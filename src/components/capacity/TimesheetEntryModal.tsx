@@ -135,7 +135,6 @@ export function TimesheetEntryModal({
                 className="w-full px-3 py-2 text-sm rounded-xl border border-[#3D5249]/20 bg-white text-[#242E29]"
               >
                 <option value="Little Treasures Company">Little Treasures Company</option>
-                <option value="We Rock the Spectrum (WRTS)">We Rock the Spectrum (WRTS)</option>
                 <option value="Studio Nets">Studio Nets</option>
                 <option value="InVogue Cleans">InVogue Cleans</option>
                 <option value="Aaron Ofosu Bootcamp">Aaron Ofosu Bootcamp</option>

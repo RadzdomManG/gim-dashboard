@@ -47,7 +47,6 @@ export function CreateTaskModal({
   onTaskCreated,
   availableClients = [
     "Little Treasures Company",
-    "We Rock the Spectrum (WRTS)",
     "Studio Nets",
     "InVogue Cleans",
     "Aaron Ofosu Bootcamp",

@@ -162,7 +162,6 @@ export function TaskBacklogView({
       if (selectedClientId && selectedClientId !== "all") {
         const clientKeyMap: Record<string, string> = {
           "little-treasures": "little treasures",
-          "wrts": "wrts",
           "studio-nets": "studio nets",
           "invogue-cleans": "invogue",
           "aaron-ofosu": "aaron ofosu",

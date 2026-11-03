@@ -51,18 +51,6 @@ const INITIAL_INVOICES: InvoiceRecord[] = [
     notes: "Tax Invoice delivered to Zoe Horner. Includes GST compliance.",
   },
   {
-    id: "inv-002",
-    invoiceNumber: "GIM-2026-089",
-    clientName: "We Rock the Spectrum (WRTS)",
-    scopeTitle: "Sensory Operations, ClassReach Webhooks & Database Maintenance",
-    amountAud: 3800,
-    issueDate: "2026-11-01",
-    dueDate: "2026-11-15",
-    status: "Paid",
-    paymentMethod: "Bank Transfer AEST",
-    notes: "Monthly enterprise automation retainer.",
-  },
-  {
     id: "inv-003",
     invoiceNumber: "GIM-2026-090",
     clientName: "Studio Nets",
@@ -416,7 +404,6 @@ export function ClientInvoicingView({
                   className="w-full px-3 py-2 text-xs rounded-xl border border-[#E8E2DD] bg-white text-[#242E29]"
                 >
                   <option value="Little Treasures Company">Little Treasures Company</option>
-                  <option value="We Rock the Spectrum (WRTS)">We Rock the Spectrum (WRTS)</option>
                   <option value="Studio Nets">Studio Nets</option>
                   <option value="InVogue Cleans">InVogue Cleans</option>
                   <option value="Aaron Ofosu Bootcamp">Aaron Ofosu Bootcamp</option>

@@ -73,7 +73,6 @@ export function MembershipAccessManager({
   // Client Portal Limits
   const [clientPortalLimits, setClientPortalLimits] = useState<Record<string, { deliverablesOnly: boolean; isRevoked: boolean }>>({
     zoe: { deliverablesOnly: false, isRevoked: false },
-    wrts_lead: { deliverablesOnly: true, isRevoked: false },
     studio_lead: { deliverablesOnly: false, isRevoked: false },
   });
 
@@ -222,18 +221,6 @@ export function MembershipAccessManager({
                   scope: "Dec 11 Global Autism Summit & GoHighLevel Infrastructure",
                 },
                 {
-                  id: "wrts",
-                  name: "We Rock the Spectrum (WRTS)",
-                  code: "WRTS-AU",
-                  industry: "Sensory Gym Franchise",
-                  contact: "National Operations Lead",
-                  lead: "Radzdom Gallego",
-                  specialist: "Radzdom Gallego",
-                  retainer: "AUD $5,200 / mo",
-                  status: "Active Sprint",
-                  scope: "Sensory Gym Operations & ClassReach CRM Sync",
-                },
-                {
                   id: "sn",
                   name: "Studio Nets",
                   code: "SN-US",
@@ -371,15 +358,6 @@ export function MembershipAccessManager({
                     status: "On Track",
                   },
                   {
-                    client: "We Rock the Spectrum (WRTS)",
-                    goal: "ClassReach Booking CRM Roster Sync & Database Archival",
-                    targetMetric: "Zero manual attendance logs + Parent Waiver archiving",
-                    progress: 88,
-                    dueDate: "30 Nov 2026",
-                    owner: "Radzdom Gallego",
-                    status: "On Track",
-                  },
-                  {
                     client: "Studio Nets",
                     goal: "Figma Component Ingestion & Client Questionnaire Handoff",
                     targetMetric: "48-Hour turnkey wireframe delivery pipeline",
@@ -475,13 +453,6 @@ export function MembershipAccessManager({
                         email: "zoe@littletreasurescompany.com.au",
                         client: "Little Treasures Company",
                         role: "Client Principal / Founder",
-                      },
-                      {
-                        key: "wrts_lead",
-                        name: "Marcus Vance",
-                        email: "operations@werockthespectrum.com.au",
-                        client: "We Rock the Spectrum (WRTS)",
-                        role: "Franchise Operations Director",
                       },
                       {
                         key: "studio_lead",

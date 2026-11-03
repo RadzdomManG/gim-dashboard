@@ -96,15 +96,6 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     memberIds: ["divine", "radz", "erwin", "bj"],
   },
   {
-    id: "wrts-ops",
-    name: "wrts-automations",
-    type: "channel",
-    description: "Sensory gym operations, ClassReach CRM sync, and operational monitoring.",
-    isPrivate: false,
-    membersCount: 3,
-    memberIds: ["divine", "radz", "erwin"],
-  },
-  {
     id: "studio-nets-ops",
     name: "studio-nets-ops",
     type: "channel",
@@ -220,7 +211,6 @@ export function MessagingCenter({
     if (!selectedClientId || selectedClientId === "all") return;
     const clientChannelMap: Record<string, string> = {
       "little-treasures": "little-treasures",
-      "wrts": "wrts-ops",
       "studio-nets": "studio-nets-ops",
       "invogue-cleans": "invogue-ops",
       "aaron-ofosu": "aaron-ofosu-ops",

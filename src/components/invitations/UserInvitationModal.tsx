@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  Mail,
   UserPlus,
   Shield,
   Building2,
@@ -13,36 +12,33 @@ import {
   RefreshCw,
   Clock,
   Trash2,
-  ExternalLink,
-  Send,
+  Lock,
+  User,
+  KeyRound,
+  Eye,
+  EyeOff,
   UserCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
-export interface InvitationRecord {
+export interface ProvisionedUserRecord {
   id: string;
-  email: string;
+  username: string;
   full_name: string;
+  password?: string;
   role: string;
   client_id?: string | null;
   assigned_clients?: string[] | null;
-  token: string;
-  expires_at: string;
-  accepted_at?: string | null;
-  is_revoked: boolean;
   created_at: string;
-  clients?: {
-    id: string;
-    name: string;
-    code: string;
-  } | null;
+  is_revoked: boolean;
 }
 
 interface UserInvitationModalProps {
   isOpen: boolean;
   onClose: () => void;
   clientsList?: { id: string; name: string; code: string }[];
+  onUserProvisioned?: (user: { name: string; username: string; role: string; clientScope: string }) => void;
 }
 
 export function UserInvitationModal({
@@ -50,135 +46,210 @@ export function UserInvitationModal({
   onClose,
   clientsList = [
     { id: "ltc-01", name: "Little Treasures Company", code: "LTC" },
-    { id: "wrts-02", name: "We Rock the Spectrum (WRTS)", code: "WRTS" },
     { id: "sn-03", name: "Studio Nets", code: "SN" },
     { id: "ivc-04", name: "InVogue Cleans", code: "IVC" },
     { id: "ao-05", name: "Aaron Ofosu Bootcamp", code: "AO" },
     { id: "t2t-06", name: "Tch2Thrive", code: "T2T" },
   ],
+  onUserProvisioned,
 }: UserInvitationModalProps) {
-  const [activeTab, setActiveTab] = useState<"send" | "manage">("send");
-  const [email, setEmail] = useState("");
+  const [activeTab, setActiveTab] = useState<"create" | "manage">("create");
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("team_member");
   const [clientId, setClientId] = useState("");
   const [selectedClients, setSelectedClients] = useState<string[]>(["Little Treasures Company"]);
   const [isLoading, setIsLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
-  const [copiedLink, setCopiedLink] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<{ username: string; password: string; name: string } | null>(null);
+  const [copiedCreds, setCopiedCreds] = useState(false);
 
-  // Invitations list
-  const [invitations, setInvitations] = useState<InvitationRecord[]>([]);
-  const [isFetchingList, setIsFetchingList] = useState(false);
+  // Stored provisioned users list
+  const [usersList, setUsersList] = useState<ProvisionedUserRecord[]>([]);
 
-  const fetchInvitations = async () => {
-    setIsFetchingList(true);
+  const loadStoredUsers = () => {
+    if (typeof window === "undefined") return;
     try {
-      const res = await fetch("/api/invitations");
-      if (res.ok) {
-        const data = await res.json();
-        setInvitations(data.invitations || []);
+      const stored = localStorage.getItem("gim_custom_logins");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const mapped: ProvisionedUserRecord[] = Object.keys(parsed).map((key) => {
+          const acc = parsed[key];
+          return {
+            id: acc.user?.id || `usr-${key}`,
+            username: key,
+            full_name: acc.user?.name || key,
+            password: acc.password,
+            role: acc.user?.role || "Team Member",
+            assigned_clients: acc.user?.clientScope ? [acc.user.clientScope] : ["Little Treasures Company"],
+            created_at: acc.created_at || new Date().toISOString(),
+            is_revoked: !!acc.is_revoked,
+          };
+        });
+        setUsersList(mapped);
+      } else {
+        setUsersList([
+          {
+            id: "u-camille",
+            username: "camille.smm",
+            full_name: "Camille Bautista",
+            password: "Camille_GIM2026!",
+            role: "Social Media Specialist",
+            assigned_clients: ["Little Treasures Company"],
+            created_at: new Date().toISOString(),
+            is_revoked: false,
+          },
+          {
+            id: "u-erwin",
+            username: "erwin.manaog",
+            full_name: "Erwin Manaog",
+            password: "Erwin_GIM2026!",
+            role: "Project Owner",
+            assigned_clients: ["Little Treasures Company", "Studio Nets"],
+            created_at: new Date().toISOString(),
+            is_revoked: false,
+          },
+        ]);
       }
     } catch (e) {
-      console.error("Failed to fetch invitations:", e);
-    } finally {
-      setIsFetchingList(false);
+      console.error("Failed to load users:", e);
     }
   };
 
   useEffect(() => {
     if (isOpen) {
-      fetchInvitations();
+      loadStoredUsers();
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSendInvitation = async (e: React.FormEvent) => {
+  const handleCreateMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !email.includes("@")) {
-      setStatusMessage({ type: "error", text: "Please enter a valid email address." });
+    if (!fullName.trim() || !username.trim() || !password.trim()) {
+      setStatusMessage({ type: "error", text: "Name, Username, and Password are all required." });
       return;
     }
 
+    const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, ".");
     setIsLoading(true);
     setStatusMessage(null);
-    setGeneratedLink(null);
+    setCreatedCredentials(null);
 
     try {
-      const res = await fetch("/api/invitations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim(),
-          full_name: fullName.trim() || email.split("@")[0],
-          role,
-          client_id: role === "client_user" ? clientId || null : null,
-          assigned_clients: role === "admin" ? ["All Clients"] : selectedClients,
-        }),
-      });
+      // 1. Store in localStorage custom logins for instant login at /login
+      const existingRaw = localStorage.getItem("gim_custom_logins");
+      const existing = existingRaw ? JSON.parse(existingRaw) : {};
 
-      const data = await res.json();
+      const primaryClient = selectedClients[0] || "Little Treasures Company";
+      const roleDisplayName =
+        role === "admin"
+          ? "Admin"
+          : role === "project_owner"
+          ? "Project Owner"
+          : role === "smm_specialist"
+          ? "Social Media Specialist"
+          : role === "client_user"
+          ? "Client User"
+          : "Team Member";
 
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to create invitation");
+      existing[cleanUsername] = {
+        password: password.trim(),
+        user: {
+          id: `usr-${cleanUsername}`,
+          username: cleanUsername,
+          name: fullName.trim(),
+          nickname: fullName.trim().split(" ")[0],
+          email: `${cleanUsername}@graceinmotion.agency`,
+          role: roleDisplayName,
+          isCoreAdmin: role === "admin",
+          avatarColor: "bg-[#466B53]",
+          title: roleDisplayName,
+          clientScope: role === "admin" ? "all" : primaryClient,
+        },
+        created_at: new Date().toISOString(),
+        is_revoked: false,
+      };
+
+      localStorage.setItem("gim_custom_logins", JSON.stringify(existing));
+
+      // Also persist to invitations API
+      try {
+        await fetch("/api/invitations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: cleanUsername,
+            full_name: fullName.trim(),
+            password: password.trim(),
+            role,
+            client_id: clientId || null,
+            assigned_clients: role === "admin" ? ["All Clients"] : selectedClients,
+          }),
+        });
+      } catch (err) {
+        // local-first fallback
       }
+
+      setCreatedCredentials({
+        name: fullName.trim(),
+        username: cleanUsername,
+        password: password.trim(),
+      });
 
       setStatusMessage({
         type: "success",
-        text: data.message || `Invitation successfully created for ${email}.`,
+        text: `Account for ${fullName.trim()} (@${cleanUsername}) successfully created!`,
       });
 
-      if (data.action_link) {
-        setGeneratedLink(data.action_link);
+      if (onUserProvisioned) {
+        onUserProvisioned({
+          name: fullName.trim(),
+          username: cleanUsername,
+          role: roleDisplayName,
+          clientScope: role === "admin" ? "all" : primaryClient,
+        });
       }
 
-      // Reset form fields
-      setEmail("");
+      // Reset input fields
       setFullName("");
-      setRole("team_member");
-      setClientId("");
-
-      // Refresh list in background
-      fetchInvitations();
+      setUsername("");
+      setPassword("");
+      loadStoredUsers();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to dispatch invitation.";
+      const msg = err instanceof Error ? err.message : "Failed to create account.";
       setStatusMessage({ type: "error", text: msg });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCopyLink = (linkToCopy: string) => {
+  const handleCopyCredentials = () => {
+    if (!createdCredentials) return;
+    const text = `Grace in Motion Access Credentials:\nName: ${createdCredentials.name}\nUsername: ${createdCredentials.username}\nPassword: ${createdCredentials.password}\nLogin URL: ${window.location.origin}/login`;
     if (navigator?.clipboard) {
-      navigator.clipboard.writeText(linkToCopy);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
+      navigator.clipboard.writeText(text);
+      setCopiedCreds(true);
+      setTimeout(() => setCopiedCreds(false), 2500);
     }
   };
 
-  const handleRevoke = async (id: string) => {
-    if (!confirm("Are you sure you want to revoke this invitation?")) return;
+  const handleRevokeUser = (targetUsername: string) => {
     try {
-      const res = await fetch(`/api/invitations/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setInvitations((prev) =>
-          prev.map((inv) => (inv.id === id ? { ...inv, is_revoked: true } : inv))
-        );
+      const existingRaw = localStorage.getItem("gim_custom_logins");
+      if (existingRaw) {
+        const existing = JSON.parse(existingRaw);
+        if (existing[targetUsername]) {
+          existing[targetUsername].is_revoked = !existing[targetUsername].is_revoked;
+          localStorage.setItem("gim_custom_logins", JSON.stringify(existing));
+          loadStoredUsers();
+        }
       }
     } catch (e) {
-      console.error("Failed to revoke invitation:", e);
+      console.error(e);
     }
-  };
-
-  const roleLabelMap: Record<string, string> = {
-    owner: "Agency Owner",
-    admin: "Admin (Universal Access)",
-    operations_manager: "Operations Manager",
-    project_owner: "Project Owner",
-    team_member: "Team Member / Specialist",
-    client_user: "Client Stakeholder (Portal Only)",
   };
 
   return (
@@ -188,14 +259,14 @@ export function UserInvitationModal({
         <div className="px-6 py-5 bg-[#3D5249] text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
-              <Mail className="w-5 h-5 text-white" />
+              <UserPlus className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold font-serif tracking-tight text-white flex items-center gap-2">
-                Supabase User & Client Invitation
+                Member &amp; Staff Account Provisioning
               </h2>
               <p className="text-xs text-[#FBF6F3]/80">
-                Dispatch official email invitations via Supabase Auth with automated role provisioning.
+                Setup new member credentials using Name, Username, and Password (No Gmail/Email required).
               </p>
             </div>
           </div>
@@ -210,20 +281,20 @@ export function UserInvitationModal({
         {/* Tab Switcher */}
         <div className="flex border-b border-[#3D5249]/10 bg-[#FBF6F3]/50 px-6 pt-3">
           <button
-            onClick={() => setActiveTab("send")}
+            onClick={() => setActiveTab("create")}
             className={`pb-3 px-4 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 ${
-              activeTab === "send"
+              activeTab === "create"
                 ? "border-[#518E6A] text-[#3D5249]"
                 : "border-transparent text-[#65746C] hover:text-[#242E29]"
             }`}
           >
-            <Send className="w-3.5 h-3.5" />
-            Send New Invitation
+            <UserPlus className="w-3.5 h-3.5" />
+            Create Member Account
           </button>
           <button
             onClick={() => {
               setActiveTab("manage");
-              fetchInvitations();
+              loadStoredUsers();
             }}
             className={`pb-3 px-4 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 ${
               activeTab === "manage"
@@ -232,14 +303,14 @@ export function UserInvitationModal({
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
-            Active & Pending ({invitations.filter((i) => !i.is_revoked && !i.accepted_at).length})
+            Provisioned Directory ({usersList.length})
           </button>
         </div>
 
         {/* Content Area */}
         <div className="p-6 overflow-y-auto space-y-6">
-          {activeTab === "send" ? (
-            <form onSubmit={handleSendInvitation} className="space-y-5">
+          {activeTab === "create" ? (
+            <form onSubmit={handleCreateMember} className="space-y-5">
               {/* Status Alert */}
               {statusMessage && (
                 <div
@@ -254,31 +325,24 @@ export function UserInvitationModal({
                   ) : (
                     <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                   )}
-                  <div className="space-y-1">
-                    <p className="font-semibold">{statusMessage.text}</p>
-                    {statusMessage.type === "success" && (
-                      <p className="text-xs text-emerald-700">
-                        Supabase has queued an invitation email. You can also copy the direct activation link below for instant testing.
-                      </p>
-                    )}
-                  </div>
+                  <p className="font-semibold">{statusMessage.text}</p>
                 </div>
               )}
 
-              {/* Action Link Banner */}
-              {generatedLink && (
-                <div className="p-4 rounded-xl bg-[#FBF6F3] border border-[#518E6A]/30 space-y-2">
+              {/* Created Credentials Card */}
+              {createdCredentials && (
+                <div className="p-4 rounded-xl bg-[#FBF6F3] border border-[#518E6A]/30 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase tracking-wider text-[#3D5249] flex items-center gap-1.5">
-                      <ExternalLink className="w-3.5 h-3.5 text-[#518E6A]" />
-                      Direct Activation Link (For Testing / Immediate Use)
+                      <KeyRound className="w-3.5 h-3.5 text-[#518E6A]" />
+                      Member Login Credentials Created
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleCopyLink(generatedLink)}
+                      onClick={handleCopyCredentials}
                       className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#518E6A] text-white hover:bg-[#466B53] transition-colors flex items-center gap-1.5 shadow-xs"
                     >
-                      {copiedLink ? (
+                      {copiedCreds ? (
                         <>
                           <Check className="w-3.5 h-3.5 text-white" />
                           Copied!
@@ -286,56 +350,105 @@ export function UserInvitationModal({
                       ) : (
                         <>
                           <Copy className="w-3.5 h-3.5 text-white" />
-                          Copy Link
+                          Copy Credentials
                         </>
                       )}
                     </button>
                   </div>
-                  <div className="p-2.5 bg-white rounded-lg border border-[#3D5249]/15 text-xs font-mono text-[#242E29] break-all select-all">
-                    {generatedLink}
+                  <div className="p-3 bg-white rounded-lg border border-[#3D5249]/15 text-xs grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div>
+                      <span className="text-[#65746C] block text-[10px] uppercase font-bold">Full Name</span>
+                      <strong className="text-[#242E29]">{createdCredentials.name}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[#65746C] block text-[10px] uppercase font-bold">Username</span>
+                      <strong className="text-[#518E6A] font-mono">{createdCredentials.username}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[#65746C] block text-[10px] uppercase font-bold">Password</span>
+                      <strong className="text-[#242E29] font-mono">{createdCredentials.password}</strong>
+                    </div>
                   </div>
                   <p className="text-[11px] text-[#65746C]">
-                    Open this link in an incognito window to verify the invite flow without signing out of your current session.
+                    Member can sign in immediately at <code>/login</code> using this Username and Password.
                   </p>
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Email Address */}
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#3D5249] mb-1.5">
-                    Recipient Email Address <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-[#65746C] absolute left-3 top-3" />
-                    <input
-                      type="email"
-                      required
-                      placeholder="e.g. test@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-[#3D5249]/20 focus:outline-none focus:ring-2 focus:ring-[#518E6A]/30 focus:border-[#518E6A] bg-white text-[#242E29]"
-                    />
-                  </div>
-                  <p className="text-[11px] text-[#65746C] mt-1">
-                    Supabase Auth will deliver the invite email to this mailbox.
-                  </p>
-                </div>
-
+              {/* Three Core Required Inputs: Name, Username, Password */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Full Name */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-[#3D5249] mb-1.5">
-                    Recipient Full Name
+                    Full Name <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Alex Hunter"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-[#3D5249]/20 focus:outline-none focus:ring-2 focus:ring-[#518E6A]/30 focus:border-[#518E6A] bg-white text-[#242E29]"
-                  />
-                  <p className="text-[11px] text-[#65746C] mt-1">
-                    Will be stored in their user profile upon account activation.
+                  <div className="relative">
+                    <User className="w-4 h-4 text-[#65746C] absolute left-3 top-3" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Camille Bautista"
+                      value={fullName}
+                      onChange={(e) => {
+                        setFullName(e.target.value);
+                        if (!username) {
+                          setUsername(e.target.value.toLowerCase().replace(/\s+/g, "."));
+                        }
+                      }}
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-[#3D5249]/20 focus:outline-none focus:ring-2 focus:ring-[#518E6A]/30 focus:border-[#518E6A] bg-white text-[#242E29]"
+                    />
+                  </div>
+                  <p className="text-[10px] text-[#65746C] mt-1">
+                    Display name for dashboards &amp; task cards.
+                  </p>
+                </div>
+
+                {/* Username */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#3D5249] mb-1.5">
+                    Username <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="text-[#65746C] font-mono text-xs absolute left-3 top-2.5">@</span>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. camille.smm"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, "."))}
+                      className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-[#3D5249]/20 font-mono focus:outline-none focus:ring-2 focus:ring-[#518E6A]/30 focus:border-[#518E6A] bg-white text-[#242E29]"
+                    />
+                  </div>
+                  <p className="text-[10px] text-[#65746C] mt-1">
+                    Used to sign in to Mission Control.
+                  </p>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#3D5249] mb-1.5">
+                    Assigned Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-[#65746C] absolute left-3 top-2.5" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      placeholder="e.g. Camille_2026!"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-[#3D5249]/20 font-mono focus:outline-none focus:ring-2 focus:ring-[#518E6A]/30 focus:border-[#518E6A] bg-white text-[#242E29]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2.5 top-2.5 text-[#65746C] hover:text-[#242E29]"
+                    >
+                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-[#65746C] mt-1">
+                    Set their initial login password.
                   </p>
                 </div>
               </div>
@@ -350,59 +463,65 @@ export function UserInvitationModal({
                     {
                       id: "admin",
                       title: "Admin",
-                      desc: "Full operational & member control across all clients.",
+                      badge: "Universal Authority",
+                      desc: "Full operational authority across all clients, timesheets, and platform settings.",
                     },
                     {
-                      id: "operations_manager",
-                      title: "Operations Manager",
-                      desc: "Sprint management, capacity & QA deliverable approvals.",
+                      id: "project_owner",
+                      title: "Project Owner",
+                      badge: "Delivery Lead",
+                      desc: "Can manage tasks, assign deliverables, review proofs, and coordinate client sprints.",
+                    },
+                    {
+                      id: "smm_specialist",
+                      title: "Social Media Specialist",
+                      badge: "SMM Lead",
+                      desc: "Dedicated content calendar execution, reel production, and media attachments.",
                     },
                     {
                       id: "team_member",
                       title: "Team Member / Specialist",
-                      desc: "Task backlog execution & team collaboration channels.",
+                      badge: "Operational Staff",
+                      desc: "Standard access to complete assigned tasks, record timesheets, and post comments.",
                     },
                     {
                       id: "client_user",
                       title: "Client Stakeholder",
-                      desc: "Restricted Portal access isolated strictly to their client.",
+                      badge: "Portal Only",
+                      desc: "Single-tenant portal access to view approved tasks and download invoices.",
                     },
-                  ].map((item) => (
-                    <label
-                      key={item.id}
-                      onClick={() => setRole(item.id)}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
-                        role === item.id
-                          ? "bg-[#3D5249]/5 border-[#518E6A] ring-1 ring-[#518E6A]"
-                          : "bg-white border-[#3D5249]/15 hover:border-[#3D5249]/40"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="invitation_role"
-                        value={item.id}
-                        checked={role === item.id}
-                        onChange={() => setRole(item.id)}
-                        className="mt-0.5 text-[#518E6A] focus:ring-[#518E6A]"
-                      />
-                      <div>
-                        <div className="text-xs font-bold text-[#242E29]">{item.title}</div>
-                        <div className="text-[11px] text-[#65746C]">{item.desc}</div>
+                  ].map((r) => {
+                    const isSelected = role === r.id;
+                    return (
+                      <div
+                        key={r.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setRole(r.id)}
+                        className={`p-3 rounded-xl border cursor-pointer transition-all flex flex-col justify-between text-left ${
+                          isSelected
+                            ? "bg-[#3D5249]/5 border-[#518E6A] ring-2 ring-[#518E6A]"
+                            : "bg-white border-[#3D5249]/15 hover:border-[#3D5249]/40 hover:bg-[#FBF6F3]/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-xs text-[#242E29] flex items-center gap-1.5">
+                            <Shield className={`w-3.5 h-3.5 ${isSelected ? "text-[#518E6A]" : "text-[#65746C]"}`} />
+                            {r.title}
+                          </span>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white border border-[#3D5249]/15 text-[#3D5249]">
+                            {r.badge}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#65746C] leading-snug">{r.desc}</p>
                       </div>
-                    </label>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Client Scope Selection (Multi-Client Assignment) */}
-              {role === "admin" ? (
-                <div className="p-3.5 rounded-xl bg-[#3D5249]/5 border border-[#3D5249]/15 flex items-start gap-2.5 text-xs text-[#3D5249]">
-                  <Shield className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Universal Admin Scope:</strong> Admins automatically hold full visibility across all 6 client accounts, automations, and deliverables.
-                  </span>
-                </div>
-              ) : (
+              {/* Client Tenant Scoping */}
+              {role !== "admin" && (
                 <div className="p-4 rounded-xl bg-[#FBF6F3] border border-[#518E6A]/20 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -410,7 +529,7 @@ export function UserInvitationModal({
                         Select Assigned Clients (Tenant Scope) <span className="text-red-500">*</span>
                       </label>
                       <p className="text-[11px] text-[#65746C] mt-0.5">
-                        Choose which clients this member will handle (e.g., SMM handling Little Treasures &amp; InVogue). They will only see data for these clients.
+                        Member will only have access to tasks, calendars, and deliverables for selected accounts.
                       </p>
                     </div>
                     <div className="flex items-center gap-2 text-xs shrink-0">
@@ -440,9 +559,7 @@ export function UserInvitationModal({
                           key={client.id}
                           role="button"
                           tabIndex={0}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
+                          onClick={() => {
                             setSelectedClients((prev) =>
                               prev.includes(client.name)
                                 ? prev.filter((c) => c !== client.name)
@@ -476,17 +593,13 @@ export function UserInvitationModal({
                       );
                     })}
                   </div>
-
-                  <div className="text-[11px] text-[#65746C] italic pt-1">
-                    * The 3 Core Admins (Divine, Radz, RA) can edit, add, or revoke client access anytime from Settings.
-                  </div>
                 </div>
               )}
 
               {/* Submit Buttons */}
               <div className="pt-3 border-t border-[#3D5249]/10 flex items-center justify-between">
                 <div className="text-xs text-[#65746C]">
-                  Invitation links expire automatically in 7 days.
+                  Setup is instant &bull; Username &amp; password active immediately
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="secondary" size="sm" onClick={onClose} type="button">
@@ -496,140 +609,83 @@ export function UserInvitationModal({
                     {isLoading ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
                     ) : (
-                      <Send className="w-4 h-4" />
+                      <UserPlus className="w-4 h-4" />
                     )}
-                    Send Supabase Invitation
+                    <span>Save &amp; Provision Member</span>
                   </Button>
                 </div>
               </div>
             </form>
           ) : (
-            /* Manage / Active Invitations Tab */
+            /* Manage / Active Directory Tab */
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-[#242E29]">Supabase Invitation Audit Log</h3>
+                  <h3 className="text-sm font-bold text-[#242E29]">Active Provisioned Members</h3>
                   <p className="text-xs text-[#65746C]">
-                    Track pending email invites, accepted registrations, and revoke access anytime.
+                    All accounts created via Username &amp; Password.
                   </p>
                 </div>
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={fetchInvitations}
-                  disabled={isFetchingList}
+                  onClick={loadStoredUsers}
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isFetchingList ? "animate-spin" : ""}`} />
-                  Refresh
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Refresh</span>
                 </Button>
               </div>
 
-              {invitations.length === 0 ? (
-                <div className="p-8 text-center bg-[#FBF6F3] rounded-xl border border-dashed border-[#3D5249]/20 text-[#65746C]">
-                  <Mail className="w-8 h-8 mx-auto text-[#65746C]/40 mb-2" />
-                  <p className="text-sm font-medium">No invitations sent yet.</p>
-                  <p className="text-xs text-[#65746C]/80 mt-1">
-                    Switch to &quot;Send New Invitation&quot; to invite your first team member or client.
-                  </p>
-                </div>
-              ) : (
-                <div className="rounded-xl border border-[#3D5249]/15 overflow-hidden">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-[#3D5249]/5 border-b border-[#3D5249]/10 font-bold uppercase tracking-wider text-[#3D5249]">
-                      <tr>
-                        <th className="py-2.5 px-3">Recipient</th>
-                        <th className="py-2.5 px-3">Role</th>
-                        <th className="py-2.5 px-3">Status</th>
-                        <th className="py-2.5 px-3">Sent</th>
-                        <th className="py-2.5 px-3 text-right">Actions</th>
+              <div className="rounded-xl border border-[#3D5249]/15 overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#3D5249]/5 border-b border-[#3D5249]/10 font-bold uppercase tracking-wider text-[#3D5249]">
+                    <tr>
+                      <th className="py-2.5 px-3">Member Name</th>
+                      <th className="py-2.5 px-3">Username</th>
+                      <th className="py-2.5 px-3">Role</th>
+                      <th className="py-2.5 px-3">Assigned Password</th>
+                      <th className="py-2.5 px-3">Status</th>
+                      <th className="py-2.5 px-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#3D5249]/10 bg-white">
+                    {usersList.map((user) => (
+                      <tr key={user.username} className="hover:bg-[#FBF6F3]/50 transition-colors">
+                        <td className="py-3 px-3 font-semibold text-[#242E29]">
+                          {user.full_name}
+                        </td>
+                        <td className="py-3 px-3 font-mono text-[#518E6A] font-bold">
+                          @{user.username}
+                        </td>
+                        <td className="py-3 px-3">
+                          <Badge variant="brand">{user.role}</Badge>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-[11px] text-[#65746C]">
+                          {user.password || "••••••••"}
+                        </td>
+                        <td className="py-3 px-3">
+                          {user.is_revoked ? (
+                            <Badge variant="critical" dot>Revoked</Badge>
+                          ) : (
+                            <Badge variant="active" dot>Active</Badge>
+                          )}
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() => handleRevokeUser(user.username)}
+                            className={`text-[11px] font-semibold hover:underline ${
+                              user.is_revoked ? "text-emerald-700" : "text-rose-700"
+                            }`}
+                          >
+                            {user.is_revoked ? "Restore" : "Revoke Access"}
+                          </button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#3D5249]/10 bg-white">
-                      {invitations.map((inv) => {
-                        const isExpired = new Date(inv.expires_at) < new Date();
-                        const isAccepted = !!inv.accepted_at;
-                        const isRevoked = inv.is_revoked;
-
-                        return (
-                          <tr key={inv.id} className="hover:bg-[#FBF6F3]/50 transition-colors">
-                            <td className="py-3 px-3">
-                              <div className="font-semibold text-[#242E29]">{inv.full_name}</div>
-                              <div className="text-[11px] text-[#65746C]">{inv.email}</div>
-                              {inv.assigned_clients && inv.assigned_clients.length > 0 ? (
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {inv.assigned_clients.map((c, idx) => (
-                                    <span key={idx} className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-[#3D5249]/10 text-[#3D5249]">
-                                      {c}
-                                    </span>
-                                  ))}
-                                </div>
-                              ) : inv.clients ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] text-[#518E6A] font-medium mt-0.5">
-                                  <Building2 className="w-3 h-3" />
-                                  {inv.clients.name}
-                                </span>
-                              ) : (
-                                <span className="text-[10px] text-[#65746C] font-mono mt-0.5 block">Universal Scope</span>
-                              )}
-                            </td>
-                            <td className="py-3 px-3">
-                              <Badge variant="neutral">{roleLabelMap[inv.role] || inv.role}</Badge>
-                            </td>
-                            <td className="py-3 px-3">
-                              {isRevoked ? (
-                                <Badge variant="critical">Revoked</Badge>
-                              ) : isAccepted ? (
-                                <Badge variant="active">Accepted</Badge>
-                              ) : isExpired ? (
-                                <Badge variant="neutral">Expired</Badge>
-                              ) : (
-                                <Badge variant="review" dot>
-                                  Pending Invite
-                                </Badge>
-                              )}
-                            </td>
-                            <td className="py-3 px-3 text-[#65746C]">
-                              {new Date(inv.created_at).toLocaleDateString([], {
-                                month: "short",
-                                day: "numeric",
-                              })}
-                            </td>
-                            <td className="py-3 px-3 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                {!isRevoked && !isAccepted && (
-                                  <>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const directLink = `http://localhost:3000/login?invite=accepted&email=${encodeURIComponent(
-                                          inv.email
-                                        )}&token=${inv.token}`;
-                                        handleCopyLink(directLink);
-                                      }}
-                                      title="Copy Direct Link"
-                                      className="p-1.5 rounded-lg border border-[#3D5249]/20 hover:bg-[#3D5249]/10 text-[#3D5249] transition-colors"
-                                    >
-                                      <Copy className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRevoke(inv.id)}
-                                      title="Revoke Invitation"
-                                      className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

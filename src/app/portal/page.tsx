@@ -61,9 +61,6 @@ export default function StandaloneClientPortalPage() {
               <option value="Little Treasures Company" className="text-[#242E29]">
                 Little Treasures Company (LTC)
               </option>
-              <option value="We Rock the Spectrum (WRTS)" className="text-[#242E29]">
-                We Rock the Spectrum (WRTS)
-              </option>
               <option value="Studio Nets" className="text-[#242E29]">
                 Studio Nets (SN)
               </option>

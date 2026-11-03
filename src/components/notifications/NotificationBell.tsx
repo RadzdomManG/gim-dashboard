@@ -129,15 +129,6 @@ export function NotificationBell({
               taskId: "14zf25zm1yv",
               isRead: false,
             },
-            {
-              id: "notif-wrts-sync",
-              type: "message",
-              title: "Radz posted update in #we-rock-the-spectrum",
-              description: "W18 Floor capacity webhook tested and live.",
-              time: "Nov 02",
-              channelId: "we-rock-the-spectrum",
-              isRead: true,
-            },
           ];
 
           const combined = [...teamAlerts, ...upcoming.slice(0, 5)];

@@ -337,16 +337,6 @@ export function GlobalSearchModal({
                   <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">In Review</span>
                 </button>
                 <button
-                  onClick={() => setQuery("We Rock the Spectrum")}
-                  className="p-2.5 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/50 hover:bg-[#FBF6F3] text-left transition-colors flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-[#518E6A]" />
-                    <span className="font-semibold text-[#242E29]">We Rock the Spectrum</span>
-                  </div>
-                  <span className="text-[10px] text-[#65746C]">Sensory Gym Operations</span>
-                </button>
-                <button
                   onClick={() => setQuery("SOP Specification")}
                   className="p-2.5 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/50 hover:bg-[#FBF6F3] text-left transition-colors flex items-center justify-between"
                 >

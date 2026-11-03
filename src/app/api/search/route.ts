@@ -31,18 +31,6 @@ const STATIC_CLIENTS = [
     description: 'Clinical paediatric occupational therapy clinic delivery system, GHL funnels, ClassReach patient scheduling.',
   },
   {
-    id: 'wrts',
-    name: 'We Rock the Spectrum (WRTS)',
-    code: 'WRTS-AU',
-    industry: 'Sensory Gym Franchise (AU)',
-    contact: 'Marcus Vance (Franchise Ops)',
-    lead: 'Radzdom Gallego',
-    specialist: 'Radzdom Gallego',
-    retainer: 'AUD $6,200 / mo',
-    status: 'Active Sprint',
-    description: 'Sensory gym franchise operations, 21 active n8n workflows, parent waiver syncing, ClassReach rosters.',
-  },
-  {
     id: 'studio-nets',
     name: 'Studio Nets',
     code: 'SN-AU',

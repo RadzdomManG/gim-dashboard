@@ -108,7 +108,8 @@ interface UserProfile {
 
 interface InvitationRecord {
   id: string;
-  email: string;
+  email?: string;
+  username?: string;
   name: string;
   role: UserRole;
   clientScope: string;
@@ -376,7 +377,7 @@ export default function GimDashboard() {
   const [invitations, setInvitations] = useState<InvitationRecord[]>([
     {
       id: "inv-1",
-      email: "erwin@graceinmotion.agency",
+      username: "erwin.manaog",
       name: "Erwin Manaog",
       role: "Project Owner",
       clientScope: "Little Treasures Company",
@@ -388,7 +389,7 @@ export default function GimDashboard() {
     },
     {
       id: "inv-2",
-      email: "bj@graceinmotion.agency",
+      username: "bj.ricafrente",
       name: "BJ Ricafrente",
       role: "Operations Manager",
       clientScope: "all",
@@ -400,25 +401,25 @@ export default function GimDashboard() {
     },
     {
       id: "inv-3",
-      email: "zoe@littletreasures.com.au",
+      username: "camille.smm",
+      name: "Camille Bautista",
+      role: "Social Media Specialist",
+      clientScope: "Little Treasures Company",
+      invitedBy: "Radzdom Gallego",
+      token: "gim_tok_7c64a511f",
+      status: "Active",
+      createdDate: "Oct 28, 2026",
+      permissions: { view: true, create: true, edit: true, assign: false, delete: false },
+    },
+    {
+      id: "inv-4",
+      username: "zoe.horner",
       name: "Zoe Horner",
       role: "Client User",
       clientScope: "Little Treasures Company",
       invitedBy: "Divine Origines",
-      token: "gim_tok_7c64a511f",
-      status: "Active",
-      createdDate: "Oct 28, 2026",
-      permissions: { view: true, create: false, edit: false, assign: false, delete: false },
-    },
-    {
-      id: "inv-4",
-      email: "matthew@invoguecleans.com",
-      name: "Matthew Robbins",
-      role: "Client User",
-      clientScope: "InVogue Cleans",
-      invitedBy: "RA Malinao",
       token: "gim_tok_4e12c980b",
-      status: "Pending",
+      status: "Active",
       createdDate: "Nov 02, 2026",
       permissions: { view: true, create: false, edit: false, assign: false, delete: false },
     },
@@ -499,7 +500,7 @@ export default function GimDashboard() {
     },
   ];
 
-  // Client Delivery Pipeline (Verified from GIM Operating System folder: WRTS, Studio Nets, Little Treasures, etc.)
+  // Client Delivery Pipeline (Verified from GIM Operating System folder: Studio Nets, Little Treasures, etc.)
   const clientsData = [
     {
       id: "little-treasures",
@@ -514,20 +515,6 @@ export default function GimDashboard() {
       tasksCount: "18 subtasks",
       retainer: "AUD $875 / wk",
       progress: 72,
-    },
-    {
-      id: "wrts",
-      name: "WRTS (We Rock the Spectrum)",
-      code: "WRTS-US",
-      lead: userProfiles.radz.nickname,
-      contact: "Operations Director",
-      currentSprint: "ClassReach Roster Sync & Intake Workflows",
-      status: "Active Sprint",
-      statusVariant: "active" as const,
-      milestone: "Workflow Verification & Live Handover",
-      tasksCount: "Active Workflows",
-      retainer: "USD $3,200 / mo",
-      progress: 85,
     },
     {
       id: "studio-nets",
@@ -942,9 +929,8 @@ export default function GimDashboard() {
                   className="bg-transparent text-xs font-bold text-[#242E29] focus:outline-none cursor-pointer pr-1 leading-tight mt-0.5 truncate"
                   title="Switch client account instantly without logging out of ClickUp"
                 >
-                  <option value="all">⊞ All Clients (Unified 6 Workspaces)</option>
+                  <option value="all">⊞ All Clients (Unified 5 Workspaces)</option>
                   <option value="little-treasures">Little Treasures Company (AU)</option>
-                  <option value="wrts">We Rock the Spectrum (AU)</option>
                   <option value="studio-nets">Studio Nets (AU)</option>
                   <option value="invogue-cleans">InVogue Cleans (AU)</option>
                   <option value="aaron-ofosu">Aaron Ofosu Bootcamp (AU)</option>
@@ -996,9 +982,7 @@ export default function GimDashboard() {
             <div className="hidden xl:flex items-center space-x-2 px-3 py-1 bg-white border border-[#E8E2DD] rounded-xl text-xs shadow-xs whitespace-nowrap">
               <span className="w-1.5 h-1.5 rounded-full bg-[#518E6A] animate-pulse"></span>
               <span className="font-semibold text-[#242E29]">
-                {selectedPortfolioClientId === "wrts"
-                  ? "WRTS Automations"
-                  : selectedPortfolioClientId === "studio-nets"
+                {selectedPortfolioClientId === "studio-nets"
                   ? "Studio Nets SOPs"
                   : selectedPortfolioClientId === "invogue-cleans"
                   ? "InVogue Retention"
@@ -1852,8 +1836,8 @@ export default function GimDashboard() {
                         <tr key={inv.id} className="hover:bg-[#FBF6F3]/50 transition-colors">
                           <td className="py-3 px-4 font-semibold text-[#242E29]">
                             <div>{inv.name}</div>
-                            <div className="text-[10px] text-[#65746C] font-normal">
-                              {inv.email}
+                            <div className="text-[10px] text-[#518E6A] font-mono font-bold">
+                              @{inv.username || inv.name.toLowerCase().replace(/\s+/g, ".")}
                             </div>
                           </td>
                           <td className="py-3 px-4">
@@ -2357,11 +2341,28 @@ export default function GimDashboard() {
       )}
 
       {/* ========================================================================= */}
-      {/* 5. SUPABASE AUTH USER & CLIENT INVITATION MODAL */}
+      {/* 5. USER & CLIENT PROVISIONING MODAL (NAME, USERNAME, PASSWORD ONLY) */}
       {/* ========================================================================= */}
       <UserInvitationModal
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
+        onUserProvisioned={(newUser) => {
+          setInvitations((prev) => [
+            {
+              id: `inv-${Date.now()}`,
+              username: newUser.username,
+              name: newUser.name,
+              role: newUser.role as UserRole,
+              clientScope: newUser.clientScope,
+              invitedBy: currentUser.name,
+              token: `gim_tok_${Math.random().toString(36).substring(2, 9)}`,
+              status: "Active",
+              createdDate: "Today",
+              permissions: { view: true, create: true, edit: true, assign: false, delete: false },
+            },
+            ...prev,
+          ]);
+        }}
       />
 
       {/* ========================================================================= */}
@@ -2433,8 +2434,6 @@ export default function GimDashboard() {
         defaultClient={
           selectedPortfolioClientId === "little-treasures"
             ? "Little Treasures Company"
-            : selectedPortfolioClientId === "wrts"
-            ? "We Rock the Spectrum (WRTS)"
             : selectedPortfolioClientId === "studio-nets"
             ? "Studio Nets"
             : selectedPortfolioClientId === "invogue-cleans"
