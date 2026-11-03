@@ -28,6 +28,13 @@ interface RawClickUpTask {
   date_updated?: string | number | null;
   description?: string;
   url?: string;
+  attachments?: {
+    id: string;
+    title: string;
+    url: string;
+    size?: number;
+    mimetype?: string;
+  }[];
   list?: {
     id: string;
     name: string;
@@ -97,6 +104,13 @@ function normalizeTask(raw: RawClickUpTask, clientName: string, listId: string, 
     url: raw.url || `https://app.clickup.com/t/${raw.id}`,
     gateCode: extractGateCode(raw.name),
     isRadzTask,
+    attachments: (raw.attachments || []).map((att) => ({
+      id: att.id,
+      name: att.title || 'Attachment',
+      url: att.url,
+      size: att.size ? `${(att.size / 1024).toFixed(0)} KB` : undefined,
+      type: att.mimetype?.includes('image') ? 'image' : att.mimetype?.includes('video') ? 'video' : 'document',
+    })),
   };
 }
 

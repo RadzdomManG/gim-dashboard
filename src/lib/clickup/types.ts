@@ -28,6 +28,13 @@ export interface ClickUpTask {
   url: string;
   gateCode?: string | null; // e.g. "G5", "G7", "G18"
   isRadzTask?: boolean;
+  attachments?: {
+    id: string;
+    name: string;
+    url: string;
+    size?: string;
+    type?: string;
+  }[];
 }
 
 export interface ClickUpStats {

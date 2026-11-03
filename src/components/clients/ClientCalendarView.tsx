@@ -232,7 +232,9 @@ export function ClientCalendarView({
                 <div className="space-y-1 flex-1 overflow-y-auto max-h-20">
                   {dayTasks.map((t) => {
                     const statusColor =
-                      t.status === "Approved" || t.status === "Completed"
+                      t.status === "Closed"
+                        ? "bg-purple-50 text-purple-900 border-purple-200 line-through opacity-85"
+                        : t.status === "Approved" || t.status === "Completed"
                         ? "bg-emerald-50 text-emerald-800 border-emerald-300"
                         : t.status === "In Review"
                         ? "bg-amber-50 text-amber-800 border-amber-300"

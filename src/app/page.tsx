@@ -747,33 +747,60 @@ export default function GimDashboard() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* TOP HEADER */}
         <header className="h-16 bg-[#FBF6F3] border-b border-[#E8E2DD] px-4 sm:px-8 flex items-center justify-between shrink-0 gap-3">
-          {/* Mobile hamburger menu & Search box */}
-          <div className="flex items-center space-x-3 flex-1 max-w-sm">
+          {/* Left Header: Mobile hamburger & Context breadcrumb or Settings Search */}
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-1.5 rounded-lg text-[#65746C] hover:text-[#242E29] hover:bg-white md:hidden"
+              className="p-1.5 rounded-lg text-[#65746C] hover:text-[#242E29] hover:bg-white md:hidden shrink-0"
               aria-label="Open navigation menu"
             >
               <Menu className="w-5 h-5" />
             </button>
 
-            <div className="relative w-full">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#65746C]" />
-              <input
-                type="text"
-                placeholder="Search accounts, tasks, gates..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-12 py-1.5 bg-white border border-[#E8E2DD] rounded-lg text-xs placeholder:text-[#65746C]/60 text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A] focus:border-[#518E6A] transition-all"
-              />
-              <span className="hidden sm:inline-block absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-[#65746C]/50 font-mono bg-[#FBF6F3] px-1 py-0.5 rounded border border-[#E8E2DD]">
-                Ctrl K
-              </span>
-            </div>
+            {activeTab === "settings" && hasAdminAccess ? (
+              <div className="relative w-full max-w-sm">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#65746C]" />
+                <input
+                  type="text"
+                  placeholder="Search settings, permissions, accounts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-8 pr-12 py-1.5 bg-white border border-[#E8E2DD] rounded-lg text-xs placeholder:text-[#65746C]/60 text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A] focus:border-[#518E6A] transition-all"
+                />
+                <span className="hidden sm:inline-block absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-[#65746C]/50 font-mono bg-[#FBF6F3] px-1 py-0.5 rounded border border-[#E8E2DD]">
+                  Ctrl K
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2 truncate">
+                <span className="font-bold text-sm text-[#242E29] truncate">
+                  {activeTab === "overview"
+                    ? "Agency Operations Overview"
+                    : activeTab === "clients"
+                    ? "Client Operations Portfolio"
+                    : activeTab === "tasks"
+                    ? "Tasks & Delivery Backlog"
+                    : activeTab === "approvals"
+                    ? "Deliverable Sign-Off Queue"
+                    : activeTab === "messaging"
+                    ? "Internal Team Messaging Hub"
+                    : activeTab === "capacity"
+                    ? "Team Capacity Worksheet"
+                    : activeTab === "library"
+                    ? "SOP & Client Playbooks"
+                    : activeTab === "team"
+                    ? "Team Directory & RBAC"
+                    : "Profile & Settings"}
+                </span>
+                <span className="hidden sm:inline-block text-[10px] text-[#65746C] font-mono px-1.5 py-0.5 rounded bg-white border border-[#E8E2DD]">
+                  GIM OS
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Right Header Controls */}
-          <div className="flex items-center space-x-2.5 sm:space-x-3.5 shrink-0">
+          <div className="flex items-center space-x-2.5 sm:space-x-3 shrink-0">
             {/* Active Sprint Context Pill (Desktop only) */}
             <div className="hidden xl:flex items-center space-x-2 px-3 py-1 bg-white border border-[#E8E2DD] rounded-lg text-xs shadow-xs whitespace-nowrap">
               <span className="w-1.5 h-1.5 rounded-full bg-[#518E6A] animate-pulse"></span>
@@ -782,47 +809,66 @@ export default function GimDashboard() {
               <span className="text-[11px] text-[#466B53] font-medium">Dec 11 Launch Target</span>
             </div>
 
-            {/* Profile Switcher for Sandbox Testing */}
-            <div className="flex items-center space-x-1.5 bg-white border border-[#E8E2DD] rounded-lg px-2 py-1 shadow-xs">
-              <KeyRound className="w-3.5 h-3.5 text-[#518E6A] shrink-0" />
-              <select
-                value={currentUserKey}
-                onChange={(e) => setCurrentUserKey(e.target.value)}
-                className="bg-transparent text-xs font-semibold text-[#242E29] focus:outline-none cursor-pointer pr-1"
-              >
-                <optgroup label="Core Admin Team (Universal Full Access)">
-                  <option value="radz">{userProfiles.radz.name} ({userProfiles.radz.nickname})</option>
-                  <option value="divine">{userProfiles.divine.name} ({userProfiles.divine.nickname})</option>
-                  <option value="ra">{userProfiles.ra.name} ({userProfiles.ra.nickname})</option>
-                </optgroup>
-                <optgroup label="Scoped Roles (RBAC Sandbox)">
-                  <option value="erwin">{userProfiles.erwin.name} ({userProfiles.erwin.nickname})</option>
-                  <option value="zoe">{userProfiles.zoe.name} ({userProfiles.zoe.nickname})</option>
-                </optgroup>
-              </select>
-            </div>
+            {/* Profile Switcher, Edit Nickname, and Invite Buttons: ONLY visible on Settings Tab for 3 Owners */}
+            {activeTab === "settings" && hasAdminAccess && (
+              <>
+                <div className="flex items-center space-x-1.5 bg-white border border-[#E8E2DD] rounded-lg px-2 py-1 shadow-xs">
+                  <KeyRound className="w-3.5 h-3.5 text-[#518E6A] shrink-0" />
+                  <select
+                    value={currentUserKey}
+                    onChange={(e) => setCurrentUserKey(e.target.value)}
+                    className="bg-transparent text-xs font-semibold text-[#242E29] focus:outline-none cursor-pointer pr-1"
+                  >
+                    <optgroup label="Core Admin Team (Universal Full Access)">
+                      <option value="radz">{userProfiles.radz.name} ({userProfiles.radz.nickname})</option>
+                      <option value="divine">{userProfiles.divine.name} ({userProfiles.divine.nickname})</option>
+                      <option value="ra">{userProfiles.ra.name} ({userProfiles.ra.nickname})</option>
+                    </optgroup>
+                    <optgroup label="Scoped Roles (RBAC Sandbox)">
+                      <option value="erwin">{userProfiles.erwin.name} ({userProfiles.erwin.nickname})</option>
+                      <option value="zoe">{userProfiles.zoe.name} ({userProfiles.zoe.nickname})</option>
+                    </optgroup>
+                  </select>
+                </div>
 
-            {/* Edit Nickname Button */}
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<Edit2 className="w-3 h-3 text-[#518E6A]" />}
-              onClick={handleOpenEditProfile}
-            >
-              Edit Nickname
-            </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<Edit2 className="w-3 h-3 text-[#518E6A]" />}
+                  onClick={handleOpenEditProfile}
+                >
+                  Edit Nickname
+                </Button>
 
-            {/* Quick Invite CTA (Admins only) */}
-            {hasAdminAccess && (
-              <Button
-                variant="primary"
-                size="sm"
-                icon={<Mail className="w-3.5 h-3.5" />}
-                className="hidden sm:inline-flex shadow-xs"
-                onClick={() => setIsInviteModalOpen(true)}
-              >
-                Invite User / Client
-              </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={<Mail className="w-3.5 h-3.5" />}
+                  className="hidden sm:inline-flex shadow-xs"
+                  onClick={() => setIsInviteModalOpen(true)}
+                >
+                  Invite User / Client
+                </Button>
+              </>
+            )}
+
+            {/* Clean User Presence Pill when on other dashboard tabs */}
+            {activeTab !== "settings" && (
+              <div className="flex items-center space-x-2 px-2.5 py-1 bg-white border border-[#E8E2DD] rounded-lg text-xs shadow-xs">
+                <div
+                  className={`w-5 h-5 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-[10px] shrink-0`}
+                >
+                  {currentUser.nickname.slice(0, 2).toUpperCase()}
+                </div>
+                <span className="font-semibold text-[#242E29] truncate max-w-[120px] sm:max-w-none">
+                  {currentUser.nickname}
+                </span>
+                {currentUser.isCoreAdmin && (
+                  <span className="hidden sm:inline-block text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#518E6A] text-white">
+                    Core Admin
+                  </span>
+                )}
+              </div>
             )}
 
             {/* Notifications */}

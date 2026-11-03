@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { fetchClickUpTasks } from '@/lib/clickup/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,19 +9,86 @@ export async function GET(req: NextRequest) {
     const clientParam = req.nextUrl.searchParams.get('client');
     const supabase = createAdminClient();
 
+    // 1. Fetch Supabase tasks
     let query = supabase.from('client_tasks').select('*').order('due_date', { ascending: true });
 
     if (clientParam && clientParam !== 'all') {
       query = query.ilike('client', `%${clientParam}%`);
     }
 
-    const { data: tasks, error } = await query;
-
+    const { data: supaTasks, error } = await query;
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('Supabase tasks error:', error.message);
     }
 
-    return NextResponse.json({ tasks: tasks || [] });
+    // 2. Fetch ClickUp tasks (Read-only live sync)
+    let clickupTasks: any[] = [];
+    try {
+      const clickupData = await fetchClickUpTasks();
+      if (clickupData && clickupData.tasks) {
+        clickupTasks = clickupData.tasks
+          .filter((t) => {
+            if (!clientParam || clientParam === 'all') return true;
+            return (
+              t.client.toLowerCase().includes(clientParam.toLowerCase()) ||
+              clientParam.toLowerCase().includes(t.client.toLowerCase())
+            );
+          })
+          .map((t) => {
+            // Map ClickUp status to GIM pipeline
+            let mappedStatus = 'To Do';
+            const s = (t.status || '').toLowerCase();
+            if (s === 'closed' || s === 'done' || t.statusType === 'closed') {
+              mappedStatus = 'Closed';
+            } else if (s === 'for review' || s === 'in review' || s === 'review') {
+              mappedStatus = 'In Review';
+            } else if (s === 'in progress') {
+              mappedStatus = 'In Progress';
+            } else if (s === 'approved') {
+              mappedStatus = 'Approved';
+            }
+
+            // Map Priority
+            let mappedPriority = 'Normal';
+            const p = (t.priority || '').toLowerCase();
+            if (p === 'urgent' || (t.gateCode && ['G18', 'G5'].includes(t.gateCode))) {
+              mappedPriority = 'Urgent';
+            } else if (p === 'high' || (t.gateCode && ['G7', 'G11'].includes(t.gateCode))) {
+              mappedPriority = 'High';
+            }
+
+            return {
+              id: t.id,
+              title: t.name,
+              client: t.client,
+              description: t.description || '',
+              status: mappedStatus,
+              priority: mappedPriority,
+              due_date: t.dueDate ? new Date(t.dueDate).toISOString() : null,
+              assignee_name: t.assignees?.[0]?.username || 'Unassigned',
+              assignee_id: t.assignees?.[0]?.id ? String(t.assignees[0].id) : '',
+              created_by: 'ClickUp Mirror',
+              attachments: t.attachments || [],
+              tags: t.gateCode ? [t.gateCode] : [],
+              url: t.url,
+              created_at: t.dateCreated ? new Date(t.dateCreated).toISOString() : new Date().toISOString(),
+              is_clickup: true,
+            };
+          });
+      }
+    } catch (cuErr) {
+      console.error('ClickUp live fetch error:', cuErr);
+    }
+
+    // 3. Merge: Supabase task status/edits take precedence if ID matches
+    const supaList = supaTasks || [];
+    const supaIds = new Set(supaList.map((t: any) => t.id));
+    const merged = [
+      ...supaList,
+      ...clickupTasks.filter((ct) => !supaIds.has(ct.id)),
+    ];
+
+    return NextResponse.json({ tasks: merged });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown server error';
     return NextResponse.json({ error: message }, { status: 500 });

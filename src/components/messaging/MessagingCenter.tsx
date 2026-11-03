@@ -28,6 +28,7 @@ import {
   Trash2,
   CheckCheck,
   ArrowLeft,
+  CornerUpLeft,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -55,6 +56,7 @@ export interface ChatMessage {
   timestamp: string;
   attachments?: Attachment[];
   reactions?: { emoji: string; count: number; users: string[] }[];
+  reply_to?: { senderName: string; content: string } | null;
 }
 
 export interface ChatChannel {
@@ -183,6 +185,49 @@ export function MessagingCenter({
   });
   const [inputText, setInputText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchMessageQuery, setSearchMessageQuery] = useState("");
+  const [isSearchingMessages, setIsSearchingMessages] = useState(false);
+  const [replyingToMessage, setReplyingToMessage] = useState<{ senderName: string; content: string } | null>(null);
+  const [showEmojiPickerForMsg, setShowEmojiPickerForMsg] = useState<string | null>(null);
+
+  const toggleMessageReaction = (msgId: string, emoji: string) => {
+    updateAndPersistMessages((prev) => {
+      const channelMsgs = prev[activeChannelId] || [];
+      const updated = channelMsgs.map((m) => {
+        if (m.id !== msgId) return m;
+        const currentReactions = m.reactions || [];
+        const match = currentReactions.find((r) => r.emoji === emoji);
+        let nextReactions;
+
+        if (match) {
+          const userAlready = match.users.includes(currentUserNickname);
+          if (userAlready) {
+            nextReactions = currentReactions
+              .map((r) =>
+                r.emoji === emoji
+                  ? { ...r, count: r.count - 1, users: r.users.filter((u) => u !== currentUserNickname) }
+                  : r
+              )
+              .filter((r) => r.count > 0);
+          } else {
+            nextReactions = currentReactions.map((r) =>
+              r.emoji === emoji ? { ...r, count: r.count + 1, users: [...r.users, currentUserNickname] } : r
+            );
+          }
+        } else {
+          nextReactions = [...currentReactions, { emoji, count: 1, users: [currentUserNickname] }];
+        }
+
+        return { ...m, reactions: nextReactions };
+      });
+
+      return {
+        ...prev,
+        [activeChannelId]: updated,
+      };
+    });
+    setShowEmojiPickerForMsg(null);
+  };
 
   // Clean up expired typing indicators after 2.5 seconds
   useEffect(() => {
@@ -387,6 +432,15 @@ export function MessagingCenter({
   const activeChannel = channels.find((c) => c.id === activeChannelId) || channels[0];
   const activeMessages = messages[activeChannelId] || [];
 
+  const displayedMessages = searchMessageQuery.trim()
+    ? activeMessages.filter(
+        (m) =>
+          m.content.toLowerCase().includes(searchMessageQuery.toLowerCase()) ||
+          m.senderName.toLowerCase().includes(searchMessageQuery.toLowerCase()) ||
+          m.senderNickname.toLowerCase().includes(searchMessageQuery.toLowerCase())
+      )
+    : activeMessages;
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
@@ -405,6 +459,7 @@ export function MessagingCenter({
       isCoreAdmin,
       content: contentText,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      reply_to: replyingToMessage,
     };
 
     updateAndPersistMessages((prev) => ({
@@ -413,6 +468,7 @@ export function MessagingCenter({
     }));
 
     setInputText("");
+    setReplyingToMessage(null);
 
     // Dispatch to Supabase API with exact message ID for instant deduplication
     fetch("/api/messages", {
@@ -725,12 +781,59 @@ export function MessagingCenter({
               </div>
 
               <div className="flex items-center space-x-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSearchingMessages(!isSearchingMessages);
+                    if (isSearchingMessages) setSearchMessageQuery("");
+                  }}
+                  className={`px-2 py-1 rounded-lg border text-xs font-semibold flex items-center space-x-1 transition-colors ${
+                    isSearchingMessages
+                      ? "bg-[#518E6A] text-white border-[#518E6A]"
+                      : "bg-white text-[#65746C] border-[#E8E2DD] hover:text-[#242E29]"
+                  }`}
+                  title="Search / Backread messages"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline text-[11px]">Backread</span>
+                </button>
                 <Badge variant="neutral">
                   <Users className="w-3 h-3 mr-1 inline" />
                   {activeChannel.membersCount} members
                 </Badge>
               </div>
             </div>
+
+            {/* In-Conversation Search / Backread Bar */}
+            {isSearchingMessages && (
+              <div className="p-2.5 bg-[#FBF6F3] border-b border-[#E8E2DD] flex items-center justify-between gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#65746C]" />
+                  <input
+                    type="text"
+                    placeholder={`Backread messages in #${activeChannel.name}...`}
+                    value={searchMessageQuery}
+                    onChange={(e) => setSearchMessageQuery(e.target.value)}
+                    className="w-full pl-8 pr-8 py-1.5 bg-white border border-[#E8E2DD] rounded-lg text-xs text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
+                    autoFocus
+                  />
+                  {searchMessageQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchMessageQuery("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#65746C] hover:text-[#242E29]"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+                {searchMessageQuery && (
+                  <span className="text-[11px] text-[#65746C] shrink-0 font-medium">
+                    {displayedMessages.length} match{displayedMessages.length === 1 ? "" : "es"}
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Messages Thread Stream */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -747,7 +850,7 @@ export function MessagingCenter({
                   </p>
                 </div>
               ) : (
-                activeMessages.map((msg) => {
+                displayedMessages.map((msg) => {
                   const isCurrentUser = msg.senderId === currentUserId;
                   return (
                     <div key={msg.id} className="flex items-start space-x-3 text-xs group">
@@ -761,6 +864,14 @@ export function MessagingCenter({
                           {msg.isCoreAdmin && <Badge variant="dark">Core Admin</Badge>}
                           <span className="text-[10px] text-[#65746C]">{msg.timestamp}</span>
                         </div>
+
+                        {/* Replying To Quote Banner */}
+                        {msg.reply_to && (
+                          <div className="p-1.5 mb-1 bg-black/5 border-l-2 border-[#518E6A] rounded text-[10px] text-[#65746C] max-w-2xl">
+                            <span className="font-semibold text-[#3D5249]">@{msg.reply_to.senderName}:</span>{" "}
+                            <span className="italic line-clamp-1">&ldquo;{msg.reply_to.content}&rdquo;</span>
+                          </div>
+                        )}
 
                         {/* Text Content */}
                         <div className="text-xs text-[#242E29] leading-relaxed whitespace-pre-wrap bg-[#FBF6F3]/50 p-2.5 rounded-xl border border-[#E8E2DD]/70 inline-block max-w-2xl">
@@ -848,6 +959,68 @@ export function MessagingCenter({
                           </div>
                         )}
 
+                        {/* Message Action Bar: Reactions & Reply */}
+                        <div className="flex items-center justify-between pt-0.5 text-xs max-w-2xl">
+                          {/* Reactions Chips & Quick Emoji Trigger */}
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {msg.reactions &&
+                              msg.reactions.map((r, rIdx) => (
+                                <button
+                                  key={rIdx}
+                                  type="button"
+                                  onClick={() => toggleMessageReaction(msg.id, r.emoji)}
+                                  className="px-1.5 py-0.5 rounded-full bg-[#FBF6F3] border border-[#E8E2DD] text-[10px] flex items-center gap-1 hover:border-[#518E6A]"
+                                  title={`Reacted by ${r.users.join(", ")}`}
+                                >
+                                  <span>{r.emoji}</span>
+                                  <span className="font-bold">{r.count}</span>
+                                </button>
+                              ))}
+
+                            {/* Quick Emoji Reaction Trigger */}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setShowEmojiPickerForMsg(showEmojiPickerForMsg === msg.id ? null : msg.id)
+                              }
+                              className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-[#65746C] hover:text-[#242E29] transition-opacity"
+                              title="React with emoji"
+                            >
+                              <Smile className="w-3.5 h-3.5" />
+                            </button>
+
+                            {showEmojiPickerForMsg === msg.id && (
+                              <div className="flex items-center gap-1 bg-white border border-[#E8E2DD] rounded-xl p-1 shadow-md z-10 animate-in fade-in">
+                                {["👍", "❤️", "🙌", "🔥", "👀", "✅", "🚀"].map((emoji) => (
+                                  <button
+                                    key={emoji}
+                                    type="button"
+                                    onClick={() => toggleMessageReaction(msg.id, emoji)}
+                                    className="p-1 text-sm hover:scale-125 transition-transform"
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Reply Button */}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setReplyingToMessage({
+                                senderName: msg.senderNickname || msg.senderName,
+                                content: msg.content,
+                              })
+                            }
+                            className="opacity-0 group-hover:opacity-100 flex items-center gap-1 text-[10px] text-[#518E6A] font-semibold hover:underline transition-opacity px-1 py-0.5 rounded hover:bg-[#518E6A]/10"
+                          >
+                            <CornerUpLeft className="w-3 h-3" />
+                            <span>Reply</span>
+                          </button>
+                        </div>
+
                         {/* Read Receipts ("Seen by ...") on messages sent by current user */}
                         {isCurrentUser && (
                           <div className="flex items-center space-x-1 text-[10px] pt-0.5">
@@ -897,6 +1070,25 @@ export function MessagingCenter({
               )}
 
               <form onSubmit={handleSendMessage} className="space-y-2">
+                {/* Replying Banner */}
+                {replyingToMessage && (
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-[#518E6A]/10 border border-[#518E6A]/30 rounded-xl text-xs text-[#3D5249]">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <CornerUpLeft className="w-3.5 h-3.5 text-[#518E6A] shrink-0" />
+                      <span className="truncate">
+                        Replying to <strong>@{replyingToMessage.senderName}</strong>: &ldquo;{replyingToMessage.content.slice(0, 70)}...&rdquo;
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setReplyingToMessage(null)}
+                      className="p-0.5 rounded text-[#3D5249] hover:bg-black/10 shrink-0 ml-2"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
                 <div className="relative">
                   <textarea
                     rows={2}

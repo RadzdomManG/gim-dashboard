@@ -297,12 +297,13 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
     }
   }, [selectedClient.id, selectedClient.name]);
 
-  // Status board grouping
+  // Status board grouping (including Closed deliverables)
   const boardColumns: { status: TaskItem["status"]; title: string; color: string }[] = [
     { status: "To Do", title: "To Do", color: "border-slate-300 bg-slate-50 text-slate-800" },
     { status: "In Progress", title: "In Progress", color: "border-[#518E6A] bg-[#518E6A]/10 text-[#3D5249]" },
     { status: "In Review", title: "In Review", color: "border-amber-400 bg-amber-50 text-amber-900" },
     { status: "Approved", title: "Approved / Done", color: "border-emerald-500 bg-emerald-50 text-emerald-900" },
+    { status: "Closed", title: "Closed / Completed", color: "border-purple-400 bg-purple-50 text-purple-950" },
   ];
 
   return (
@@ -452,7 +453,7 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 items-start">
             {boardColumns.map((col) => {
               const colTasks = tasks.filter(
                 (t) => t.status.toLowerCase() === col.status.toLowerCase()
@@ -461,15 +462,15 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
               return (
                 <div key={col.status} className="bg-white rounded-2xl border border-[#3D5249]/15 shadow-sm overflow-hidden flex flex-col">
                   {/* Column Header */}
-                  <div className={`px-4 py-3 border-b flex items-center justify-between font-bold text-xs ${col.color}`}>
-                    <span className="uppercase tracking-wider">{col.title}</span>
-                    <span className="w-5 h-5 rounded-full bg-white/80 border border-current flex items-center justify-center font-mono text-[11px]">
+                  <div className={`px-3.5 py-3 border-b flex items-center justify-between font-bold text-xs ${col.color}`}>
+                    <span className="uppercase tracking-wider truncate">{col.title}</span>
+                    <span className="w-5 h-5 rounded-full bg-white/90 border border-current flex items-center justify-center font-mono text-[11px] shrink-0">
                       {colTasks.length}
                     </span>
                   </div>
 
                   {/* Tasks List */}
-                  <div className="p-3 space-y-2.5 min-h-64 bg-[#FBF6F3]/30">
+                  <div className="p-2.5 space-y-2 min-h-64 bg-[#FBF6F3]/30">
                     {colTasks.length === 0 ? (
                       <div className="p-6 text-center text-xs text-[#65746C]/60 italic border border-dashed border-[#3D5249]/15 rounded-xl">
                         No tasks in {col.title}
@@ -477,27 +478,40 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
                     ) : (
                       colTasks.map((task) => {
                         const dueDateObj = task.due_date ? new Date(task.due_date) : null;
-                        const isOverdue = dueDateObj && dueDateObj.getTime() < new Date(2026, 10, 3).getTime();
+                        const isClosed = task.status.toLowerCase() === "closed";
+                        const isOverdue = !isClosed && dueDateObj && dueDateObj.getTime() < new Date(2026, 10, 3).getTime();
 
                         return (
                           <div
                             key={task.id}
                             role="button"
                             onClick={() => setSelectedTaskForDetail(task)}
-                            className="p-3 rounded-xl bg-white border border-[#3D5249]/15 hover:border-[#518E6A] hover:shadow-md transition-all cursor-pointer space-y-2"
+                            className={`p-3 rounded-xl bg-white border transition-all cursor-pointer space-y-2 ${
+                              isClosed
+                                ? "border-purple-200/70 hover:border-purple-400 bg-purple-50/20"
+                                : "border-[#3D5249]/15 hover:border-[#518E6A] hover:shadow-md"
+                            }`}
                           >
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#3D5249]/10 text-[#3D5249] font-bold">
-                                {task.tags?.[0] || "TASK"}
+                            <div className="flex items-center justify-between gap-1">
+                              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-bold ${
+                                isClosed ? "bg-purple-100 text-purple-900" : "bg-[#3D5249]/10 text-[#3D5249]"
+                              }`}>
+                                {task.tags?.[0] || (task.is_clickup ? "CLICKUP" : "TASK")}
                               </span>
-                              {task.priority === "Urgent" ? (
+                              {isClosed ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] text-purple-700 font-bold bg-purple-100 px-1.5 py-0.5 rounded">
+                                  <Check className="w-2.5 h-2.5" /> Done
+                                </span>
+                              ) : task.priority === "Urgent" ? (
                                 <Badge variant="critical">Urgent</Badge>
                               ) : task.priority === "High" ? (
                                 <Badge variant="review">High</Badge>
                               ) : null}
                             </div>
 
-                            <h4 className="text-xs font-bold text-[#242E29] line-clamp-2">
+                            <h4 className={`text-xs font-bold line-clamp-2 ${
+                              isClosed ? "text-[#242E29]/80 line-through" : "text-[#242E29]"
+                            }`}>
                               {task.title}
                             </h4>
 
