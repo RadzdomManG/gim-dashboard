@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import {
   MessageSquare,
   Users,
@@ -184,6 +185,88 @@ export function MessagingCenter({
   const [newChannelDesc, setNewChannelDesc] = useState("");
   const [newChannelPrivate, setNewChannelPrivate] = useState(false);
 
+  // Supabase Realtime Synchronization
+  useEffect(() => {
+    // 1. Initial fetch from API
+    fetch(`/api/messages?channelId=${activeChannelId}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+      .then((data) => {
+        if (data.messages && data.messages.length > 0) {
+          const mapped: ChatMessage[] = data.messages.map((row: any) => ({
+            id: row.id,
+            channelId: row.channel_id,
+            senderId: row.sender_id,
+            senderName: row.sender_name,
+            senderNickname: row.sender_nickname || row.sender_name?.split(" ")[0] || "User",
+            senderAvatar: row.sender_avatar || "#3D5249",
+            senderRole: row.sender_role || "team_member",
+            isCoreAdmin: !!row.is_core_admin,
+            content: row.content || "",
+            timestamp: new Date(row.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            attachments: row.attachments || [],
+            reactions: row.reactions || [],
+          }));
+
+          setMessages((prev) => ({
+            ...prev,
+            [activeChannelId]: mapped,
+          }));
+        }
+      })
+      .catch((err) => console.log("Realtime fetch fallback:", err));
+
+    // 2. Supabase Realtime Channel
+    try {
+      const supabase = createClient();
+      const channel = supabase
+        .channel(`realtime-channel-${activeChannelId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `channel_id=eq.${activeChannelId}`,
+          },
+          (payload) => {
+            const row = payload.new as any;
+            if (!row) return;
+
+            const newMsg: ChatMessage = {
+              id: row.id,
+              channelId: row.channel_id,
+              senderId: row.sender_id,
+              senderName: row.sender_name,
+              senderNickname: row.sender_nickname || row.sender_name?.split(" ")[0] || "User",
+              senderAvatar: row.sender_avatar || "#3D5249",
+              senderRole: row.sender_role || "team_member",
+              isCoreAdmin: !!row.is_core_admin,
+              content: row.content || "",
+              timestamp: new Date(row.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+              attachments: row.attachments || [],
+              reactions: row.reactions || [],
+            };
+
+            setMessages((prev) => {
+              const current = prev[row.channel_id] || [];
+              if (current.some((m) => m.id === newMsg.id)) return prev;
+              return {
+                ...prev,
+                [row.channel_id]: [...current, newMsg],
+              };
+            });
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } catch (e) {
+      console.log("Supabase realtime subscription bypassed:", e);
+    }
+  }, [activeChannelId]);
+
   const activeChannel = channels.find((c) => c.id === activeChannelId) || channels[0];
   const activeMessages = messages[activeChannelId] || [];
 
@@ -191,8 +274,11 @@ export function MessagingCenter({
     e.preventDefault();
     if (!inputText.trim()) return;
 
+    const contentText = inputText.trim();
+    const tempId = `msg-${Date.now()}`;
+
     const newMessage: ChatMessage = {
-      id: `msg-${Date.now()}`,
+      id: tempId,
       channelId: activeChannelId,
       senderId: currentUserId,
       senderName: currentUserName,
@@ -200,7 +286,7 @@ export function MessagingCenter({
       senderAvatar: avatarColor,
       senderRole: currentUserRole,
       isCoreAdmin,
-      content: inputText.trim(),
+      content: contentText,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
@@ -210,6 +296,23 @@ export function MessagingCenter({
     }));
 
     setInputText("");
+
+    // Dispatch to Supabase API
+    fetch("/api/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        channel_id: activeChannelId,
+        sender_id: currentUserId,
+        sender_name: currentUserName,
+        sender_nickname: currentUserNickname,
+        sender_avatar: avatarColor,
+        sender_role: currentUserRole,
+        is_core_admin: isCoreAdmin,
+        content: contentText,
+        attachments: [],
+      }),
+    }).catch((err) => console.log("Failed to persist message to Supabase:", err));
   };
 
   const handleAddAttachment = (e: React.FormEvent) => {
@@ -242,6 +345,23 @@ export function MessagingCenter({
       ...prev,
       [activeChannelId]: [...(prev[activeChannelId] || []), newMessage],
     }));
+
+    // Persist attachment to Supabase API
+    fetch("/api/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        channel_id: activeChannelId,
+        sender_id: currentUserId,
+        sender_name: currentUserName,
+        sender_nickname: currentUserNickname,
+        sender_avatar: avatarColor,
+        sender_role: currentUserRole,
+        is_core_admin: isCoreAdmin,
+        content: newMessage.content,
+        attachments: [newAttachment],
+      }),
+    }).catch((err) => console.log("Failed to persist attachment to Supabase:", err));
 
     setIsAttachModalOpen(false);
     setAttachName("");

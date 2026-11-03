@@ -167,6 +167,18 @@ export function DeliverableSignOffQueue({
     setSelectedItem(null);
     setFeedbackNote("");
     setActiveAction(null);
+
+    // Sync to Supabase approvals table
+    fetch("/api/approvals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id,
+        status: newStatus,
+        review_notes: feedbackNote || (newStatus === "Approved" ? "Deliverable approved without notes." : "Revisions requested."),
+        reviewed_by: reviewerString,
+      }),
+    }).catch((err) => console.log("Approvals sync bypass:", err));
   };
 
   const renderStatusBadge = (status: ApprovalItem["status"]) => {

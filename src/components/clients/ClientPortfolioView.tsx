@@ -18,11 +18,13 @@ import {
   ChevronRight,
   Filter,
   Check,
+  Plus,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { ClientReportExportModal } from "@/components/reports/ClientReportExportModal";
+import { ClientOnboardingModal } from "@/components/clients/ClientOnboardingModal";
 
 export interface ClientProfile {
   id: string;
@@ -221,6 +223,7 @@ export function ClientPortfolioView({ onSelectTasks }: ClientPortfolioViewProps)
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isOnboardModalOpen, setIsOnboardModalOpen] = useState(false);
 
   const filteredClients = CLIENT_PORTFOLIO.filter((c) => {
     if (statusFilter !== "all" && c.status.toLowerCase() !== statusFilter.toLowerCase()) {
@@ -258,6 +261,15 @@ export function ClientPortfolioView({ onSelectTasks }: ClientPortfolioViewProps)
         </div>
 
         <div className="flex items-center space-x-2">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsOnboardModalOpen(true)}
+            className="flex items-center space-x-1.5 text-xs shadow-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Onboard Client</span>
+          </Button>
           <Badge variant="active" dot>
             3 Active Builds
           </Badge>
@@ -555,6 +567,12 @@ export function ClientPortfolioView({ onSelectTasks }: ClientPortfolioViewProps)
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         clientName={selectedClient.name}
+      />
+
+      {/* Client Onboarding Modal */}
+      <ClientOnboardingModal
+        isOpen={isOnboardModalOpen}
+        onClose={() => setIsOnboardModalOpen(false)}
       />
     </div>
   );

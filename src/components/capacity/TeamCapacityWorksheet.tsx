@@ -13,10 +13,12 @@ import {
   Filter,
   Search,
   UserCheck,
+  Plus,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
+import { TimesheetEntryModal } from "@/components/capacity/TimesheetEntryModal";
 
 export interface TeamMemberCapacity {
   id: string;
@@ -143,9 +145,34 @@ const TEAM_CAPACITY_DATA: TeamMemberCapacity[] = [
 ];
 
 export function TeamCapacityWorksheet() {
-  const [teamMembers] = useState<TeamMemberCapacity[]>(TEAM_CAPACITY_DATA);
+  const [teamMembers, setTeamMembers] = useState<TeamMemberCapacity[]>(TEAM_CAPACITY_DATA);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isTimesheetOpen, setIsTimesheetOpen] = useState(false);
+
+  const handleLogHours = (entry: {
+    memberId: string;
+    client: string;
+    hours: number;
+    deliverable: string;
+    notes: string;
+    date: string;
+  }) => {
+    setTeamMembers((prev) =>
+      prev.map((m) => {
+        if (m.id === entry.memberId) {
+          const updated = m.allocatedHours + entry.hours;
+          const newStatus = updated >= m.capacityHours ? "At Capacity" : "Optimal";
+          return {
+            ...m,
+            allocatedHours: updated,
+            status: newStatus,
+          };
+        }
+        return m;
+      })
+    );
+  };
 
   const totalCapacity = teamMembers.reduce((acc, m) => acc + m.capacityHours, 0);
   const totalAllocated = teamMembers.reduce((acc, m) => acc + m.allocatedHours, 0);
@@ -197,6 +224,15 @@ export function TeamCapacityWorksheet() {
         </div>
 
         <div className="flex items-center space-x-2">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsTimesheetOpen(true)}
+            className="flex items-center space-x-1.5 text-xs shadow-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Log Billable Time</span>
+          </Button>
           <Badge variant="dark">7 Active Contributors</Badge>
         </div>
       </div>
@@ -364,6 +400,13 @@ export function TeamCapacityWorksheet() {
           </table>
         </div>
       </Card>
+
+      {/* Timesheet Entry Modal */}
+      <TimesheetEntryModal
+        isOpen={isTimesheetOpen}
+        onClose={() => setIsTimesheetOpen(false)}
+        onLogHours={handleLogHours}
+      />
     </div>
   );
 }

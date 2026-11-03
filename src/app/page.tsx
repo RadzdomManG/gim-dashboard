@@ -55,6 +55,7 @@ import { MessagingCenter } from "@/components/messaging/MessagingCenter";
 import { TeamCapacityWorksheet } from "@/components/capacity/TeamCapacityWorksheet";
 import { ClientPortalView } from "@/components/client-portal/ClientPortalView";
 import { SopPlaybookLibrary } from "@/components/library/SopPlaybookLibrary";
+import { UserInvitationModal } from "@/components/invitations/UserInvitationModal";
 
 type NavTab =
   | "overview"
@@ -814,14 +815,11 @@ export default function GimDashboard() {
               <Button
                 variant="primary"
                 size="sm"
-                icon={<UserPlus className="w-3.5 h-3.5" />}
-                className="hidden sm:inline-flex"
-                onClick={() => {
-                  setActiveTab("team");
-                  setIsInviteModalOpen(true);
-                }}
+                icon={<Mail className="w-3.5 h-3.5" />}
+                className="hidden sm:inline-flex shadow-xs"
+                onClick={() => setIsInviteModalOpen(true)}
               >
-                Invite User
+                Invite User / Client
               </Button>
             )}
 
@@ -1874,164 +1872,12 @@ export default function GimDashboard() {
       )}
 
       {/* ========================================================================= */}
-      {/* 5. INVITATION MODAL */}
+      {/* 5. SUPABASE AUTH USER & CLIENT INVITATION MODAL */}
       {/* ========================================================================= */}
-      {isInviteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl border border-[#E8E2DD] shadow-xl max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-[#E8E2DD] pb-3">
-              <div className="flex items-center space-x-2.5">
-                <div className="p-2 rounded-lg bg-[#466B53]/10 text-[#466B53]">
-                  <UserPlus className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm text-[#242E29]">
-                    Invite User to GIM
-                  </h3>
-                  <p className="text-[11px] text-[#65746C]">
-                    Provision scoped access with role and tenant boundary
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsInviteModalOpen(false)}
-                className="p-1 rounded-md text-[#65746C] hover:text-[#242E29] hover:bg-[#FBF6F3]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSendInvite} className="space-y-3.5">
-              <div>
-                <label className="block text-xs font-semibold text-[#242E29] mb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Erwin Manaog"
-                  value={inviteForm.name}
-                  onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#FBF6F3] border border-[#E8E2DD] rounded-lg text-xs text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#242E29] mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="user@example.com"
-                  value={inviteForm.email}
-                  onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#FBF6F3] border border-[#E8E2DD] rounded-lg text-xs text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-[#242E29] mb-1">
-                    Role Assignment
-                  </label>
-                  <select
-                    value={inviteForm.role}
-                    onChange={(e) => {
-                      const newRole = e.target.value as UserRole;
-                      let perms = { view: true, create: false, edit: false, assign: false, delete: false };
-                      if (newRole === "Admin") perms = { view: true, create: true, edit: true, assign: true, delete: true };
-                      else if (newRole === "Operations Manager") perms = { view: true, create: true, edit: true, assign: true, delete: false };
-                      else if (newRole === "Project Owner") perms = { view: true, create: true, edit: true, assign: true, delete: false };
-                      setInviteForm({ ...inviteForm, role: newRole, permissions: perms });
-                    }}
-                    className="w-full px-3 py-2 bg-[#FBF6F3] border border-[#E8E2DD] rounded-lg text-xs text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
-                  >
-                    <option value="Admin">Admin</option>
-                    <option value="Operations Manager">Operations Manager</option>
-                    <option value="Project Owner">Project Owner</option>
-                    <option value="Team Member">Team Member</option>
-                    <option value="Client User">Client User</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[#242E29] mb-1">
-                    Client Scope
-                  </label>
-                  <select
-                    value={inviteForm.clientScope}
-                    onChange={(e) => setInviteForm({ ...inviteForm, clientScope: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#FBF6F3] border border-[#E8E2DD] rounded-lg text-xs text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
-                  >
-                    <option value="all">Universal (All Accounts)</option>
-                    <option value="Little Treasures Company">Little Treasures Company</option>
-                    <option value="WRTS (We Rock the Spectrum)">WRTS (We Rock the Spectrum)</option>
-                    <option value="Studio Nets">Studio Nets</option>
-                    <option value="InVogue Cleans">InVogue Cleans</option>
-                    <option value="Aaron Ofosu Bootcamp">Aaron Ofosu Bootcamp</option>
-                    <option value="Tch2Thrive">Tch2Thrive</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Granular Module Capabilities */}
-              <div className="pt-1">
-                <label className="block text-xs font-semibold text-[#242E29] mb-1.5">
-                  Granular Permissions
-                </label>
-                <div className="grid grid-cols-5 gap-2 bg-[#FBF6F3] p-2.5 rounded-lg border border-[#E8E2DD] text-center">
-                  {[
-                    { key: "view", label: "View" },
-                    { key: "create", label: "Create" },
-                    { key: "edit", label: "Edit" },
-                    { key: "assign", label: "Assign" },
-                    { key: "delete", label: "Delete" },
-                  ].map((perm) => (
-                    <label key={perm.key} className="flex flex-col items-center space-y-1 cursor-pointer">
-                      <span className="text-[10px] font-semibold text-[#242E29]">
-                        {perm.label}
-                      </span>
-                      <input
-                        type="checkbox"
-                        checked={inviteForm.permissions[perm.key as keyof typeof inviteForm.permissions]}
-                        onChange={(e) =>
-                          setInviteForm({
-                            ...inviteForm,
-                            permissions: {
-                              ...inviteForm.permissions,
-                              [perm.key]: e.target.checked,
-                            },
-                          })
-                        }
-                        className="rounded text-[#518E6A] focus:ring-[#518E6A] h-3.5 w-3.5"
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end space-x-2.5 pt-3 border-t border-[#E8E2DD]">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  type="button"
-                  onClick={() => setIsInviteModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  type="submit"
-                >
-                  Generate Invitation Token
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <UserInvitationModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+      />
     </div>
   );
 }
