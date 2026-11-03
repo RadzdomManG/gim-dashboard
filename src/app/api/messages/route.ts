@@ -28,17 +28,16 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const {
-      channel_id,
-      sender_id,
-      sender_name,
-      sender_nickname,
-      sender_avatar = '#3D5249',
-      sender_role = 'team_member',
-      is_core_admin = false,
-      content,
-      attachments = [],
-    } = body;
+    const channel_id = body.channel_id || body.channelId;
+    const sender_id = body.sender_id || body.senderId;
+    const sender_name = body.sender_name || body.senderName;
+    const sender_nickname = body.sender_nickname || body.senderNickname;
+    const sender_avatar = body.sender_avatar || body.senderAvatar || '#3D5249';
+    const sender_role = body.sender_role || body.senderRole || 'team_member';
+    const is_core_admin = body.is_core_admin ?? body.isCoreAdmin ?? false;
+    const content = body.content;
+    const attachments = body.attachments || [];
+    const reply_to = body.reply_to || body.replyTo || null;
 
     if (!channel_id || (!content && (!attachments || attachments.length === 0))) {
       return NextResponse.json({ error: 'channel_id and content or attachments required.' }, { status: 400 });
