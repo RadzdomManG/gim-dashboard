@@ -1888,7 +1888,7 @@ export default function GimDashboard() {
                                       id: inv.id,
                                       name: inv.name,
                                       nickname: inv.name.split(" ")[0],
-                                      email: inv.email,
+                                      email: inv.email || `${inv.username || "member"}@graceinmotion.agency`,
                                       role: inv.role,
                                       assignedClients: inv.clientScope === "all" ? [] : [inv.clientScope],
                                     });
