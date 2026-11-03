@@ -9,8 +9,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Grace In Motion — Agency OS",
-  description: "Operating platform for Grace In Motion team, projects, and client workflows",
+  title: "GIM",
+  description: "Operations platform for Grace In Motion team and client workflows",
 };
 
 export default function RootLayout({

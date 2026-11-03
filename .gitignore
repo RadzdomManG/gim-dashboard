@@ -36,7 +36,19 @@ yarn-error.log*
 
 # vercel
 .vercel
+.gemini/
+GIM Operating System (1)/
+__MACOSX/
+
+
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel
+.gemini/
+GIM Operating System (1)/
+__MACOSX/
+
+

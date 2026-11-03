@@ -1,13 +1,33 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Cooper";
+  src: url("/fonts/CooperBlack.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --color-gim-dark: #3D5249;
+  --color-gim-dark-hover: #31423B;
+  --color-gim-logo: #466B53;
+  --color-gim-accent: #518E6A;
+  --color-gim-accent-hover: #457B5B;
+  --color-gim-cream: #FBF6F3;
+  --color-gim-cream-subtle: #F5EFEA;
+  --color-gim-charcoal: #242E29;
+  --color-gim-muted: #65746C;
+  --color-gim-border: #E8E2DD;
+  --color-gim-border-green: rgba(61, 82, 73, 0.12);
+
+  --font-display: "Cooper", Georgia, serif;
+  --font-sans: var(--font-montserrat), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
 :root {
-  --gim-dark-green: #3D5249;
-  --gim-warm-cream: #FBF6F3;
-  --gim-logo-green: #466B53;
-  --gim-secondary-green: #518E6A;
-  
   --background: #FBF6F3;
-  --foreground: #3D5249;
+  --foreground: #242E29;
 }
 
 body {
@@ -15,4 +35,22 @@ body {
   color: var(--foreground);
   margin: 0;
   padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle, polished scrollbars matching GIM aesthetic */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(61, 82, 73, 0.20);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(61, 82, 73, 0.35);
 }
