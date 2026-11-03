@@ -57,6 +57,9 @@ import { ClientPortalView } from "@/components/client-portal/ClientPortalView";
 import { SopPlaybookLibrary } from "@/components/library/SopPlaybookLibrary";
 import { UserInvitationModal } from "@/components/invitations/UserInvitationModal";
 import { EditClientAccessModal, TeamMemberAccess } from "@/components/team/EditClientAccessModal";
+import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { TaskDetailModal, TaskItem } from "@/components/tasks/TaskDetailModal";
 
 type NavTab =
   | "overview"
@@ -112,6 +115,41 @@ export default function GimDashboard() {
   const [activeTab, setActiveTab] = useState<NavTab>("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
+  const [modalTask, setModalTask] = useState<TaskItem | null>(null);
+
+  // Global Ctrl+K / Cmd+K listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsGlobalSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const handleOpenSearchTask = async (taskId: string, clientName?: string) => {
+    try {
+      const res = await fetch("/api/tasks?client=all");
+      const json = await res.json();
+      const found = (json.tasks || []).find((t: any) => t.id === taskId);
+      if (found) {
+        setModalTask(found);
+      } else {
+        setModalTask({
+          id: taskId,
+          title: "Selected Task",
+          client: clientName || "Little Treasures Company",
+          status: "In Progress",
+          priority: "Normal",
+        });
+      }
+    } catch {
+      setActiveTab("clients");
+    }
+  };
 
   // ClickUp Live Mirror State
   const [taskStatusFilter, setTaskStatusFilter] = useState("all");
@@ -618,6 +656,25 @@ export default function GimDashboard() {
           </div>
         </div>
 
+        {/* Quick Search Button in Sidebar */}
+        <div className="px-3 pt-3">
+          <button
+            onClick={() => {
+              setIsGlobalSearchOpen(true);
+              setMobileMenuOpen(false);
+            }}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-[#34463E] border border-[#466B53]/50 text-xs text-[#FBF6F3]/70 hover:text-white hover:border-[#518E6A] transition-all"
+          >
+            <div className="flex items-center space-x-2">
+              <Search className="w-3.5 h-3.5 text-[#518E6A]" />
+              <span>Search everything...</span>
+            </div>
+            <kbd className="text-[9px] font-mono bg-[#3D5249] px-1 py-0.5 rounded border border-[#466B53]/40">
+              ⌘K
+            </kbd>
+          </button>
+        </div>
+
         {/* Grouped Domain Navigation */}
         <div className="p-3 space-y-4">
           {navSections.map((section, idx) => {
@@ -871,11 +928,25 @@ export default function GimDashboard() {
               </div>
             )}
 
-            {/* Notifications */}
-            <button className="relative p-2 text-[#65746C] hover:text-[#242E29] rounded-lg hover:bg-white transition-colors">
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
+            {/* Global Search Button */}
+            <button
+              onClick={() => setIsGlobalSearchOpen(true)}
+              className="flex items-center space-x-2 px-2.5 py-1.5 bg-white border border-[#E8E2DD] rounded-xl text-xs text-[#65746C] hover:text-[#242E29] hover:border-[#518E6A] shadow-xs transition-colors"
+              title="Search everything across GIM (Ctrl+K)"
+            >
+              <Search className="w-3.5 h-3.5 text-[#518E6A]" />
+              <span className="hidden md:inline font-medium text-xs">Search...</span>
+              <kbd className="hidden md:inline text-[9px] font-mono text-[#65746C]/60 bg-[#FBF6F3] px-1 py-0.2 rounded border border-[#E8E2DD]">
+                ⌘K
+              </kbd>
             </button>
+
+            {/* Notifications Dropdown Bell */}
+            <NotificationBell
+              onSelectTask={handleOpenSearchTask}
+              onSelectMessage={() => setActiveTab("messaging")}
+              onSelectApprovals={() => setActiveTab("approvals")}
+            />
           </div>
         </header>
 
@@ -1971,6 +2042,45 @@ export default function GimDashboard() {
           );
         }}
       />
+
+      {/* ========================================================================= */}
+      {/* 7. UNIFIED GLOBAL SEARCH SPOTLIGHT MODAL (Ctrl+K) */}
+      {/* ========================================================================= */}
+      <GlobalSearchModal
+        isOpen={isGlobalSearchOpen}
+        onClose={() => setIsGlobalSearchOpen(false)}
+        onSelectTask={(taskId, clientName) => {
+          handleOpenSearchTask(taskId, clientName);
+        }}
+        onSelectMessage={(channelId) => {
+          setActiveTab("messaging");
+        }}
+        onSelectClient={(clientName) => {
+          setActiveTab("clients");
+        }}
+        onSelectSop={(sopId) => {
+          setActiveTab("library");
+        }}
+        onSelectTeam={(memberId) => {
+          setActiveTab("team");
+        }}
+      />
+
+      {/* ========================================================================= */}
+      {/* 8. SEARCH & NOTIFICATION TASK DETAIL MODAL */}
+      {/* ========================================================================= */}
+      {modalTask && (
+        <TaskDetailModal
+          task={modalTask}
+          isOpen={!!modalTask}
+          onClose={() => setModalTask(null)}
+          currentUserNickname={currentUser.nickname}
+          currentUserName={currentUser.name}
+          onTaskUpdated={(updated) => {
+            setModalTask(updated);
+          }}
+        />
+      )}
     </div>
   );
 }

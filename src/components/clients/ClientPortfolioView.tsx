@@ -251,11 +251,41 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
 
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+  const [boardAssigneeFilter, setBoardAssigneeFilter] = useState("All");
+  const [boardPriorityFilter, setBoardPriorityFilter] = useState("All");
 
   const selectedClient =
     accessibleClients.find((c) => c.id === selectedClientId) ||
     accessibleClients[0] ||
     CLIENT_PORTFOLIO[0];
+
+  const handleQuickStatusChange = async (
+    task: TaskItem,
+    newStatus: TaskItem["status"],
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation();
+    try {
+      setTasks((prev) =>
+        prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t))
+      );
+      await fetch("/api/tasks", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: task.id,
+          status: newStatus,
+          title: task.title,
+          client: task.client,
+          priority: task.priority,
+          due_date: task.due_date,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to quick update status:", err);
+      fetchTasks();
+    }
+  };
 
   const fetchTasks = async () => {
     setIsLoadingTasks(true);
@@ -433,31 +463,72 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
       {/* SUB-TAB 2: KANBAN TASK BOARD */}
       {activeSubTab === "board" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#3D5249]/15">
             <div>
-              <h3 className="text-base font-bold text-[#242E29] flex items-center gap-2">
+              <h3 className="text-sm sm:text-base font-bold text-[#242E29] flex items-center gap-2">
                 <span>Task Delivery Board &mdash; {selectedClient.name}</span>
               </h3>
               <p className="text-xs text-[#65746C]">
                 Track deliverable movement through To Do, In Progress, QA Review, and Approved sign-offs.
               </p>
             </div>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setIsCreateTaskOpen(true)}
-              className="flex items-center gap-1.5 text-xs shadow-xs"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Task</span>
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Assignee Filter */}
+              <div className="flex items-center gap-1.5 bg-[#FBF6F3] border border-[#E8E2DD] px-2.5 py-1 rounded-xl text-xs">
+                <User className="w-3.5 h-3.5 text-[#65746C]" />
+                <select
+                  value={boardAssigneeFilter}
+                  onChange={(e) => setBoardAssigneeFilter(e.target.value)}
+                  className="bg-transparent text-xs text-[#242E29] font-medium focus:outline-none"
+                >
+                  <option value="All">All Team</option>
+                  {Array.from(new Set(tasks.map((t) => t.assignee_name || "Unassigned").filter(Boolean))).map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Priority Filter */}
+              <div className="flex items-center gap-1.5 bg-[#FBF6F3] border border-[#E8E2DD] px-2.5 py-1 rounded-xl text-xs">
+                <Filter className="w-3.5 h-3.5 text-[#65746C]" />
+                <select
+                  value={boardPriorityFilter}
+                  onChange={(e) => setBoardPriorityFilter(e.target.value)}
+                  className="bg-transparent text-xs text-[#242E29] font-medium focus:outline-none"
+                >
+                  <option value="All">All Priority</option>
+                  <option value="Urgent">Urgent</option>
+                  <option value="High">High</option>
+                  <option value="Normal">Normal</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setIsCreateTaskOpen(true)}
+                className="flex items-center gap-1.5 text-xs shadow-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Task</span>
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 items-start">
             {boardColumns.map((col) => {
-              const colTasks = tasks.filter(
-                (t) => t.status.toLowerCase() === col.status.toLowerCase()
-              );
+              const colTasks = tasks
+                .filter((t) => {
+                  if (boardAssigneeFilter !== "All" && (t.assignee_name || "Unassigned") !== boardAssigneeFilter) return false;
+                  if (boardPriorityFilter !== "All" && t.priority !== boardPriorityFilter) return false;
+                  return true;
+                })
+                .filter(
+                  (t) => t.status.toLowerCase() === col.status.toLowerCase()
+                );
 
               return (
                 <div key={col.status} className="bg-white rounded-2xl border border-[#3D5249]/15 shadow-sm overflow-hidden flex flex-col">
@@ -530,6 +601,30 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
                                   {dueDateObj.toLocaleDateString("en-AU", { month: "short", day: "numeric" })}
                                 </span>
                               )}
+                            </div>
+
+                            {/* One-Click Quick Move Status Bar */}
+                            <div
+                              className="pt-1.5 border-t border-[#E8E2DD]/70 flex items-center justify-between gap-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <span className="text-[9px] font-mono text-[#65746C] uppercase">Move:</span>
+                              <div className="flex items-center gap-1 flex-wrap">
+                                {(["To Do", "In Progress", "In Review", "Approved", "Closed"] as TaskItem["status"][]).map((st) => {
+                                  if (st.toLowerCase() === task.status.toLowerCase()) return null;
+                                  return (
+                                    <button
+                                      key={st}
+                                      type="button"
+                                      onClick={(e) => handleQuickStatusChange(task, st, e)}
+                                      title={`Move task to ${st}`}
+                                      className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#FBF6F3] border border-[#E8E2DD] hover:bg-[#518E6A] hover:text-white hover:border-[#518E6A] transition-colors"
+                                    >
+                                      {st === "In Progress" ? "Prog" : st === "In Review" ? "Rev" : st === "Closed" ? "Done" : st}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
                         );

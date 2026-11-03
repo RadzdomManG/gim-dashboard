@@ -167,18 +167,42 @@ export async function PATCH(req: NextRequest) {
     if (description !== undefined) updates.description = description;
     if (title) updates.title = title;
 
-    const { data: task, error } = await supabase
-      .from('client_tasks')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+    // Check if task exists in Supabase
+    const { data: existing } = await supabase.from('client_tasks').select('id').eq('id', id).maybeSingle();
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    let taskData: any = null;
+    if (existing) {
+      const { data: task, error } = await supabase
+        .from('client_tasks')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      taskData = task;
+    } else {
+      // Upsert ClickUp mirrored task into Supabase so overrides persist
+      const { data: task, error } = await supabase
+        .from('client_tasks')
+        .insert({
+          id,
+          title: title || 'Task',
+          client: body.client || 'Little Treasures Company',
+          status: status || 'To Do',
+          priority: priority || 'Normal',
+          due_date: due_date || null,
+          description: description || '',
+          assignee_name: body.assignee_name || 'Unassigned',
+          assignee_id: body.assignee_id || '',
+          created_by: 'GIM Dashboard',
+        })
+        .select()
+        .single();
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      taskData = task;
     }
 
-    return NextResponse.json({ success: true, task });
+    return NextResponse.json({ success: true, task: taskData });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown server error';
     return NextResponse.json({ error: message }, { status: 500 });

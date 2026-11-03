@@ -61,6 +61,9 @@ export function ClientCalendarView({
     setCurrentDate(new Date(2026, 10, 3));
   };
 
+  const [filterAssignee, setFilterAssignee] = useState<string>("All");
+  const [filterPriority, setFilterPriority] = useState<string>("All");
+
   // Get calendar days for month
   const firstDayIndex = new Date(year, month, 1).getDay(); // 0 is Sunday
   // Adjust so Monday is 0
@@ -77,9 +80,20 @@ export function ClientCalendarView({
     );
   });
 
+  const assignees = [
+    "All",
+    ...Array.from(new Set(clientTasks.map((t) => t.assignee_name || "Unassigned").filter(Boolean))),
+  ];
+
+  const filteredTasks = clientTasks.filter((t) => {
+    if (filterAssignee !== "All" && (t.assignee_name || "Unassigned") !== filterAssignee) return false;
+    if (filterPriority !== "All" && t.priority !== filterPriority) return false;
+    return true;
+  });
+
   // Map tasks to day of current month
   const tasksByDay: Record<number, TaskItem[]> = {};
-  clientTasks.forEach((t) => {
+  filteredTasks.forEach((t) => {
     if (t.due_date) {
       const d = new Date(t.due_date);
       if (d.getFullYear() === year && d.getMonth() === month) {
@@ -93,8 +107,8 @@ export function ClientCalendarView({
   return (
     <div className="space-y-4">
       {/* 1. CALENDAR HEADER BAR */}
-      <div className="bg-white rounded-2xl p-4 border border-[#3D5249]/15 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="bg-white rounded-2xl p-4 border border-[#3D5249]/15 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-1 border border-[#3D5249]/20 rounded-xl p-1 bg-[#FBF6F3]/50">
             <button
               onClick={prevMonth}
@@ -117,6 +131,39 @@ export function ClientCalendarView({
           <Button variant="secondary" size="sm" onClick={goToToday} className="text-xs">
             Today
           </Button>
+
+          {/* Filters */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-[#FBF6F3] border border-[#E8E2DD] px-2.5 py-1 rounded-xl text-xs">
+              <User className="w-3.5 h-3.5 text-[#65746C]" />
+              <select
+                value={filterAssignee}
+                onChange={(e) => setFilterAssignee(e.target.value)}
+                className="bg-transparent text-xs text-[#242E29] font-medium focus:outline-none"
+              >
+                {assignees.map((a) => (
+                  <option key={a} value={a}>
+                    {a === "All" ? "All Team" : a}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-[#FBF6F3] border border-[#E8E2DD] px-2.5 py-1 rounded-xl text-xs">
+              <Filter className="w-3.5 h-3.5 text-[#65746C]" />
+              <select
+                value={filterPriority}
+                onChange={(e) => setFilterPriority(e.target.value)}
+                className="bg-transparent text-xs text-[#242E29] font-medium focus:outline-none"
+              >
+                <option value="All">All Priority</option>
+                <option value="Urgent">Urgent</option>
+                <option value="High">High</option>
+                <option value="Normal">Normal</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
