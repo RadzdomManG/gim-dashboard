@@ -75,7 +75,15 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const id = req.nextUrl.searchParams.get('id');
+    let id = req.nextUrl.searchParams.get('id');
+    if (!id) {
+      try {
+        const body = await req.json();
+        id = body?.id;
+      } catch {
+        // no body provided
+      }
+    }
     if (!id) {
       return NextResponse.json({ error: 'Message ID is required' }, { status: 400 });
     }

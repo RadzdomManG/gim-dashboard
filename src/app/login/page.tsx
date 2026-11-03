@@ -135,9 +135,23 @@ export default function LoginPage() {
       return;
     }
 
-    // 2. Check dynamic invited accounts stored in localStorage
+    // 2. Check dynamic invited accounts stored in localStorage (gim_custom_logins and gim_invited_users)
     if (typeof window !== "undefined") {
       try {
+        const storedCustomLogins = localStorage.getItem("gim_custom_logins");
+        if (storedCustomLogins) {
+          const customLogins = JSON.parse(storedCustomLogins);
+          const userEntry = customLogins[cleanUsername];
+          if (userEntry && userEntry.password === password && !userEntry.is_revoked) {
+            localStorage.setItem("gim_auth_user", JSON.stringify(userEntry.user));
+            setTimeout(() => {
+              setLoading(false);
+              router.push("/");
+            }, 500);
+            return;
+          }
+        }
+
         const storedInvites = localStorage.getItem("gim_invited_users");
         if (storedInvites) {
           const invites = JSON.parse(storedInvites);
