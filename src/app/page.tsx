@@ -44,6 +44,7 @@ import {
   AlertTriangle,
   Menu,
   User,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -60,6 +61,7 @@ import { EditClientAccessModal, TeamMemberAccess } from "@/components/team/EditC
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { TaskDetailModal, TaskItem } from "@/components/tasks/TaskDetailModal";
+import { CreateTaskModal } from "@/components/tasks/CreateTaskModal";
 
 type NavTab =
   | "overview"
@@ -121,6 +123,7 @@ export default function GimDashboard() {
   const [modalTask, setModalTask] = useState<TaskItem | null>(null);
   const [selectedPortfolioClientId, setSelectedPortfolioClientId] = useState<string>("all");
   const [selectedPortfolioSubTab, setSelectedPortfolioSubTab] = useState<"calendar" | "board" | "dossier">("calendar");
+  const [isGlobalCreateTaskOpen, setIsGlobalCreateTaskOpen] = useState(false);
 
   // Global Ctrl+K / Cmd+K listener
   useEffect(() => {
@@ -832,8 +835,8 @@ export default function GimDashboard() {
       {/* ========================================================================= */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* TOP HEADER */}
-        <header className="h-16 bg-[#FBF6F3] border-b border-[#E8E2DD] px-4 sm:px-8 flex items-center justify-between shrink-0 gap-3">
-          {/* Left Header: Mobile hamburger & Context breadcrumb or Settings Search */}
+        <header className="h-16 bg-[#FBF6F3]/90 backdrop-blur-md border-b border-[#E8E2DD] px-4 sm:px-8 flex items-center justify-between shrink-0 gap-3">
+          {/* Left Header: Mobile hamburger & Global Client Workspace Switcher */}
           <div className="flex items-center space-x-3 flex-1 min-w-0">
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -843,56 +846,91 @@ export default function GimDashboard() {
               <Menu className="w-5 h-5" />
             </button>
 
-            {activeTab === "settings" && hasAdminAccess ? (
-              <div className="relative w-full max-w-sm">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#65746C]" />
-                <input
-                  type="text"
-                  placeholder="Search settings, permissions, accounts..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-12 py-1.5 bg-white border border-[#E8E2DD] rounded-lg text-xs placeholder:text-[#65746C]/60 text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A] focus:border-[#518E6A] transition-all"
-                />
-                <span className="hidden sm:inline-block absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-[#65746C]/50 font-mono bg-[#FBF6F3] px-1 py-0.5 rounded border border-[#E8E2DD]">
-                  Ctrl K
-                </span>
+            {/* Global Client Workspace Switcher — Instant Account Context (No ClickUp Logout/Login Required) */}
+            <div className="flex items-center space-x-2 bg-white border border-[#E8E2DD] rounded-xl px-2.5 py-1.5 shadow-2xs hover:border-[#518E6A] transition-all max-w-[280px] sm:max-w-xs">
+              <div className="w-5 h-5 rounded-md bg-[#466B53]/15 text-[#3D5249] flex items-center justify-center font-bold text-[10px] shrink-0">
+                <Building2 className="w-3.5 h-3.5 text-[#518E6A]" />
               </div>
-            ) : (
-              <div className="flex items-center space-x-2 truncate">
-                <span className="font-bold text-sm text-[#242E29] truncate">
-                  {activeTab === "overview"
-                    ? "Agency Operations Overview"
-                    : activeTab === "clients"
-                    ? "Client Operations Portfolio"
-                    : activeTab === "tasks"
-                    ? "Tasks & Delivery Backlog"
-                    : activeTab === "approvals"
-                    ? "Deliverable Sign-Off Queue"
-                    : activeTab === "messaging"
-                    ? "Internal Team Messaging Hub"
-                    : activeTab === "capacity"
-                    ? "Team Capacity Worksheet"
-                    : activeTab === "library"
-                    ? "SOP & Client Playbooks"
-                    : activeTab === "team"
-                    ? "Team Directory & RBAC"
-                    : "Profile & Settings"}
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-[#65746C] leading-none">
+                  Client Workspace
                 </span>
-                <span className="hidden sm:inline-block text-[10px] text-[#65746C] font-mono px-1.5 py-0.5 rounded bg-white border border-[#E8E2DD]">
-                  GIM OS
-                </span>
+                <select
+                  value={selectedPortfolioClientId}
+                  onChange={(e) => {
+                    setSelectedPortfolioClientId(e.target.value);
+                  }}
+                  className="bg-transparent text-xs font-bold text-[#242E29] focus:outline-none cursor-pointer pr-1 leading-tight mt-0.5 truncate"
+                  title="Switch client account instantly without logging out of ClickUp"
+                >
+                  <option value="all">⊞ All Clients (Unified 6 Workspaces)</option>
+                  <option value="little-treasures">Little Treasures Company (AU)</option>
+                  <option value="wrts">We Rock the Spectrum (AU)</option>
+                  <option value="studio-nets">Studio Nets (AU)</option>
+                  <option value="invogue-cleans">InVogue Cleans (AU)</option>
+                  <option value="aaron-ofosu">Aaron Ofosu Bootcamp (AU)</option>
+                  <option value="tch2thrive">Tch2Thrive (US)</option>
+                </select>
               </div>
-            )}
+            </div>
+
+            {/* Breadcrumb Context Label */}
+            <div className="hidden lg:flex items-center space-x-1.5 text-xs text-[#65746C] truncate pl-1">
+              <span className="text-[#E8E2DD]">/</span>
+              <span className="font-semibold text-[#242E29] truncate">
+                {activeTab === "overview"
+                  ? "Operations Hub"
+                  : activeTab === "clients"
+                  ? "Client Workspaces & Calendar"
+                  : activeTab === "tasks"
+                  ? "Tasks & Pipeline"
+                  : activeTab === "approvals"
+                  ? "Sign-Off Queue"
+                  : activeTab === "messaging"
+                  ? "Team Messaging (Slack Hub)"
+                  : activeTab === "capacity"
+                  ? "Capacity Worksheet"
+                  : activeTab === "library"
+                  ? "SOP & Playbooks"
+                  : activeTab === "team"
+                  ? "Team Directory & Roles"
+                  : "Profile & Settings"}
+              </span>
+            </div>
           </div>
 
           {/* Right Header Controls */}
-          <div className="flex items-center space-x-2.5 sm:space-x-3 shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-2.5 shrink-0">
+            {/* Quick Create Task Trigger (+ New Task) */}
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsGlobalCreateTaskOpen(true)}
+              className="hidden sm:inline-flex items-center space-x-1.5 text-xs shadow-xs"
+              title="Quickly add a task for any client"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>New Task</span>
+            </Button>
+
             {/* Active Sprint Context Pill (Desktop only) */}
-            <div className="hidden xl:flex items-center space-x-2 px-3 py-1 bg-white border border-[#E8E2DD] rounded-lg text-xs shadow-xs whitespace-nowrap">
+            <div className="hidden xl:flex items-center space-x-2 px-3 py-1 bg-white border border-[#E8E2DD] rounded-xl text-xs shadow-xs whitespace-nowrap">
               <span className="w-1.5 h-1.5 rounded-full bg-[#518E6A] animate-pulse"></span>
-              <span className="font-semibold text-[#242E29]">Little Treasures Sprint</span>
+              <span className="font-semibold text-[#242E29]">
+                {selectedPortfolioClientId === "wrts"
+                  ? "WRTS Automations"
+                  : selectedPortfolioClientId === "studio-nets"
+                  ? "Studio Nets SOPs"
+                  : selectedPortfolioClientId === "invogue-cleans"
+                  ? "InVogue Retention"
+                  : selectedPortfolioClientId === "aaron-ofosu"
+                  ? "Bootcamp Launch"
+                  : selectedPortfolioClientId === "tch2thrive"
+                  ? "Tch2Thrive Pipeline"
+                  : "Little Treasures Sprint"}
+              </span>
               <span className="text-[#65746C] text-[10px]">·</span>
-              <span className="text-[11px] text-[#466B53] font-medium">Dec 11 Launch Target</span>
+              <span className="text-[11px] text-[#466B53] font-medium">Live Mirror</span>
             </div>
 
             {/* Profile Switcher, Edit Nickname, and Invite Buttons: ONLY visible on Settings Tab for 3 Owners */}
@@ -941,13 +979,16 @@ export default function GimDashboard() {
 
             {/* Clean User Presence Pill when on other dashboard tabs */}
             {activeTab !== "settings" && (
-              <div className="flex items-center space-x-2 px-2.5 py-1 bg-white border border-[#E8E2DD] rounded-lg text-xs shadow-xs">
-                <div
-                  className={`w-5 h-5 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-[10px] shrink-0`}
-                >
-                  {currentUser.nickname.slice(0, 2).toUpperCase()}
+              <div className="flex items-center space-x-2 px-2.5 py-1 bg-white border border-[#E8E2DD] rounded-xl text-xs shadow-xs">
+                <div className="relative">
+                  <div
+                    className={`w-5 h-5 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-[10px] shrink-0`}
+                  >
+                    {currentUser.nickname.slice(0, 2).toUpperCase()}
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 absolute -bottom-0.5 -right-0.5 ring-1 ring-white"></span>
                 </div>
-                <span className="font-semibold text-[#242E29] truncate max-w-[120px] sm:max-w-none">
+                <span className="font-semibold text-[#242E29] truncate max-w-[100px] sm:max-w-none">
                   {currentUser.nickname}
                 </span>
                 {currentUser.isCoreAdmin && (
@@ -1449,6 +1490,7 @@ export default function GimDashboard() {
               currentUserName={currentUser.name}
               isCoreAdmin={currentUser.isCoreAdmin}
               clientScope={currentUser.clientScope}
+              selectedClientId={selectedPortfolioClientId}
             />
           )}
 
@@ -1475,6 +1517,7 @@ export default function GimDashboard() {
               currentUserRole={currentUser.role}
               isCoreAdmin={currentUser.isCoreAdmin}
               avatarColor={currentUser.avatarColor}
+              selectedClientId={selectedPortfolioClientId}
             />
           )}
 
@@ -2181,6 +2224,34 @@ export default function GimDashboard() {
           }}
         />
       )}
+
+      {/* ========================================================================= */}
+      {/* 9. GLOBAL QUICK CREATE TASK MODAL */}
+      {/* ========================================================================= */}
+      <CreateTaskModal
+        isOpen={isGlobalCreateTaskOpen}
+        onClose={() => setIsGlobalCreateTaskOpen(false)}
+        defaultClient={
+          selectedPortfolioClientId === "little-treasures"
+            ? "Little Treasures Company"
+            : selectedPortfolioClientId === "wrts"
+            ? "We Rock the Spectrum (WRTS)"
+            : selectedPortfolioClientId === "studio-nets"
+            ? "Studio Nets"
+            : selectedPortfolioClientId === "invogue-cleans"
+            ? "InVogue Cleans"
+            : selectedPortfolioClientId === "aaron-ofosu"
+            ? "Aaron Ofosu Bootcamp"
+            : selectedPortfolioClientId === "tch2thrive"
+            ? "Tch2Thrive"
+            : "Little Treasures Company"
+        }
+        currentUserName={currentUser.name}
+        currentUserRole={currentUser.role}
+        onTaskCreated={() => {
+          setIsGlobalCreateTaskOpen(false);
+        }}
+      />
     </div>
   );
 }

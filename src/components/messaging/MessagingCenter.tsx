@@ -102,6 +102,42 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     memberIds: ["divine", "radz", "erwin"],
   },
   {
+    id: "studio-nets-ops",
+    name: "studio-nets-ops",
+    type: "channel",
+    description: "Creative design systems, Figma handoffs, and Fathom AI SOP summaries.",
+    isPrivate: false,
+    membersCount: 4,
+    memberIds: ["divine", "erwin", "bj", "jedy"],
+  },
+  {
+    id: "invogue-ops",
+    name: "invogue-growth",
+    type: "channel",
+    description: "Lead generation, SMS reminders, and cleaner dispatch system.",
+    isPrivate: false,
+    membersCount: 3,
+    memberIds: ["ra", "joy", "radz"],
+  },
+  {
+    id: "aaron-ofosu-ops",
+    name: "aaron-ofosu-bootcamp",
+    type: "channel",
+    description: "Athlete onboarding funnels, Stripe checkout, and coach schedules.",
+    isPrivate: false,
+    membersCount: 3,
+    memberIds: ["divine", "radz", "bj"],
+  },
+  {
+    id: "tch2thrive-ops",
+    name: "tch2thrive-systems",
+    type: "channel",
+    description: "Teacher development resources, district pipelines, and SOP library.",
+    isPrivate: false,
+    membersCount: 3,
+    memberIds: ["divine", "radz", "ra"],
+  },
+  {
     id: "leadership",
     name: "core-leadership",
     type: "channel",
@@ -143,6 +179,7 @@ const AVAILABLE_TEAM_MEMBERS = [
   { id: "erwin", name: "Erwin Manaog", role: "Senior Specialist" },
   { id: "bj", name: "BJ Ricafrente", role: "Specialist" },
   { id: "joy", name: "Joy Fabular", role: "Specialist" },
+  { id: "camille", name: "Camille Bautista", role: "Social Media Specialist" },
   { id: "jedy", name: "Jedy Caillio", role: "Creative Specialist" },
 ];
 
@@ -155,6 +192,7 @@ interface MessagingCenterProps {
   currentUserRole: string;
   isCoreAdmin: boolean;
   avatarColor: string;
+  selectedClientId?: string;
 }
 
 export function MessagingCenter({
@@ -164,6 +202,7 @@ export function MessagingCenter({
   currentUserRole,
   isCoreAdmin,
   avatarColor,
+  selectedClientId,
 }: MessagingCenterProps) {
   const [channels, setChannels] = useState<ChatChannel[]>(INITIAL_CHANNELS);
   const [activeChannelId, setActiveChannelId] = useState<string>("general");
@@ -172,6 +211,23 @@ export function MessagingCenter({
   const [seenUsers, setSeenUsers] = useState<Record<string, { name: string; seenAt: number }>>({});
   const realtimeChannelRef = useRef<any>(null);
   const lastTypingBroadcastRef = useRef<number>(0);
+
+  // Sync active channel with selected client context
+  useEffect(() => {
+    if (!selectedClientId || selectedClientId === "all") return;
+    const clientChannelMap: Record<string, string> = {
+      "little-treasures": "little-treasures",
+      "wrts": "wrts-ops",
+      "studio-nets": "studio-nets-ops",
+      "invogue-cleans": "invogue-ops",
+      "aaron-ofosu": "aaron-ofosu-ops",
+      "tch2thrive": "tch2thrive-ops",
+    };
+    const target = clientChannelMap[selectedClientId];
+    if (target) {
+      setActiveChannelId(target);
+    }
+  }, [selectedClientId]);
 
   const [messages, setMessages] = useState<Record<string, ChatMessage[]>>(() => {
     if (typeof window !== "undefined") {

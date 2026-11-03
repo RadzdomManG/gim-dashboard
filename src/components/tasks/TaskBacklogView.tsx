@@ -34,6 +34,7 @@ interface TaskBacklogViewProps {
   currentUserName?: string;
   isCoreAdmin?: boolean;
   clientScope?: string | string[];
+  selectedClientId?: string;
 }
 
 export function TaskBacklogView({
@@ -43,6 +44,7 @@ export function TaskBacklogView({
   currentUserName = "Radzdom Gallego",
   isCoreAdmin = true,
   clientScope = "all",
+  selectedClientId = "all",
 }: TaskBacklogViewProps) {
   const [tasks, setTasks] = useState<ClickUpTask[]>([]);
   const [stats, setStats] = useState<ClickUpStats | null>(null);
@@ -154,6 +156,25 @@ export function TaskBacklogView({
           task.listName.toLowerCase().includes(scope.toLowerCase())
         );
         if (!hasAccess) return false;
+      }
+
+      // Global client context filter from header
+      if (selectedClientId && selectedClientId !== "all") {
+        const clientKeyMap: Record<string, string> = {
+          "little-treasures": "little treasures",
+          "wrts": "wrts",
+          "studio-nets": "studio nets",
+          "invogue-cleans": "invogue",
+          "aaron-ofosu": "aaron ofosu",
+          "tch2thrive": "tch2thrive",
+        };
+        const targetPattern = clientKeyMap[selectedClientId];
+        if (targetPattern) {
+          const matches =
+            task.client.toLowerCase().includes(targetPattern) ||
+            task.listName.toLowerCase().includes(targetPattern);
+          if (!matches) return false;
+        }
       }
 
       // Client filter
