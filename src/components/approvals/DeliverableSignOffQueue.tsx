@@ -190,6 +190,19 @@ export function DeliverableSignOffQueue({
         reviewed_by: reviewerString,
       }),
     }).catch((err) => console.log("Approvals sync bypass:", err));
+
+    // Sync status back to corresponding client task
+    const targetItem = approvals.find((a) => a.id === id);
+    if (targetItem?.code) {
+      fetch("/api/tasks", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: targetItem.code,
+          status: newStatus === "Approved" ? "Approved" : "In Review",
+        }),
+      }).catch((err) => console.log("Task status sync bypass:", err));
+    }
   };
 
   const renderStatusBadge = (status: ApprovalItem["status"]) => {

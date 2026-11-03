@@ -5,13 +5,12 @@ import React from "react";
 export function Card({
   children,
   className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={`bg-white rounded-xl border border-[#E8E2DD] shadow-[0_2px_8px_-2px_rgba(61,82,73,0.06)] overflow-hidden ${className}`}
+      {...props}
     >
       {children}
     </div>

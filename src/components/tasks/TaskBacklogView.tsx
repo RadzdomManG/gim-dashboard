@@ -25,15 +25,24 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { ClickUpTask, ClickUpStats } from "@/lib/clickup/types";
+import { TaskDetailModal, TaskItem } from "@/components/tasks/TaskDetailModal";
 
 interface TaskBacklogViewProps {
   initialStatusFilter?: string;
   initialSearch?: string;
+  currentUserNickname?: string;
+  currentUserName?: string;
+  isCoreAdmin?: boolean;
+  clientScope?: string | string[];
 }
 
 export function TaskBacklogView({
   initialStatusFilter = "all",
   initialSearch = "",
+  currentUserNickname = "Radz",
+  currentUserName = "Radzdom Gallego",
+  isCoreAdmin = true,
+  clientScope = "all",
 }: TaskBacklogViewProps) {
   const [tasks, setTasks] = useState<ClickUpTask[]>([]);
   const [stats, setStats] = useState<ClickUpStats | null>(null);
@@ -136,6 +145,17 @@ export function TaskBacklogView({
   // Filter tasks
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
+      // Scoped client check for non-admin users
+      if (clientScope && clientScope !== "all") {
+        const allowed = Array.isArray(clientScope) ? clientScope : [clientScope];
+        const hasAccess = allowed.some((scope) =>
+          task.client.toLowerCase().includes(scope.toLowerCase()) ||
+          scope.toLowerCase().includes(task.client.toLowerCase()) ||
+          task.listName.toLowerCase().includes(scope.toLowerCase())
+        );
+        if (!hasAccess) return false;
+      }
+
       // Client filter
       if (clientFilter === "little-treasures" && !task.listName.toLowerCase().includes("little treasures")) {
         return false;
@@ -604,192 +624,47 @@ export function TaskBacklogView({
       </Card>
 
       {/* ========================================================================= */}
-      {/* 6. TASK DETAIL INSPECTION MODAL */}
+      {/* 6. TASK DETAIL INSPECTION MODAL (UNIFIED GIM DETAIL MODAL) */}
       {/* ========================================================================= */}
       {selectedTask && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl border border-[#E8E2DD] max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-[#E8E2DD] bg-[#FBF6F3] flex items-center justify-between">
-              <div className="flex items-center space-x-2.5">
-                {selectedTask.gateCode && (
-                  <span className="font-bold text-[#3D5249] text-xs bg-[#466B53]/15 px-2.5 py-1 rounded border border-[#466B53]/25">
-                    {selectedTask.gateCode}
-                  </span>
-                )}
-                <span className="text-xs font-semibold text-[#65746C]">
-                  ClickUp Task #{selectedTask.id}
-                </span>
-              </div>
-              <button
-                onClick={() => setSelectedTask(null)}
-                className="p-1.5 rounded-lg text-[#65746C] hover:text-[#242E29] hover:bg-black/5 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-5 text-xs">
-              <div>
-                <h3 className="text-base font-bold text-[#242E29] leading-snug">
-                  {selectedTask.name}
-                </h3>
-                <div className="flex flex-wrap items-center gap-2 mt-2">
-                  {renderStatusBadge(selectedTask.status)}
-                  <Badge variant="neutral">
-                    {selectedTask.client}
-                  </Badge>
-                  {selectedTask.priority && (
-                    <Badge variant="brand">
-                      Priority: {selectedTask.priority}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-
-              {/* Read-Only Notice Banner */}
-              <div className="p-3 rounded-lg bg-[#466B53]/10 border border-[#466B53]/25 flex items-start space-x-2 text-[#3D5249]">
-                <ShieldCheck className="w-4 h-4 text-[#466B53] shrink-0 mt-0.5" />
-                <div className="text-[11px] leading-relaxed">
-                  <strong>Read-Only Operational Feed:</strong> ClickUp is protected from accidental mutation. Deliverable sign-offs and status transitions are recorded internally via GIM approval workflows.
-                </div>
-              </div>
-
-              {/* Task Metadata Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/50">
-                <div>
-                  <span className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider">
-                    Assigned Team Members
-                  </span>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {selectedTask.assignees.length > 0 ? (
-                      selectedTask.assignees.map((a) => (
-                        <div
-                          key={a.id}
-                          className="flex items-center space-x-1.5 px-2 py-1 rounded-md bg-white border border-[#E8E2DD] text-[11px] font-medium text-[#242E29]"
-                        >
-                          <div className="w-4 h-4 rounded-full bg-[#3D5249] text-white flex items-center justify-center text-[8px] font-bold">
-                            {a.initials}
-                          </div>
-                          <span>{a.username}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <span className="text-[#65746C] italic">Unassigned</span>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider">
-                    Due Date
-                  </span>
-                  <p className="mt-1.5 text-[11px] font-medium text-[#242E29]">
-                    {selectedTask.dueDateFormatted ? (
-                      <span className="flex items-center space-x-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-[#518E6A]" />
-                        <span>{selectedTask.dueDateFormatted}</span>
-                      </span>
-                    ) : (
-                      <span className="text-[#65746C] italic">No due date assigned</span>
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <span className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider block mb-1.5">
-                  Task Specification & Requirements
-                </span>
-                {selectedTask.description ? (
-                  <div className="p-3.5 rounded-xl border border-[#E8E2DD] bg-[#FFFFFF] whitespace-pre-wrap leading-relaxed text-[#242E29] max-h-60 overflow-y-auto font-mono text-[11px]">
-                    {selectedTask.description}
-                  </div>
-                ) : (
-                  <div className="p-4 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/40 text-center text-[#65746C] italic text-[11px]">
-                    No description logged in ClickUp.
-                  </div>
-                )}
-              </div>
-
-              {/* Live ClickUp Discussion Thread / Comments */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider flex items-center space-x-1.5">
-                    <MessageSquare className="w-3.5 h-3.5 text-[#518E6A]" />
-                    <span>Live ClickUp Comments ({taskComments.length})</span>
-                  </span>
-                  {loadingComments && (
-                    <span className="text-[10px] text-[#518E6A] flex items-center space-x-1">
-                      <RefreshCw className="w-3 h-3 animate-spin" />
-                      <span>Syncing thread...</span>
-                    </span>
-                  )}
-                </div>
-
-                {loadingComments ? (
-                  <div className="p-4 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/40 text-center text-[11px] text-[#65746C]">
-                    Fetching discussion thread from ClickUp...
-                  </div>
-                ) : taskComments.length > 0 ? (
-                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                    {taskComments.map((comment) => (
-                      <div
-                        key={comment.id}
-                        className="p-3 rounded-xl border border-[#E8E2DD] bg-[#FFFFFF] shadow-2xs space-y-1.5"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <div
-                              className="w-5 h-5 rounded-full text-white flex items-center justify-center font-bold text-[8px]"
-                              style={{ backgroundColor: comment.user.color || "#3D5249" }}
-                            >
-                              {comment.user.initials}
-                            </div>
-                            <span className="font-semibold text-[#242E29] text-[11px]">
-                              {comment.user.username}
-                            </span>
-                          </div>
-                          <span className="text-[10px] text-[#65746C]">{comment.date}</span>
-                        </div>
-                        <p className="text-[11px] text-[#242E29] whitespace-pre-wrap pl-7 leading-relaxed font-sans">
-                          {comment.text}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-4 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/40 text-center text-[#65746C] italic text-[11px]">
-                    No comments logged in ClickUp yet.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="px-6 py-3.5 border-t border-[#E8E2DD] bg-[#FBF6F3] flex items-center justify-between">
-              <span className="text-[11px] text-[#65746C]">
-                ClickUp Task ID: <code>{selectedTask.id}</code>
-              </span>
-              <div className="flex items-center space-x-2">
-                <Button variant="secondary" size="sm" onClick={() => setSelectedTask(null)}>
-                  Close
-                </Button>
-                <a
-                  href={selectedTask.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-[#3D5249] hover:bg-[#34463E] text-white text-xs font-medium transition-colors"
-                >
-                  <span>Open in ClickUp</span>
-                  <ExternalLink className="w-3.5 h-3.5 ml-1" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
+        <TaskDetailModal
+          isOpen={!!selectedTask}
+          onClose={() => setSelectedTask(null)}
+          currentUserNickname={currentUserNickname}
+          currentUserName={currentUserName}
+          isCoreAdmin={isCoreAdmin}
+          onTaskUpdated={() => {
+            loadTasks(true);
+          }}
+          task={{
+            id: selectedTask.id,
+            title: selectedTask.name,
+            client: selectedTask.client,
+            description: selectedTask.description || "",
+            status:
+              selectedTask.status.toLowerCase() === "closed"
+                ? "Closed"
+                : selectedTask.status.toLowerCase() === "for review" || selectedTask.status.toLowerCase() === "in review"
+                ? "In Review"
+                : selectedTask.status.toLowerCase() === "in progress"
+                ? "In Progress"
+                : "To Do",
+            priority:
+              selectedTask.priority?.toLowerCase() === "urgent" ||
+              (selectedTask.gateCode && ["G18", "G5"].includes(selectedTask.gateCode))
+                ? "Urgent"
+                : selectedTask.priority?.toLowerCase() === "high" ||
+                  (selectedTask.gateCode && ["G7", "G11"].includes(selectedTask.gateCode))
+                ? "High"
+                : "Normal",
+            due_date: selectedTask.dueDateFormatted || null,
+            assignee_name: selectedTask.assignees?.[0]?.username || "Unassigned",
+            created_by: "ClickUp Mirror",
+            tags: selectedTask.gateCode ? [selectedTask.gateCode] : [],
+            url: selectedTask.url,
+            is_clickup: true,
+          }}
+        />
       )}
     </div>
   );

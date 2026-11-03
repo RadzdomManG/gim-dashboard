@@ -119,6 +119,8 @@ export default function GimDashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
   const [modalTask, setModalTask] = useState<TaskItem | null>(null);
+  const [selectedPortfolioClientId, setSelectedPortfolioClientId] = useState<string>("all");
+  const [selectedPortfolioSubTab, setSelectedPortfolioSubTab] = useState<"calendar" | "board" | "dossier">("calendar");
 
   // Global Ctrl+K / Cmd+K listener
   useEffect(() => {
@@ -136,13 +138,21 @@ export default function GimDashboard() {
     try {
       const res = await fetch("/api/tasks?client=all");
       const json = await res.json();
-      const found = (json.tasks || []).find((t: any) => t.id === taskId);
+      const lowerId = taskId.toLowerCase();
+      const found = (json.tasks || []).find((t: any) => {
+        if (!t) return false;
+        if (t.id === taskId) return true;
+        if (t.gateCode && t.gateCode.toLowerCase() === lowerId) return true;
+        if (Array.isArray(t.tags) && t.tags.some((tag: string) => tag.toLowerCase() === lowerId)) return true;
+        if (t.title && t.title.toLowerCase().startsWith(lowerId)) return true;
+        return false;
+      });
       if (found) {
         setModalTask(found);
       } else {
         setModalTask({
           id: taskId,
-          title: "Selected Task",
+          title: `${taskId} Deliverable Gate Verification`,
           client: clientName || "Little Treasures Company",
           status: "In Progress",
           priority: "Normal",
@@ -434,6 +444,7 @@ export default function GimDashboard() {
   // Client Delivery Pipeline (Verified from GIM Operating System folder: WRTS, Studio Nets, Little Treasures, etc.)
   const clientsData = [
     {
+      id: "little-treasures",
       name: "Little Treasures Company",
       code: "LT-AU",
       lead: "Erwin Manaog",
@@ -447,6 +458,7 @@ export default function GimDashboard() {
       progress: 72,
     },
     {
+      id: "wrts",
       name: "WRTS (We Rock the Spectrum)",
       code: "WRTS-US",
       lead: userProfiles.radz.nickname,
@@ -460,6 +472,7 @@ export default function GimDashboard() {
       progress: 85,
     },
     {
+      id: "studio-nets",
       name: "Studio Nets",
       code: "SN-US",
       lead: "Erwin Manaog",
@@ -473,6 +486,7 @@ export default function GimDashboard() {
       progress: 60,
     },
     {
+      id: "invogue-cleans",
       name: "InVogue Cleans",
       code: "IVC-US",
       lead: "Pending PO",
@@ -486,6 +500,7 @@ export default function GimDashboard() {
       progress: 35,
     },
     {
+      id: "aaron-ofosu",
       name: "Aaron Ofosu Bootcamp",
       code: "AO-US",
       lead: "Pending PO",
@@ -499,6 +514,7 @@ export default function GimDashboard() {
       progress: 20,
     },
     {
+      id: "tch2thrive",
       name: "Tch2Thrive",
       code: "T2T-US",
       lead: "Pending PO",
@@ -1032,11 +1048,19 @@ export default function GimDashboard() {
               {/* 1. COMPACT OPERATIONAL SUMMARY STRIP */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Active Accounts */}
-                <Card>
+                <Card
+                  onClick={() => {
+                    setSelectedPortfolioClientId("all");
+                    setSelectedPortfolioSubTab("calendar");
+                    setActiveTab("clients");
+                  }}
+                  className="cursor-pointer hover:border-[#466B53]/60 transition-all hover:shadow-xs group"
+                >
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-medium text-[#65746C]">
+                      <p className="text-xs font-medium text-[#65746C] group-hover:text-[#466B53] transition-colors flex items-center gap-1">
                         Active Client Accounts
+                        <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </p>
                       <div className="text-2xl font-bold text-[#242E29] mt-1">
                         {visibleClients.length}
@@ -1045,18 +1069,26 @@ export default function GimDashboard() {
                         3 Primary Builds · 3 Staged
                       </p>
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-[#466B53]/10 text-[#466B53] flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-[#466B53]/10 text-[#466B53] group-hover:bg-[#466B53] group-hover:text-white transition-all flex items-center justify-center">
                       <Building2 className="w-5 h-5" />
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Sprint Tasks */}
-                <Card>
+                <Card
+                  onClick={() => {
+                    setSelectedPortfolioClientId("all");
+                    setSelectedPortfolioSubTab("board");
+                    setActiveTab("clients");
+                  }}
+                  className="cursor-pointer hover:border-[#518E6A]/60 transition-all hover:shadow-xs group"
+                >
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-medium text-[#65746C]">
+                      <p className="text-xs font-medium text-[#65746C] group-hover:text-[#518E6A] transition-colors flex items-center gap-1">
                         Sprint Tasks (ClickUp Mirror)
+                        <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </p>
                       <div className="text-2xl font-bold text-[#242E29] mt-1">
                         {clickupStats ? clickupStats.totalTasks : 193}
@@ -1067,18 +1099,22 @@ export default function GimDashboard() {
                           : "94 Closed · 97 Open"}
                       </p>
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-[#518E6A]/10 text-[#518E6A] flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-[#518E6A]/10 text-[#518E6A] group-hover:bg-[#518E6A] group-hover:text-white transition-all flex items-center justify-center">
                       <CheckSquare className="w-5 h-5" />
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Review Checkpoints */}
-                <Card>
+                <Card
+                  onClick={() => setActiveTab("approvals")}
+                  className="cursor-pointer hover:border-amber-400 transition-all hover:shadow-xs group"
+                >
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-medium text-[#65746C]">
+                      <p className="text-xs font-medium text-[#65746C] group-hover:text-amber-800 transition-colors flex items-center gap-1">
                         Needs Review & Checkpoints
+                        <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </p>
                       <div className="text-2xl font-bold text-[#242E29] mt-1">
                         {clickupStats ? clickupStats.reviewCount : 2}
@@ -1087,18 +1123,26 @@ export default function GimDashboard() {
                         G5 Website Pages & G7 Enquiry Flow
                       </p>
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-700 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-700 group-hover:bg-amber-600 group-hover:text-white transition-all flex items-center justify-center">
                       <AlertCircle className="w-5 h-5" />
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Summit Countdown */}
-                <Card>
+                <Card
+                  onClick={() => {
+                    setSelectedPortfolioClientId("little-treasures");
+                    setSelectedPortfolioSubTab("calendar");
+                    setActiveTab("clients");
+                  }}
+                  className="cursor-pointer hover:border-[#3D5249]/60 transition-all hover:shadow-xs group"
+                >
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-medium text-[#65746C]">
+                      <p className="text-xs font-medium text-[#65746C] group-hover:text-[#3D5249] transition-colors flex items-center gap-1">
                         Summit Launch Deadline
+                        <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </p>
                       <div className="text-2xl font-bold text-[#242E29] mt-1">
                         38 Days
@@ -1107,7 +1151,7 @@ export default function GimDashboard() {
                         Hard Target: Fri 11 Dec 2026
                       </p>
                     </div>
-                    <div className="w-10 h-10 rounded-lg bg-[#3D5249]/10 text-[#3D5249] flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-[#3D5249]/10 text-[#3D5249] group-hover:bg-[#3D5249] group-hover:text-white transition-all flex items-center justify-center">
                       <Calendar className="w-5 h-5" />
                     </div>
                   </CardContent>
@@ -1170,9 +1214,21 @@ export default function GimDashboard() {
                         </thead>
                         <tbody className="divide-y divide-[#E8E2DD]/70">
                           {visibleClients.map((client, idx) => (
-                            <tr key={idx} className="hover:bg-[#FBF6F3]/50 transition-colors">
+                            <tr
+                              key={idx}
+                              onClick={() => {
+                                setSelectedPortfolioClientId(client.id);
+                                setSelectedPortfolioSubTab("calendar");
+                                setActiveTab("clients");
+                              }}
+                              className="hover:bg-[#518E6A]/5 transition-colors cursor-pointer group"
+                              title={`Open ${client.name} workspace`}
+                            >
                               <td className="py-3 px-4 font-semibold text-[#242E29]">
-                                <div>{client.name}</div>
+                                <div className="flex items-center gap-1.5 group-hover:text-[#466B53] transition-colors">
+                                  <span>{client.name}</span>
+                                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-[#518E6A]" />
+                                </div>
                                 <div className="text-[10px] text-[#65746C] font-normal">
                                   {client.contact}
                                 </div>
@@ -1228,17 +1284,20 @@ export default function GimDashboard() {
                         {urgentTasks.map((task, idx) => (
                           <div
                             key={idx}
-                            className="p-3 rounded-lg border border-[#E8E2DD] bg-[#FBF6F3]/40 hover:border-[#518E6A]/50 transition-all text-xs"
+                            onClick={() => handleOpenSearchTask(task.code, "Little Treasures Company")}
+                            className="p-3 rounded-lg border border-[#E8E2DD] bg-[#FBF6F3]/40 hover:border-[#518E6A]/60 hover:bg-[#FBF6F3] cursor-pointer transition-all text-xs group"
+                            title={`Inspect ${task.code} requirements & sign-off`}
                           >
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex items-center space-x-1.5">
-                                <span className="font-bold text-[#3D5249] text-[10px] bg-[#466B53]/15 px-1.5 py-0.2 rounded border border-[#466B53]/25">
+                                <span className="font-bold text-[#3D5249] text-[10px] bg-[#466B53]/15 px-1.5 py-0.2 rounded border border-[#466B53]/25 group-hover:bg-[#466B53] group-hover:text-white transition-colors">
                                   {task.code}
                                 </span>
-                                <span className="font-semibold text-[#242E29] line-clamp-1">
+                                <span className="font-semibold text-[#242E29] line-clamp-1 group-hover:text-[#466B53] transition-colors">
                                   {task.title}
                                 </span>
                               </div>
+                              <ArrowUpRight className="w-3.5 h-3.5 text-[#518E6A] opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-1" />
                             </div>
                             <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#E8E2DD]/60 text-[10px] text-[#65746C]">
                               <span>Assignee: <strong>{task.assignee}</strong></span>
@@ -1370,6 +1429,8 @@ export default function GimDashboard() {
               currentUserName={currentUser.name}
               currentUserNickname={currentUser.nickname}
               isCoreAdmin={currentUser.isCoreAdmin}
+              initialClientId={selectedPortfolioClientId}
+              initialSubTab={selectedPortfolioSubTab}
               onSelectTasks={(clientName) => {
                 setTaskSearchQuery(clientName);
                 setActiveTab("tasks");
@@ -1384,6 +1445,10 @@ export default function GimDashboard() {
             <TaskBacklogView
               initialStatusFilter={taskStatusFilter}
               initialSearch={taskSearchQuery}
+              currentUserNickname={currentUser.nickname}
+              currentUserName={currentUser.name}
+              isCoreAdmin={currentUser.isCoreAdmin}
+              clientScope={currentUser.clientScope}
             />
           )}
 

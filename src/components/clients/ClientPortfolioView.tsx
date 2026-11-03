@@ -226,6 +226,8 @@ interface ClientPortfolioViewProps {
   currentUserName?: string;
   currentUserNickname?: string;
   isCoreAdmin?: boolean;
+  initialClientId?: string;
+  initialSubTab?: "calendar" | "board" | "dossier";
 }
 
 export function ClientPortfolioView({
@@ -234,6 +236,8 @@ export function ClientPortfolioView({
   currentUserName = "Radzdom Gallego",
   currentUserNickname = "Radz",
   isCoreAdmin = true,
+  initialClientId,
+  initialSubTab,
 }: ClientPortfolioViewProps) {
   // Permission helper: only Core Admins, assignee, or creator can move or modify tasks
   const canModifyTask = (task: TaskItem) => {
@@ -264,9 +268,23 @@ export function ClientPortfolioView({
   });
 
   const [selectedClientId, setSelectedClientId] = useState<string>(
-    accessibleClients[0]?.id || "little-treasures"
+    initialClientId || accessibleClients[0]?.id || "little-treasures"
   );
-  const [activeSubTab, setActiveSubTab] = useState<"calendar" | "board" | "dossier">("calendar");
+  const [activeSubTab, setActiveSubTab] = useState<"calendar" | "board" | "dossier">(
+    initialSubTab || "calendar"
+  );
+
+  useEffect(() => {
+    if (initialClientId) {
+      setSelectedClientId(initialClientId);
+    }
+  }, [initialClientId]);
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setActiveSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
 
   // Modals & Tasks State
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
