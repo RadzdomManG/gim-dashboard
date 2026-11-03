@@ -436,9 +436,13 @@ export function UserInvitationModal({
                     {clientsList.map((client) => {
                       const isChecked = selectedClients.includes(client.name);
                       return (
-                        <label
+                        <div
                           key={client.id}
-                          onClick={() => {
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             setSelectedClients((prev) =>
                               prev.includes(client.name)
                                 ? prev.filter((c) => c !== client.name)
@@ -448,17 +452,17 @@ export function UserInvitationModal({
                               setClientId(client.id);
                             }
                           }}
-                          className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center gap-2.5 ${
+                          className={`p-3 rounded-xl border cursor-pointer select-none transition-all flex items-center gap-3 ${
                             isChecked
-                              ? "bg-white border-[#518E6A] ring-1 ring-[#518E6A]"
-                              : "bg-white/70 border-[#3D5249]/15 hover:border-[#3D5249]/30"
+                              ? "bg-[#3D5249]/5 border-[#518E6A] ring-2 ring-[#518E6A]"
+                              : "bg-white border-[#3D5249]/15 hover:border-[#3D5249]/40 hover:bg-[#FBF6F3]/50"
                           }`}
                         >
                           <input
                             type="checkbox"
                             checked={isChecked}
-                            onChange={() => {}}
-                            className="text-[#518E6A] focus:ring-[#518E6A] rounded border-[#3D5249]/20"
+                            readOnly
+                            className="pointer-events-none text-[#518E6A] focus:ring-0 rounded border-[#3D5249]/30 h-4 w-4"
                           />
                           <div className="flex-1 min-w-0">
                             <div className="text-xs font-bold text-[#242E29] truncate">
@@ -468,7 +472,7 @@ export function UserInvitationModal({
                               Code: {client.code}
                             </span>
                           </div>
-                        </label>
+                        </div>
                       );
                     })}
                   </div>

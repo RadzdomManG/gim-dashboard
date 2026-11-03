@@ -44,10 +44,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'channel_id and content or attachments required.' }, { status: 400 });
     }
 
+    const messageId = body.id || `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const supabase = createAdminClient();
     const { data, error } = await supabase
       .from('messages')
       .insert({
+        id: messageId,
         channel_id,
         sender_id: sender_id || 'radz-001',
         sender_name: sender_name || 'Radzdom Gallego',

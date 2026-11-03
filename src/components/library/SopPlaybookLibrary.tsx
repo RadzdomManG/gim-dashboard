@@ -123,13 +123,35 @@ Establish an automated lead capture and subscription retention system for premiu
   },
 ];
 
-export function SopPlaybookLibrary() {
+interface SopPlaybookLibraryProps {
+  clientScope?: string | string[];
+  isCoreAdmin?: boolean;
+}
+
+export function SopPlaybookLibrary({ clientScope = "all", isCoreAdmin = true }: SopPlaybookLibraryProps) {
   const [selectedDocId, setSelectedDocId] = useState<string>("sop-lt-spec");
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [copied, setCopied] = useState(false);
 
-  const filteredDocs = SOP_DOCS.filter((d) => {
+  // Client scoping rule: Admins see all. Members only see general SOPs + their assigned clients.
+  const accessibleDocs = SOP_DOCS.filter((doc) => {
+    if (isCoreAdmin) return true;
+    if (!doc.clientScope || doc.category === "Internal Operations" || doc.category === "Strategy") {
+      return true;
+    }
+    if (clientScope && clientScope !== "all") {
+      const allowed = Array.isArray(clientScope) ? clientScope : [clientScope];
+      return allowed.some(
+        (scope) =>
+          doc.clientScope?.toLowerCase().includes(scope.toLowerCase()) ||
+          scope.toLowerCase().includes(doc.clientScope?.toLowerCase() || "")
+      );
+    }
+    return true;
+  });
+
+  const filteredDocs = accessibleDocs.filter((d) => {
     if (selectedCategory !== "all" && d.category.toLowerCase() !== selectedCategory.toLowerCase()) {
       return false;
     }
@@ -144,7 +166,7 @@ export function SopPlaybookLibrary() {
     return true;
   });
 
-  const selectedDoc = SOP_DOCS.find((d) => d.id === selectedDocId) || SOP_DOCS[0];
+  const selectedDoc = accessibleDocs.find((d) => d.id === selectedDocId) || accessibleDocs[0] || SOP_DOCS[0];
 
   const handleCopy = () => {
     navigator.clipboard.writeText(selectedDoc.content);

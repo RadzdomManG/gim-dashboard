@@ -194,20 +194,26 @@ export function EditClientAccessModal({
             {AUTHENTIC_CLIENTS.map((client) => {
               const isSelected = selectedClients.includes(client.name);
               return (
-                <label
+                <div
                   key={client.id}
-                  onClick={() => toggleClient(client.name)}
-                  className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleClient(client.name);
+                  }}
+                  className={`p-3 rounded-xl border cursor-pointer select-none transition-all flex items-start gap-3 ${
                     isSelected
-                      ? "bg-[#3D5249]/5 border-[#518E6A] ring-1 ring-[#518E6A]"
-                      : "bg-white border-[#3D5249]/15 hover:border-[#3D5249]/40"
+                      ? "bg-[#3D5249]/5 border-[#518E6A] ring-2 ring-[#518E6A]"
+                      : "bg-white border-[#3D5249]/15 hover:border-[#3D5249]/40 hover:bg-[#FBF6F3]/50"
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={isSelected}
-                    onChange={() => {}} // handled by parent label click
-                    className="mt-0.5 text-[#518E6A] focus:ring-[#518E6A] rounded border-[#3D5249]/20"
+                    readOnly
+                    className="pointer-events-none mt-0.5 text-[#518E6A] focus:ring-0 rounded border-[#3D5249]/30 h-4 w-4"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
@@ -222,7 +228,7 @@ export function EditClientAccessModal({
                       {client.description}
                     </p>
                   </div>
-                </label>
+                </div>
               );
             })}
           </div>

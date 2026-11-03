@@ -1272,7 +1272,10 @@ export default function GimDashboard() {
           {/* TAB: INTERNAL SOP & PLAYBOOK LIBRARY */}
           {/* ========================================================================= */}
           {activeTab === "library" && (
-            <SopPlaybookLibrary />
+            <SopPlaybookLibrary
+              clientScope={currentUser.clientScope}
+              isCoreAdmin={currentUser.isCoreAdmin}
+            />
           )}
 
           {/* ========================================================================= */}

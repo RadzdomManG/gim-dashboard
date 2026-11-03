@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Building2,
   Users,
-  Calendar,
+  Calendar as CalendarIcon,
   CheckCircle2,
   Clock,
   ArrowUpRight,
@@ -19,12 +19,19 @@ import {
   Filter,
   Check,
   Plus,
+  LayoutGrid,
+  AlertTriangle,
+  User,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { ClientReportExportModal } from "@/components/reports/ClientReportExportModal";
 import { ClientOnboardingModal } from "@/components/clients/ClientOnboardingModal";
+import { ClientCalendarView } from "@/components/clients/ClientCalendarView";
+import { TaskItem, TaskDetailModal } from "@/components/tasks/TaskDetailModal";
+import { CreateTaskModal } from "@/components/tasks/CreateTaskModal";
+import { createClient } from "@/lib/supabase/client";
 
 export interface ClientProfile {
   id: string;
@@ -60,64 +67,62 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     location: "Brisbane, Queensland, AU",
     contactName: "Zoe Horner",
     contactRole: "Founder & Lead Paediatric OT",
-    accountLead: "Erwin Manaog",
-    specialist: "Radzdom Gallego (Radz)",
+    accountLead: "Radzdom Gallego",
+    specialist: "Erwin Manaog",
     status: "Active Sprint",
     statusVariant: "active",
-    retainer: "AUD $875 / week",
+    retainer: "AUD $4,500 / month",
     progress: 72,
-    currentSprint: "GoHighLevel Website, Forms & $99 Course Build",
-    targetMilestone: "Summit Launch Ready: Fri 11 Dec 2026",
+    currentSprint: "Summit Landing Page, GHL Automated SMS Alerts & $99 Video Course",
+    targetMilestone: "Dec 11 Summit Launch",
     description:
-      "Comprehensive digital patient intake and clinical course platform for paediatric occupational therapy. Consolidates multi-step consultation bookings, family intake forms, automated SMS notifications, and video training course delivery.",
+      "Clinical paediatric occupational therapy clinic delivery system. Powers automated parent enquiry routing, GoHighLevel multi-step funnels, ClassReach patient scheduling, AUD Stripe payments, and online sensory regulation courses.",
     deliverables: [
-      { code: "G1", title: "Foundation: AUD currency & account defaults", status: "Completed" },
-      { code: "G2", title: "Course shell architecture for Zoe's first look", status: "Completed" },
-      { code: "G3", title: "Custom fields, tags, pipeline and smart lists", status: "Completed" },
-      { code: "G4", title: "Three client forms with privacy notices", status: "Completed" },
-      { code: "G5", title: "Website: Six pages in Zoe's brand", status: "In Review" },
-      { code: "G6", title: "Wording: Page copy and enquiry reply (A1)", status: "Completed" },
-      { code: "G7", title: "Enquiry workflow and Zoe's phone SMS alert", status: "In Review" },
-      { code: "G11", title: "Checkout and course access automation", status: "In Progress" },
-      { code: "G14", title: "Domain pointing: littletreasurescompany.com", status: "Queued" },
-      { code: "G18", title: "Dry run fixes and summit-ready QA check", status: "Queued" },
+      { code: "G1", title: "Currency & GST Compliance Setup (AUD)", status: "Completed" },
+      { code: "G2", title: "Course Membership Shell in GHL", status: "Completed" },
+      { code: "G3", title: "Custom Fields & Therapy Stage Tags", status: "Completed" },
+      { code: "G4", title: "Therapy Intake Forms with AU Disclosures", status: "Completed" },
+      { code: "G5", title: "Website: Six Brand Pages (Copy & Layout)", status: "In Review" },
+      { code: "G7", title: "Enquiry Workflow & Zoe Mobile Alert", status: "In Progress" },
+      { code: "G11", title: "SMM 30-Day Campaign & Video Reel Batches", status: "In Progress" },
+      { code: "G18", title: "Dec 11 Clinical Summit Live Readiness", status: "Queued" },
     ],
-    keyTechStack: ["GoHighLevel", "Stripe AUD", "Wix DNS", "Vimeo / Wistia", "G Suite"],
+    keyTechStack: ["GoHighLevel (AU)", "Stripe Payments (AUD)", "Wix DNS", "Vimeo Enterprise", "Make.com"],
   },
   {
     id: "wrts",
     name: "We Rock the Spectrum (WRTS)",
-    code: "WRTS-US",
-    industry: "Sensory Gym Franchise",
-    location: "Preston, Victoria, AU",
-    contactName: "Marcus Vance",
-    contactRole: "Operations Director",
-    accountLead: "Radzdom Gallego (Radz)",
-    specialist: "Radzdom Gallego (Radz)",
+    code: "WRTS-AU",
+    industry: "Sensory Gym Franchise Operations",
+    location: "Melbourne & Sydney, AU",
+    contactName: "Franchise Director",
+    contactRole: "National Operations Lead",
+    accountLead: "Divine Origines",
+    specialist: "Radzdom Gallego",
     status: "Active Sprint",
     statusVariant: "active",
-    retainer: "USD $3,200 / month",
+    retainer: "AUD $5,200 / month",
     progress: 85,
-    currentSprint: "21 n8n Operational Automations & ClassReach Sync",
-    targetMilestone: "Live Operational Handover & Uptime Monitoring",
+    currentSprint: "21 n8n Automation Workflows & ClassReach Roster Sync",
+    targetMilestone: "Franchise Waiver & Roster Sentinel",
     description:
-      "Full operational automation suite for sensory gym franchise operations. Automates parent waiver capture, class attendance logging, webhook dispatching, ClassReach system synchronisation, and automated member lifecycle emails.",
+      "Enterprise workflow automation for sensory gym franchises across Australia. Bridges ClassReach booking rosters with HubSpot CRM and automated parent waiver signature archiving via self-hosted n8n.",
     deliverables: [
-      { code: "W01", title: "Parent waiver ingestion & digital storage webhook", status: "Completed" },
-      { code: "W05", title: "ClassReach roster synchronization to CRM", status: "Completed" },
-      { code: "W12", title: "Failed payment alert and automatic retry sequence", status: "Completed" },
-      { code: "W18", title: "Gym floor capacity alerts to manager mobile", status: "In Progress" },
-      { code: "W21", title: "Automated end-of-day revenue reconciliation", status: "In Progress" },
+      { code: "W01", title: "Parent waiver ingestion & Supabase record write", status: "Completed" },
+      { code: "W05", title: "ClassReach attendance sync to CRM", status: "Completed" },
+      { code: "W12", title: "Failed payment 3-stage dunning automated SMS", status: "In Progress" },
+      { code: "W18", title: "Gym floor capacity threshold alert", status: "Queued" },
+      { code: "W21", title: "Daily settlement revenue reconciliation", status: "Completed" },
     ],
-    keyTechStack: ["n8n Enterprise", "ClassReach API", "HubSpot CRM", "Webhooks", "PostgreSQL"],
+    keyTechStack: ["n8n Enterprise", "ClassReach CRM", "HubSpot", "Twilio SMS", "PostgreSQL"],
   },
   {
     id: "studio-nets",
     name: "Studio Nets",
-    code: "SN-US",
-    industry: "Creative Design & Brand Systems",
-    location: "Austin, Texas, US",
-    contactName: "Elena Rostova",
+    code: "SN-AU",
+    industry: "Digital Creative & Design Systems",
+    location: "Sydney, NSW, AU",
+    contactName: "Nathan Blake",
     contactRole: "Creative Director",
     accountLead: "Erwin Manaog",
     specialist: "BJ Ricafrente",
@@ -130,7 +135,7 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     description:
       "Operational systemization for a boutique digital creative agency. Bridges Figma design asset reviews with client sign-off checklists, ClickUp task generation, and automated Fathom meeting summary transcript extraction.",
     deliverables: [
-      { code: "SN-01", title: "Client intake questionnaire and Figma asset folder generator", status: "Completed" },
+      { code: "SN-01", title: "Client intake questionnaire and Figma folder generator", status: "Completed" },
       { code: "SN-02", title: "Creative production SOP & Fathom call sync", status: "Completed" },
       { code: "SN-03", title: "Client feedback portal and approval states", status: "In Progress" },
       { code: "SN-04", title: "Resource allocation & contractor billing matrix", status: "Queued" },
@@ -160,45 +165,45 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
       { code: "IVC-02", title: "Instant estimate calculator and SMS quote follow-up", status: "In Progress" },
       { code: "IVC-03", title: "Cleaner dispatch alerts via WhatsApp/SMS", status: "Queued" },
     ],
-    keyTechStack: ["GoHighLevel", "Stripe", "Twilio SMS", "Zapier"],
+    keyTechStack: ["ClickUp", "Twilio SMS", "GoHighLevel", "Stripe Invoicing"],
   },
   {
     id: "aaron-ofosu",
     name: "Aaron Ofosu Bootcamp",
-    code: "AO-US",
-    industry: "Athletic Conditioning & Fitness",
-    location: "London, UK / Global",
+    code: "AO-AU",
+    industry: "High-Performance Athletic Fitness",
+    location: "Gold Coast, Queensland, AU",
     contactName: "Aaron Ofosu",
-    contactRole: "Founder & Master Trainer",
-    accountLead: "BJ Ricafrente",
-    specialist: "Radzdom Gallego (Radz)",
-    status: "Discovery Intake",
-    statusVariant: "upcoming",
-    retainer: "USD $4,000 / month",
-    progress: 20,
-    currentSprint: "Student Onboarding Pipeline & Community Setup",
-    targetMilestone: "Cohort 1 Launch Readiness",
+    contactRole: "Founder & Elite Strength Coach",
+    accountLead: "Divine Origines",
+    specialist: "Radzdom Gallego",
+    status: "Active Sprint",
+    statusVariant: "active",
+    retainer: "AUD $3,200 / month",
+    progress: 50,
+    currentSprint: "Athlete Onboarding & Membership Checkout Portal",
+    targetMilestone: "Summer Bootcamp Intake Launch",
     description:
-      "Athlete training ecosystem and premium membership portal. Features multi-week fitness program progressions, video accountability check-ins, automated milestone badges, and Stripe recurring memberships.",
+      "Full digital athlete onboarding and recurring subscription billing infrastructure. Automates liability waivers, trainer scheduling, nutrition plan PDF distribution, and Stripe recurring memberships.",
     deliverables: [
-      { code: "AO-01", title: "Student intake pipeline and welcome video sequence", status: "In Review" },
-      { code: "AO-02", title: "Membership portal setup & community channels", status: "In Progress" },
-      { code: "AO-03", title: "Weekly workout video delivery workflow", status: "Queued" },
+      { code: "AO-01", title: "Athlete liability waiver & health questionnaire", status: "Completed" },
+      { code: "AO-02", title: "Stripe subscription checkout with coupon rules", status: "In Progress" },
+      { code: "AO-03", title: "Class capacity & trainer dispatch alert", status: "Queued" },
     ],
-    keyTechStack: ["Skool / Circle", "GoHighLevel", "Stripe Billing", "Loom"],
+    keyTechStack: ["Stripe Billing", "Google Workspace", "ClickUp", "Typeform"],
   },
   {
     id: "tch2thrive",
     name: "Tch2Thrive",
     code: "T2T-US",
-    industry: "Educational Consultancy & Teacher Development",
-    location: "California, US",
-    contactName: "Dr. Gloria Ramos Gonzalez",
+    industry: "Education & Teacher Development",
+    location: "California, United States",
+    contactName: "Kimberly Daniels",
     contactRole: "Executive Director",
-    accountLead: "Divine Origines",
-    specialist: "Ma. Rose Anne (RA) Malinao",
-    status: "Proposal Staged",
-    statusVariant: "review",
+    accountLead: "Ma. Rose Anne (RA) Malinao",
+    specialist: "BJ Ricafrente",
+    status: "Discovery Intake",
+    statusVariant: "upcoming",
     retainer: "USD $2,500 / month",
     progress: 40,
     currentSprint: "School District Proposal & ClickUp SOP Library",
@@ -220,357 +225,471 @@ interface ClientPortfolioViewProps {
 }
 
 export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: ClientPortfolioViewProps) {
-  const [selectedClientId, setSelectedClientId] = useState<string>("little-treasures");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [isOnboardModalOpen, setIsOnboardModalOpen] = useState(false);
-
-  const filteredClients = CLIENT_PORTFOLIO.filter((c) => {
-    // Client scope enforcement
+  // Filter clients based on logged-in member's access scope
+  const accessibleClients = CLIENT_PORTFOLIO.filter((c) => {
     if (clientScope && clientScope !== "all") {
       const allowed = Array.isArray(clientScope) ? clientScope : [clientScope];
-      const hasAccess = allowed.some((scope) =>
-        c.name.toLowerCase().includes(scope.toLowerCase()) || scope.toLowerCase().includes(c.name.toLowerCase())
-      );
-      if (!hasAccess) return false;
-    }
-
-    if (statusFilter !== "all" && c.status.toLowerCase() !== statusFilter.toLowerCase()) {
-      return false;
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        c.name.toLowerCase().includes(q) ||
-        c.industry.toLowerCase().includes(q) ||
-        c.contactName.toLowerCase().includes(q) ||
-        c.code.toLowerCase().includes(q)
+      return allowed.some(
+        (scope) =>
+          c.name.toLowerCase().includes(scope.toLowerCase()) ||
+          scope.toLowerCase().includes(c.name.toLowerCase())
       );
     }
     return true;
   });
 
+  const [selectedClientId, setSelectedClientId] = useState<string>(
+    accessibleClients[0]?.id || "little-treasures"
+  );
+  const [activeSubTab, setActiveSubTab] = useState<"calendar" | "board" | "dossier">("calendar");
+
+  // Modals & Tasks State
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isOnboardModalOpen, setIsOnboardModalOpen] = useState(false);
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [selectedTaskForDetail, setSelectedTaskForDetail] = useState<TaskItem | null>(null);
+
+  const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+
   const selectedClient =
-    CLIENT_PORTFOLIO.find((c) => c.id === selectedClientId) || CLIENT_PORTFOLIO[0];
+    accessibleClients.find((c) => c.id === selectedClientId) ||
+    accessibleClients[0] ||
+    CLIENT_PORTFOLIO[0];
+
+  const fetchTasks = async () => {
+    setIsLoadingTasks(true);
+    try {
+      const res = await fetch(`/api/tasks?client=${encodeURIComponent(selectedClient.name)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTasks(data.tasks || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch tasks:", e);
+    } finally {
+      setIsLoadingTasks(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks();
+
+    // Realtime channel for client tasks
+    try {
+      const supabase = createClient();
+      const channel = supabase
+        .channel(`realtime:client_tasks:${selectedClient.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "client_tasks" },
+          () => {
+            fetchTasks();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } catch {
+      // offline fallback
+    }
+  }, [selectedClient.id, selectedClient.name]);
+
+  // Status board grouping
+  const boardColumns: { status: TaskItem["status"]; title: string; color: string }[] = [
+    { status: "To Do", title: "To Do", color: "border-slate-300 bg-slate-50 text-slate-800" },
+    { status: "In Progress", title: "In Progress", color: "border-[#518E6A] bg-[#518E6A]/10 text-[#3D5249]" },
+    { status: "In Review", title: "In Review", color: "border-amber-400 bg-amber-50 text-amber-900" },
+    { status: "Approved", title: "Approved / Done", color: "border-emerald-500 bg-emerald-50 text-emerald-900" },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* 1. HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center space-x-2">
-            <h2 className="text-xl font-bold tracking-tight text-[#242E29]">
-              Client Portfolio Command Center
-            </h2>
-            <Badge variant="brand">{CLIENT_PORTFOLIO.length} Authentic Accounts</Badge>
+    <div className="space-y-5">
+      {/* 1. TOP HEADER & ACCESSIBLE CLIENT SELECTOR BAR */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#3D5249]/15 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xl font-bold tracking-tight text-[#242E29]">
+                Client Operations Workspace
+              </h2>
+              <Badge variant="brand">
+                {accessibleClients.length} {accessibleClients.length === 1 ? "Client Assigned" : "Clients Available"}
+              </Badge>
+            </div>
+            <p className="text-xs text-[#65746C] mt-0.5">
+              Select an account to view deadlines, workflow task statuses, and verified delivery dossiers.
+            </p>
           </div>
-          <p className="text-xs text-[#65746C] mt-0.5">
-            Operational client dossiers, delivery roadmaps, retainer metrics, and assigned team leads.
-          </p>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsReportModalOpen(true)}
+              className="text-xs flex items-center gap-1.5"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#518E6A]" />
+              <span>Client Report</span>
+            </Button>
+
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsOnboardModalOpen(true)}
+              className="flex items-center space-x-1 text-xs shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Onboard Client</span>
+            </Button>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => setIsOnboardModalOpen(true)}
-            className="flex items-center space-x-1.5 text-xs shadow-xs"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Onboard Client</span>
-          </Button>
-          <Badge variant="active" dot>
-            3 Active Builds
-          </Badge>
-          <Badge variant="review" dot>
-            2 Proposals Staged
-          </Badge>
-          <Badge variant="upcoming" dot>
-            1 Discovery
-          </Badge>
+        {/* Clean Client Switcher (Pill Selector) - Focused on One Client at a Time */}
+        <div className="pt-2 border-t border-[#3D5249]/10 flex items-center gap-2 overflow-x-auto pb-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#3D5249] shrink-0 mr-1 flex items-center gap-1">
+            <Building2 className="w-3.5 h-3.5 text-[#518E6A]" />
+            Active Client:
+          </span>
+          {accessibleClients.map((client) => {
+            const isSelected = client.id === selectedClientId;
+            return (
+              <button
+                key={client.id}
+                onClick={() => setSelectedClientId(client.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 border ${
+                  isSelected
+                    ? "bg-[#3D5249] text-white border-[#3D5249] shadow-xs"
+                    : "bg-[#FBF6F3] text-[#65746C] border-[#3D5249]/15 hover:border-[#3D5249]/40 hover:text-[#242E29]"
+                }`}
+              >
+                <span>{client.name}</span>
+                <span
+                  className={`text-[10px] font-mono px-1 py-0.2 rounded ${
+                    isSelected ? "bg-white/20 text-white" : "bg-[#3D5249]/10 text-[#3D5249]"
+                  }`}
+                >
+                  {client.code}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* 2. MAIN LAYOUT: CLIENT LIST ON LEFT, DOSSIER ON RIGHT */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column (5 Cols): Client List & Filters */}
-        <div className="lg:col-span-5 space-y-3">
-          <Card>
-            <CardContent className="p-3.5 space-y-3">
-              {/* Search & Filter */}
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#65746C]" />
-                <input
-                  type="text"
-                  placeholder="Filter clients..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 bg-[#FBF6F3]/50 border border-[#E8E2DD] rounded-lg text-xs text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
-                />
-              </div>
+      {/* 2. SUB-TAB SWITCHER (Calendar, Board, Dossier) */}
+      <div className="flex border-b border-[#3D5249]/15 bg-white rounded-t-2xl px-4 pt-2 shadow-xs">
+        <button
+          onClick={() => setActiveSubTab("calendar")}
+          className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 ${
+            activeSubTab === "calendar"
+              ? "border-[#518E6A] text-[#3D5249]"
+              : "border-transparent text-[#65746C] hover:text-[#242E29]"
+          }`}
+        >
+          <CalendarIcon className="w-4 h-4 text-[#518E6A]" />
+          Calendar &amp; Deadlines
+        </button>
 
-              {/* Status Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
-                <button
-                  onClick={() => setStatusFilter("all")}
-                  className={`px-2 py-0.5 rounded font-medium transition-colors ${
-                    statusFilter === "all"
-                      ? "bg-[#3D5249] text-white"
-                      : "bg-[#FBF6F3] text-[#65746C] hover:bg-[#E8E2DD]"
-                  }`}
-                >
-                  All (6)
-                </button>
-                <button
-                  onClick={() => setStatusFilter("active sprint")}
-                  className={`px-2 py-0.5 rounded font-medium transition-colors ${
-                    statusFilter === "active sprint"
-                      ? "bg-[#466B53] text-white"
-                      : "bg-[#FBF6F3] text-[#65746C] hover:bg-[#E8E2DD]"
-                  }`}
-                >
-                  Active (3)
-                </button>
-                <button
-                  onClick={() => setStatusFilter("proposal staged")}
-                  className={`px-2 py-0.5 rounded font-medium transition-colors ${
-                    statusFilter === "proposal staged"
-                      ? "bg-amber-600 text-white"
-                      : "bg-[#FBF6F3] text-[#65746C] hover:bg-[#E8E2DD]"
-                  }`}
-                >
-                  Proposals (2)
-                </button>
-              </div>
-            </CardContent>
-          </Card>
+        <button
+          onClick={() => setActiveSubTab("board")}
+          className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 ${
+            activeSubTab === "board"
+              ? "border-[#518E6A] text-[#3D5249]"
+              : "border-transparent text-[#65746C] hover:text-[#242E29]"
+          }`}
+        >
+          <Layers className="w-4 h-4 text-[#518E6A]" />
+          Task Board ({tasks.length})
+        </button>
 
-          {/* Client Cards List */}
-          <div className="space-y-2">
-            {filteredClients.map((client) => {
-              const isSelected = client.id === selectedClientId;
+        <button
+          onClick={() => setActiveSubTab("dossier")}
+          className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 ${
+            activeSubTab === "dossier"
+              ? "border-[#518E6A] text-[#3D5249]"
+              : "border-transparent text-[#65746C] hover:text-[#242E29]"
+          }`}
+        >
+          <Building2 className="w-4 h-4 text-[#518E6A]" />
+          Client Dossier &amp; Retainer
+        </button>
+      </div>
+
+      {/* 3. ACTIVE SUB-TAB CONTENT */}
+      {/* SUB-TAB 1: INTERACTIVE CALENDAR VIEW */}
+      {activeSubTab === "calendar" && (
+        <ClientCalendarView
+          clientName={selectedClient.name}
+          tasks={tasks}
+          onTaskUpdated={fetchTasks}
+          availableClients={accessibleClients.map((c) => c.name)}
+        />
+      )}
+
+      {/* SUB-TAB 2: KANBAN TASK BOARD */}
+      {activeSubTab === "board" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-[#242E29] flex items-center gap-2">
+                <span>Task Delivery Board &mdash; {selectedClient.name}</span>
+              </h3>
+              <p className="text-xs text-[#65746C]">
+                Track deliverable movement through To Do, In Progress, QA Review, and Approved sign-offs.
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsCreateTaskOpen(true)}
+              className="flex items-center gap-1.5 text-xs shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Task</span>
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+            {boardColumns.map((col) => {
+              const colTasks = tasks.filter(
+                (t) => t.status.toLowerCase() === col.status.toLowerCase()
+              );
+
               return (
-                <div
-                  key={client.id}
-                  onClick={() => setSelectedClientId(client.id)}
-                  className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
-                    isSelected
-                      ? "bg-white border-[#518E6A] ring-2 ring-[#518E6A]/20 shadow-xs"
-                      : "bg-white border-[#E8E2DD] hover:border-[#466B53]/40 hover:bg-[#FBF6F3]/30"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-bold text-[#3D5249] text-[10px] bg-[#466B53]/15 px-1.5 py-0.2 rounded border border-[#466B53]/25">
-                      {client.code}
+                <div key={col.status} className="bg-white rounded-2xl border border-[#3D5249]/15 shadow-sm overflow-hidden flex flex-col">
+                  {/* Column Header */}
+                  <div className={`px-4 py-3 border-b flex items-center justify-between font-bold text-xs ${col.color}`}>
+                    <span className="uppercase tracking-wider">{col.title}</span>
+                    <span className="w-5 h-5 rounded-full bg-white/80 border border-current flex items-center justify-center font-mono text-[11px]">
+                      {colTasks.length}
                     </span>
-                    <Badge variant={client.statusVariant} dot>
-                      {client.status}
-                    </Badge>
                   </div>
 
-                  <h3 className="font-bold text-xs text-[#242E29] line-clamp-1">
-                    {client.name}
-                  </h3>
+                  {/* Tasks List */}
+                  <div className="p-3 space-y-2.5 min-h-64 bg-[#FBF6F3]/30">
+                    {colTasks.length === 0 ? (
+                      <div className="p-6 text-center text-xs text-[#65746C]/60 italic border border-dashed border-[#3D5249]/15 rounded-xl">
+                        No tasks in {col.title}
+                      </div>
+                    ) : (
+                      colTasks.map((task) => {
+                        const dueDateObj = task.due_date ? new Date(task.due_date) : null;
+                        const isOverdue = dueDateObj && dueDateObj.getTime() < new Date(2026, 10, 3).getTime();
 
-                  <p className="text-[11px] text-[#65746C] line-clamp-1 mt-0.5">
-                    {client.industry}
-                  </p>
+                        return (
+                          <div
+                            key={task.id}
+                            role="button"
+                            onClick={() => setSelectedTaskForDetail(task)}
+                            className="p-3 rounded-xl bg-white border border-[#3D5249]/15 hover:border-[#518E6A] hover:shadow-md transition-all cursor-pointer space-y-2"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#3D5249]/10 text-[#3D5249] font-bold">
+                                {task.tags?.[0] || "TASK"}
+                              </span>
+                              {task.priority === "Urgent" ? (
+                                <Badge variant="critical">Urgent</Badge>
+                              ) : task.priority === "High" ? (
+                                <Badge variant="review">High</Badge>
+                              ) : null}
+                            </div>
 
-                  <div className="mt-2.5 pt-2 border-t border-[#E8E2DD]/60 flex items-center justify-between text-[10px] text-[#65746C]">
-                    <span>Lead: <strong>{client.accountLead}</strong></span>
-                    <span className="font-semibold text-[#466B53]">{client.retainer}</span>
-                  </div>
+                            <h4 className="text-xs font-bold text-[#242E29] line-clamp-2">
+                              {task.title}
+                            </h4>
 
-                  {/* Progress Bar */}
-                  <div className="mt-2 w-full bg-[#E8E2DD]/60 rounded-full h-1 overflow-hidden">
-                    <div
-                      className="bg-[#518E6A] h-1 rounded-full transition-all"
-                      style={{ width: `${client.progress}%` }}
-                    />
+                            <div className="pt-2 border-t border-[#3D5249]/10 flex items-center justify-between text-[11px] text-[#65746C]">
+                              <span className="flex items-center gap-1 truncate max-w-28">
+                                <User className="w-3 h-3 text-[#518E6A]" />
+                                {task.assignee_name?.split(" ")[0] || "Unassigned"}
+                              </span>
+                              {dueDateObj && (
+                                <span
+                                  className={`flex items-center gap-1 font-medium ${
+                                    isOverdue ? "text-rose-600 font-bold" : "text-[#65746C]"
+                                  }`}
+                                >
+                                  <Clock className="w-3 h-3" />
+                                  {dueDateObj.toLocaleDateString("en-AU", { month: "short", day: "numeric" })}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
+      )}
 
-        {/* Right Column (7 Cols): Detailed Client Dossier */}
-        <div className="lg:col-span-7 space-y-4">
-          <Card>
-            {/* Header Strip */}
-            <div className="p-5 border-b border-[#E8E2DD] bg-[#FBF6F3]/50">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                <div className="flex items-center space-x-2">
-                  <span className="font-bold text-[#3D5249] text-xs bg-[#466B53]/20 px-2 py-0.5 rounded border border-[#466B53]/30">
-                    {selectedClient.code}
-                  </span>
-                  <Badge variant={selectedClient.statusVariant} dot>
-                    {selectedClient.status}
-                  </Badge>
-                </div>
-                <span className="text-xs font-bold text-[#466B53]">
-                  {selectedClient.retainer}
+      {/* SUB-TAB 3: CLIENT DOSSIER & RETAINER */}
+      {activeSubTab === "dossier" && (
+        <Card>
+          <div className="p-5 border-b border-[#E8E2DD] bg-[#FBF6F3]/50">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+              <div className="flex items-center space-x-2">
+                <span className="font-bold text-[#3D5249] text-xs bg-[#466B53]/20 px-2 py-0.5 rounded border border-[#466B53]/30">
+                  {selectedClient.code}
                 </span>
+                <Badge variant={selectedClient.statusVariant} dot>
+                  {selectedClient.status}
+                </Badge>
               </div>
+              <span className="text-xs font-bold text-[#466B53]">
+                {selectedClient.retainer}
+              </span>
+            </div>
 
-              <h2 className="text-lg font-bold text-[#242E29]">
-                {selectedClient.name}
-              </h2>
-              <p className="text-xs text-[#65746C] mt-0.5">
-                {selectedClient.industry} · {selectedClient.location}
+            <h2 className="text-lg font-bold text-[#242E29]">
+              {selectedClient.name}
+            </h2>
+            <p className="text-xs text-[#65746C] mt-0.5">
+              {selectedClient.industry} &bull; {selectedClient.location}
+            </p>
+          </div>
+
+          <CardContent className="p-5 space-y-5 text-xs">
+            <div>
+              <h4 className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider mb-1.5">
+                Strategic Scope &amp; Objective
+              </h4>
+              <p className="text-xs text-[#242E29] leading-relaxed">
+                {selectedClient.description}
               </p>
             </div>
 
-            {/* Strategic Overview */}
-            <CardContent className="p-5 space-y-5 text-xs">
+            {/* Account Stakeholders */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/40">
               <div>
-                <h4 className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider mb-1.5">
-                  Strategic Scope & Objective
-                </h4>
-                <p className="text-xs text-[#242E29] leading-relaxed">
-                  {selectedClient.description}
+                <span className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider block">
+                  Client Contact
+                </span>
+                <p className="font-bold text-xs text-[#242E29] mt-0.5">
+                  {selectedClient.contactName}
                 </p>
+                <p className="text-[10px] text-[#65746C]">{selectedClient.contactRole}</p>
               </div>
 
-              {/* Account Stakeholders Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/40">
-                <div>
-                  <span className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider block">
-                    Client Contact
-                  </span>
-                  <p className="font-bold text-xs text-[#242E29] mt-0.5">
-                    {selectedClient.contactName}
-                  </p>
-                  <p className="text-[10px] text-[#65746C]">{selectedClient.contactRole}</p>
-                </div>
-
-                <div>
-                  <span className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider block">
-                    GIM Account Lead
-                  </span>
-                  <p className="font-bold text-xs text-[#242E29] mt-0.5">
-                    {selectedClient.accountLead}
-                  </p>
-                  <p className="text-[10px] text-[#518E6A] font-medium">Project Owner</p>
-                </div>
-
-                <div>
-                  <span className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider block">
-                    Technical Specialist
-                  </span>
-                  <p className="font-bold text-xs text-[#242E29] mt-0.5">
-                    {selectedClient.specialist}
-                  </p>
-                  <p className="text-[10px] text-[#466B53] font-medium">Delivery & Systems</p>
-                </div>
-              </div>
-
-              {/* Current Sprint & Hard Target */}
-              <div className="p-3.5 rounded-xl border border-[#518E6A]/30 bg-[#EDFDF5]/60 flex items-start space-x-3">
-                <CheckCircle2 className="w-4 h-4 text-[#38A169] shrink-0 mt-0.5" />
-                <div className="space-y-0.5 flex-1">
-                  <p className="font-bold text-xs text-[#276749]">
-                    Current Sprint Focus: {selectedClient.currentSprint}
-                  </p>
-                  <p className="text-[11px] text-[#276749]/80">
-                    Target Milestone: <strong>{selectedClient.targetMilestone}</strong>
-                  </p>
-                </div>
-              </div>
-
-              {/* Deliverables & Quality Gates Checklist */}
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider">
-                    Deliverables & Verification Gates
-                  </h4>
-                  <span className="text-[11px] text-[#65746C]">
-                    Overall Progress: <strong>{selectedClient.progress}%</strong>
-                  </span>
-                </div>
-
-                <div className="divide-y divide-[#E8E2DD]/50 border border-[#E8E2DD] rounded-xl overflow-hidden bg-white">
-                  {selectedClient.deliverables.map((del, idx) => (
-                    <div
-                      key={idx}
-                      className="p-2.5 flex items-center justify-between hover:bg-[#FBF6F3]/40 transition-colors text-xs"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-[10px] text-[#3D5249] bg-[#466B53]/10 px-1.5 py-0.2 rounded">
-                          {del.code}
-                        </span>
-                        <span className="font-medium text-[#242E29] text-xs">
-                          {del.title}
-                        </span>
-                      </div>
-                      <Badge
-                        variant={
-                          del.status === "Completed"
-                            ? "active"
-                            : del.status === "In Review"
-                            ? "review"
-                            : del.status === "In Progress"
-                            ? "brand"
-                            : "upcoming"
-                        }
-                      >
-                        {del.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
+                <span className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider block">
+                  GIM Account Lead
+                </span>
+                <p className="font-bold text-xs text-[#242E29] mt-0.5">
+                  {selectedClient.accountLead}
+                </p>
+                <p className="text-[10px] text-[#518E6A] font-medium">Project Owner</p>
               </div>
 
-              {/* Tech Stack Pills */}
               <div>
-                <h4 className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider mb-2">
-                  Integrated Technologies & Tooling
-                </h4>
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedClient.keyTechStack.map((tech, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 rounded-md bg-[#FBF6F3] border border-[#E8E2DD] text-[11px] font-medium text-[#242E29]"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-
-            {/* Card Footer with Quick Link to Tasks & Report Generator */}
-            <div className="p-3.5 border-t border-[#E8E2DD] bg-[#FBF6F3]/60 flex items-center justify-between">
-              <span className="text-[11px] text-[#65746C]">
-                Operational backlog mirrored from ClickUp
-              </span>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setIsReportModalOpen(true)}
-                  className="flex items-center space-x-1.5 text-xs"
-                >
-                  <FileText className="w-3.5 h-3.5 text-[#518E6A]" />
-                  <span>Generate Report</span>
-                </Button>
-                {onSelectTasks && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => onSelectTasks(selectedClient.name)}
-                    className="flex items-center space-x-1 text-xs"
-                  >
-                    <span>View {selectedClient.code} Tasks</span>
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </Button>
-                )}
+                <span className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider block">
+                  Technical Specialist
+                </span>
+                <p className="font-bold text-xs text-[#242E29] mt-0.5">
+                  {selectedClient.specialist}
+                </p>
+                <p className="text-[10px] text-[#466B53] font-medium">Delivery &amp; Systems</p>
               </div>
             </div>
-          </Card>
-        </div>
-      </div>
+
+            {/* Current Sprint Focus */}
+            <div className="p-3.5 rounded-xl border border-[#518E6A]/30 bg-[#EDFDF5]/60 flex items-start space-x-3">
+              <CheckCircle2 className="w-4 h-4 text-[#38A169] shrink-0 mt-0.5" />
+              <div className="space-y-0.5 flex-1">
+                <p className="font-bold text-xs text-[#276749]">
+                  Current Sprint Focus: {selectedClient.currentSprint}
+                </p>
+                <p className="text-[11px] text-[#276749]/80">
+                  Target Milestone: <strong>{selectedClient.targetMilestone}</strong>
+                </p>
+              </div>
+            </div>
+
+            {/* Deliverables Checklist */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider">
+                  Deliverables &amp; Verification Gates
+                </h4>
+                <span className="text-[11px] text-[#65746C]">
+                  Overall Progress: <strong>{selectedClient.progress}%</strong>
+                </span>
+              </div>
+
+              <div className="divide-y divide-[#E8E2DD]/50 border border-[#E8E2DD] rounded-xl overflow-hidden bg-white">
+                {selectedClient.deliverables.map((del, idx) => (
+                  <div
+                    key={idx}
+                    className="p-2.5 flex items-center justify-between hover:bg-[#FBF6F3]/40 transition-colors text-xs"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-[10px] text-[#3D5249] bg-[#466B53]/10 px-1.5 py-0.2 rounded">
+                        {del.code}
+                      </span>
+                      <span className="font-medium text-[#242E29] text-xs">
+                        {del.title}
+                      </span>
+                    </div>
+                    <Badge
+                      variant={
+                        del.status === "Completed"
+                          ? "active"
+                          : del.status === "In Review"
+                          ? "review"
+                          : del.status === "In Progress"
+                          ? "brand"
+                          : "upcoming"
+                      }
+                    >
+                      {del.status}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Key Tech Stack */}
+            <div>
+              <h4 className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider mb-2">
+                Integrated Technologies &amp; Tooling
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {selectedClient.keyTechStack.map((tech, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2.5 py-1 rounded-md bg-[#FBF6F3] border border-[#E8E2DD] text-[11px] font-medium text-[#242E29]"
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Task Detail Modal */}
+      <TaskDetailModal
+        task={selectedTaskForDetail}
+        isOpen={!!selectedTaskForDetail}
+        onClose={() => setSelectedTaskForDetail(null)}
+        onTaskUpdated={fetchTasks}
+      />
+
+      {/* Create Task Modal */}
+      <CreateTaskModal
+        isOpen={isCreateTaskOpen}
+        onClose={() => setIsCreateTaskOpen(false)}
+        defaultClient={selectedClient.name}
+        availableClients={accessibleClients.map((c) => c.name)}
+        onTaskCreated={fetchTasks}
+      />
 
       {/* Client Report Export Modal */}
       <ClientReportExportModal
@@ -583,6 +702,7 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
       <ClientOnboardingModal
         isOpen={isOnboardModalOpen}
         onClose={() => setIsOnboardModalOpen(false)}
+        onClientAdded={fetchTasks}
       />
     </div>
   );

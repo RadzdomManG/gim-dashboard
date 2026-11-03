@@ -26,6 +26,8 @@ import {
   Smile,
   Edit2,
   Trash2,
+  CheckCheck,
+  ArrowLeft,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -162,6 +164,12 @@ export function MessagingCenter({
 }: MessagingCenterProps) {
   const [channels, setChannels] = useState<ChatChannel[]>(INITIAL_CHANNELS);
   const [activeChannelId, setActiveChannelId] = useState<string>("general");
+  const [mobileView, setMobileView] = useState<"list" | "chat">("chat");
+  const [typingUsers, setTypingUsers] = useState<Record<string, { name: string; time: number }>>({});
+  const [seenUsers, setSeenUsers] = useState<Record<string, { name: string; seenAt: number }>>({});
+  const realtimeChannelRef = useRef<any>(null);
+  const lastTypingBroadcastRef = useRef<number>(0);
+
   const [messages, setMessages] = useState<Record<string, ChatMessage[]>>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -175,6 +183,26 @@ export function MessagingCenter({
   });
   const [inputText, setInputText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Clean up expired typing indicators after 2.5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setTypingUsers((prev) => {
+        let changed = false;
+        const next: Record<string, { name: string; time: number }> = {};
+        for (const [uid, info] of Object.entries(prev)) {
+          if (now - info.time < 2500) {
+            next[uid] = info;
+          } else {
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const updateAndPersistMessages = (updater: (prev: Record<string, ChatMessage[]>) => Record<string, ChatMessage[]>) => {
     setMessages((prev) => {
@@ -234,7 +262,7 @@ export function MessagingCenter({
       })
       .catch((err) => console.log("Realtime fetch fallback:", err));
 
-    // 2. Supabase Realtime Channel
+    // 2. Supabase Realtime Channel (Database Inserts + Broadcast Typing + Broadcast Seen)
     try {
       const supabase = createClient();
       const channel = supabase
@@ -274,17 +302,87 @@ export function MessagingCenter({
                 [row.channel_id]: [...current, newMsg],
               };
             });
+
+            // If someone else sent a message, immediately acknowledge seen
+            if (row.sender_id !== currentUserId) {
+              channel.send({
+                type: "broadcast",
+                event: "seen",
+                payload: {
+                  channelId: activeChannelId,
+                  userId: currentUserId,
+                  userName: currentUserNickname || currentUserName,
+                  seenAt: Date.now(),
+                },
+              });
+            }
           }
         )
-        .subscribe();
+        .on("broadcast", { event: "typing" }, (payload) => {
+          const { userId, userName } = payload.payload || {};
+          if (userId && userId !== currentUserId) {
+            setTypingUsers((prev) => ({
+              ...prev,
+              [userId]: { name: userName || "Team Member", time: Date.now() },
+            }));
+          }
+        })
+        .on("broadcast", { event: "seen" }, (payload) => {
+          const { userId, userName, seenAt } = payload.payload || {};
+          if (userId && userId !== currentUserId) {
+            setSeenUsers((prev) => ({
+              ...prev,
+              [userId]: { name: userName || "Member", seenAt: seenAt || Date.now() },
+            }));
+          }
+        })
+        .subscribe((status) => {
+          if (status === "SUBSCRIBED") {
+            // Broadcast initial presence/seen
+            channel.send({
+              type: "broadcast",
+              event: "seen",
+              payload: {
+                channelId: activeChannelId,
+                userId: currentUserId,
+                userName: currentUserNickname || currentUserName,
+                seenAt: Date.now(),
+              },
+            });
+          }
+        });
+
+      realtimeChannelRef.current = channel;
 
       return () => {
         supabase.removeChannel(channel);
+        realtimeChannelRef.current = null;
       };
     } catch (e) {
       console.log("Supabase realtime subscription bypassed:", e);
     }
-  }, [activeChannelId]);
+  }, [activeChannelId, currentUserId, currentUserName, currentUserNickname]);
+
+  // Throttled typing broadcast
+  const handleInputChange = (text: string) => {
+    setInputText(text);
+    if (!text.trim()) return;
+
+    const now = Date.now();
+    if (now - lastTypingBroadcastRef.current > 1500) {
+      lastTypingBroadcastRef.current = now;
+      if (realtimeChannelRef.current) {
+        realtimeChannelRef.current.send({
+          type: "broadcast",
+          event: "typing",
+          payload: {
+            userId: currentUserId,
+            userName: currentUserNickname || currentUserName,
+          },
+        });
+      }
+    }
+  };
 
   const activeChannel = channels.find((c) => c.id === activeChannelId) || channels[0];
   const activeMessages = messages[activeChannelId] || [];
@@ -316,11 +414,12 @@ export function MessagingCenter({
 
     setInputText("");
 
-    // Dispatch to Supabase API
+    // Dispatch to Supabase API with exact message ID for instant deduplication
     fetch("/api/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        id: tempId,
         channel_id: activeChannelId,
         sender_id: currentUserId,
         sender_name: currentUserName,
@@ -370,6 +469,7 @@ export function MessagingCenter({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        id: newMessage.id,
         channel_id: activeChannelId,
         sender_id: currentUserId,
         sender_name: currentUserName,
@@ -471,9 +571,9 @@ export function MessagingCenter({
 
       {/* 2. CHAT CONTAINER: SIDEBAR + ACTIVE CONVERSATION */}
       <Card className="overflow-hidden border border-[#E8E2DD] shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-12 min-h-[620px]">
+        <div className="grid grid-cols-1 md:grid-cols-12 min-h-[580px] md:min-h-[620px]">
           {/* Left Sidebar: Channels & DMs (4 Cols) */}
-          <div className="md:col-span-4 border-r border-[#E8E2DD] bg-[#FBF6F3]/50 flex flex-col">
+          <div className={`md:col-span-4 border-r border-[#E8E2DD] bg-[#FBF6F3]/50 flex flex-col ${mobileView === "chat" ? "hidden md:flex" : "flex"}`}>
             {/* Search Input */}
             <div className="p-3 border-b border-[#E8E2DD]">
               <div className="relative">
@@ -512,7 +612,10 @@ export function MessagingCenter({
                       return (
                         <button
                           key={channel.id}
-                          onClick={() => setActiveChannelId(channel.id)}
+                          onClick={() => {
+                            setActiveChannelId(channel.id);
+                            setMobileView("chat");
+                          }}
                           className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-colors ${
                             isActive
                               ? "bg-[#3D5249] text-white font-semibold shadow-xs"
@@ -551,7 +654,10 @@ export function MessagingCenter({
                       return (
                         <button
                           key={channel.id}
-                          onClick={() => setActiveChannelId(channel.id)}
+                          onClick={() => {
+                            setActiveChannelId(channel.id);
+                            setMobileView("chat");
+                          }}
                           className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-colors ${
                             isActive
                               ? "bg-[#3D5249] text-white font-semibold shadow-xs"
@@ -588,17 +694,26 @@ export function MessagingCenter({
           </div>
 
           {/* Right Area: Active Chat & Composer (8 Cols) */}
-          <div className="md:col-span-8 flex flex-col bg-white">
+          <div className={`md:col-span-8 flex flex-col bg-white ${mobileView === "list" ? "hidden md:flex" : "flex"}`}>
             {/* Chat Top Header */}
             <div className="p-3.5 border-b border-[#E8E2DD] bg-[#FBF6F3]/40 flex items-center justify-between">
               <div className="flex items-center space-x-2 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => setMobileView("list")}
+                  className="md:hidden p-1.5 -ml-1 rounded-lg bg-[#518E6A]/15 text-[#3D5249] hover:bg-[#518E6A]/25 transition-colors flex items-center space-x-1 shrink-0"
+                  title="Back to Channels"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5 text-[#3D5249]" />
+                  <span className="text-[10px] font-bold">Channels</span>
+                </button>
                 {activeChannel.isPrivate ? (
                   <Lock className="w-4 h-4 text-amber-600 shrink-0" />
                 ) : (
                   <Hash className="w-4 h-4 text-[#466B53] shrink-0" />
                 )}
-                <div>
-                  <h3 className="font-bold text-sm text-[#242E29] leading-tight">
+                <div className="min-w-0">
+                  <h3 className="font-bold text-sm text-[#242E29] leading-tight truncate">
                     {activeChannel.name}
                   </h3>
                   {activeChannel.description && (
@@ -609,7 +724,7 @@ export function MessagingCenter({
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 shrink-0">
                 <Badge variant="neutral">
                   <Users className="w-3 h-3 mr-1 inline" />
                   {activeChannel.membersCount} members
@@ -732,21 +847,61 @@ export function MessagingCenter({
                             ))}
                           </div>
                         )}
+
+                        {/* Read Receipts ("Seen by ...") on messages sent by current user */}
+                        {isCurrentUser && (
+                          <div className="flex items-center space-x-1 text-[10px] pt-0.5">
+                            {Object.keys(seenUsers).length > 0 ? (
+                              <div className="flex items-center space-x-1 text-[#466B53] font-medium">
+                                <CheckCheck className="w-3.5 h-3.5 text-[#518E6A]" />
+                                <span>Seen by {Object.values(seenUsers).map((u) => u.name).join(", ")}</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center space-x-1 text-[#65746C]">
+                                <CheckCircle2 className="w-3 h-3 text-[#65746C]" />
+                                <span>Sent</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
                 })
               )}
+
+              {/* Bottom channel seen indicator if someone else is active in channel */}
+              {activeMessages.length > 0 && Object.keys(seenUsers).length > 0 && (
+                <div className="flex items-center justify-end space-x-1 text-[10px] text-[#65746C] pr-1 pt-1 italic">
+                  <CheckCheck className="w-3.5 h-3.5 text-[#518E6A]" />
+                  <span>Seen by {Object.values(seenUsers).map((u) => u.name).join(", ")}</span>
+                </div>
+              )}
             </div>
 
             {/* Message Composer & Attachment Bar */}
             <div className="p-3 border-t border-[#E8E2DD] bg-[#FBF6F3]/30 space-y-2">
+              {/* Live Typing Indicator */}
+              {Object.keys(typingUsers).length > 0 && (
+                <div className="flex items-center space-x-1.5 text-[11px] text-[#466B53] font-medium animate-pulse px-1">
+                  <span className="flex space-x-0.5 items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#518E6A] animate-bounce"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#518E6A] animate-bounce [animation-delay:0.2s]"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#518E6A] animate-bounce [animation-delay:0.4s]"></span>
+                  </span>
+                  <span>
+                    {Object.values(typingUsers).map((u) => u.name).join(", ")}{" "}
+                    {Object.keys(typingUsers).length === 1 ? "is" : "are"} typing...
+                  </span>
+                </div>
+              )}
+
               <form onSubmit={handleSendMessage} className="space-y-2">
                 <div className="relative">
                   <textarea
                     rows={2}
                     value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
+                    onChange={(e) => handleInputChange(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
