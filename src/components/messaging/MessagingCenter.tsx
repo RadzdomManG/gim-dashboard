@@ -34,6 +34,9 @@ import {
   UserMinus,
   Pin,
   PinOff,
+  Share2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -297,6 +300,107 @@ export function MessagingCenter({
       }
       return next;
     });
+  };
+
+  // Context Menu & Forwarding State
+  const [contextMenuMsg, setContextMenuMsg] = useState<ChatMessage | null>(null);
+  const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [isForwardModalOpen, setIsForwardModalOpen] = useState(false);
+  const [forwardMsg, setForwardMsg] = useState<ChatMessage | null>(null);
+  const [copiedToast, setCopiedToast] = useState(false);
+  const touchTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Mobile Long-Press / Hold handlers
+  const handleMessageTouchStart = (msg: ChatMessage, e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const clientX = touch.clientX;
+    const clientY = touch.clientY;
+    touchTimerRef.current = setTimeout(() => {
+      setContextMenuMsg(msg);
+      setContextMenuPos({ x: clientX, y: clientY });
+      if (typeof window !== "undefined" && window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(35);
+      }
+    }, 450);
+  };
+
+  const handleMessageTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+    }
+  };
+
+  const handleMessageContextMenu = (msg: ChatMessage, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenuMsg(msg);
+    setContextMenuPos({ x: e.clientX, y: e.clientY });
+  };
+
+  // Delete message for everyone
+  const handleDeleteMessage = async (msgId: string) => {
+    updateAndPersistMessages((prev) => {
+      const channelMsgs = prev[activeChannelId] || [];
+      return {
+        ...prev,
+        [activeChannelId]: channelMsgs.filter((m) => m.id !== msgId),
+      };
+    });
+    setContextMenuMsg(null);
+
+    try {
+      await fetch(`/api/messages?id=${msgId}`, { method: "DELETE" });
+    } catch (err) {
+      console.error("Failed to delete message:", err);
+    }
+  };
+
+  // Forward message to another channel/DM
+  const handleExecuteForward = (targetChannelId: string) => {
+    if (!forwardMsg || !targetChannelId) return;
+
+    const forwardedContent = `↪ Forwarded from @${forwardMsg.senderNickname || forwardMsg.senderName}:\n"${forwardMsg.content}"`;
+    const newMsg: ChatMessage = {
+      id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      channelId: targetChannelId,
+      senderId: currentUserId,
+      senderName: currentUserName,
+      senderNickname: currentUserNickname,
+      senderAvatar: avatarColor,
+      senderRole: currentUserRole,
+      isCoreAdmin,
+      content: forwardedContent,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      attachments: forwardMsg.attachments,
+    };
+
+    updateAndPersistMessages((prev) => {
+      const targetMsgs = prev[targetChannelId] || [];
+      return {
+        ...prev,
+        [targetChannelId]: [...targetMsgs, newMsg],
+      };
+    });
+
+    fetch("/api/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newMsg),
+    }).catch((e) => console.error("Forward error:", e));
+
+    setIsForwardModalOpen(false);
+    setForwardMsg(null);
+    setContextMenuMsg(null);
+    setActiveChannelId(targetChannelId);
+  };
+
+  const handleCopyMessageText = (text: string) => {
+    if (typeof window !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedToast(true);
+      setTimeout(() => setCopiedToast(false), 2000);
+      setContextMenuMsg(null);
+    }
   };
 
   const isLeader =
@@ -1125,7 +1229,11 @@ export function MessagingCenter({
                   return (
                     <div
                       key={msg.id}
-                      className={`group relative flex items-start space-x-3 text-xs p-1.5 rounded-xl transition-colors ${
+                      onContextMenu={(e) => handleMessageContextMenu(msg, e)}
+                      onTouchStart={(e) => handleMessageTouchStart(msg, e)}
+                      onTouchEnd={handleMessageTouchEnd}
+                      onTouchMove={handleMessageTouchEnd}
+                      className={`group relative flex items-start space-x-3 text-xs p-1.5 rounded-xl transition-colors select-none ${
                         isPinned ? "bg-amber-50/60 border-l-2 border-amber-500 pl-2" : "hover:bg-black/[0.015]"
                       }`}
                     >
@@ -1923,6 +2031,265 @@ export function MessagingCenter({
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification when message text copied */}
+      {copiedToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-[#3D5249] text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-2xl flex items-center space-x-2 animate-in fade-in slide-in-from-bottom-2">
+          <Check className="w-4 h-4 text-emerald-400" />
+          <span>Message copied to clipboard!</span>
+        </div>
+      )}
+
+      {/* Message Context Menu (Right Click on Desktop / Long Press on Phone) */}
+      {contextMenuMsg && (
+        <div
+          className="fixed inset-0 z-50 bg-black/30 backdrop-blur-2xs flex sm:block items-end justify-center"
+          onClick={() => setContextMenuMsg(null)}
+        >
+          {/* Mobile Bottom Action Sheet (sm:hidden) */}
+          <div
+            className="sm:hidden w-full bg-white rounded-t-2xl p-4 shadow-2xl border-t border-[#E8E2DD] space-y-3 animate-in slide-in-from-bottom duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-1 bg-[#E8E2DD] rounded-full mx-auto mb-2" />
+            
+            {/* Quick Emoji Reactions Row */}
+            <div className="flex items-center justify-around bg-[#FBF6F3] p-2 rounded-xl">
+              {["👍", "❤️", "🔥", "😂", "🚀", "✅", "👀", "🎉"].map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => {
+                    toggleMessageReaction(contextMenuMsg.id, emoji);
+                    setContextMenuMsg(null);
+                  }}
+                  className="p-1.5 text-lg active:scale-125 transition-transform"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="divide-y divide-[#E8E2DD]/70 text-xs font-semibold text-[#242E29]">
+              <button
+                type="button"
+                onClick={() => {
+                  setReplyingToMessage({
+                    senderName: contextMenuMsg.senderNickname || contextMenuMsg.senderName,
+                    content: contextMenuMsg.content,
+                  });
+                  setContextMenuMsg(null);
+                }}
+                className="w-full flex items-center space-x-3 py-3 px-2 text-left active:bg-[#FBF6F3]"
+              >
+                <CornerUpLeft className="w-4 h-4 text-[#518E6A]" />
+                <span>Reply in Thread</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setForwardMsg(contextMenuMsg);
+                  setIsForwardModalOpen(true);
+                  setContextMenuMsg(null);
+                }}
+                className="w-full flex items-center space-x-3 py-3 px-2 text-left active:bg-[#FBF6F3]"
+              >
+                <Share2 className="w-4 h-4 text-blue-600" />
+                <span>Forward Message</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  togglePinMessage(contextMenuMsg.id);
+                  setContextMenuMsg(null);
+                }}
+                className="w-full flex items-center space-x-3 py-3 px-2 text-left active:bg-[#FBF6F3]"
+              >
+                <Pin className="w-4 h-4 text-amber-500" />
+                <span>Pin / Unpin Message</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleCopyMessageText(contextMenuMsg.content)}
+                className="w-full flex items-center space-x-3 py-3 px-2 text-left active:bg-[#FBF6F3]"
+              >
+                <Copy className="w-4 h-4 text-[#65746C]" />
+                <span>Copy Message Text</span>
+              </button>
+
+              {/* Delete for Everyone: Available to Sender or Admin/Owner */}
+              {(contextMenuMsg.senderId === currentUserId ||
+                contextMenuMsg.senderNickname === currentUserNickname ||
+                contextMenuMsg.senderName === currentUserName ||
+                isLeader ||
+                isCoreAdmin) && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteMessage(contextMenuMsg.id)}
+                  className="w-full flex items-center space-x-3 py-3 px-2 text-left text-rose-600 active:bg-rose-50"
+                >
+                  <Trash2 className="w-4 h-4 text-rose-600" />
+                  <span>Delete for Everyone</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Desktop Floating Context Menu (hidden sm:block) */}
+          <div
+            className="hidden sm:block absolute bg-white rounded-xl shadow-2xl border border-[#E8E2DD] p-1.5 w-56 z-50 animate-in zoom-in-95 duration-150"
+            style={{
+              top: Math.min(contextMenuPos?.y || 100, typeof window !== "undefined" ? window.innerHeight - 300 : 400),
+              left: Math.min(contextMenuPos?.x || 100, typeof window !== "undefined" ? window.innerWidth - 250 : 600),
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Quick Reactions */}
+            <div className="flex items-center justify-between px-2 py-1.5 border-b border-[#E8E2DD]/70 mb-1">
+              {["👍", "❤️", "🔥", "😂", "🚀", "✅"].map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => {
+                    toggleMessageReaction(contextMenuMsg.id, emoji);
+                    setContextMenuMsg(null);
+                  }}
+                  className="hover:scale-125 transition-transform text-sm p-1"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-0.5 text-xs font-semibold text-[#242E29]">
+              <button
+                type="button"
+                onClick={() => {
+                  setReplyingToMessage({
+                    senderName: contextMenuMsg.senderNickname || contextMenuMsg.senderName,
+                    content: contextMenuMsg.content,
+                  });
+                  setContextMenuMsg(null);
+                }}
+                className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg hover:bg-[#FBF6F3] text-left transition-colors"
+              >
+                <CornerUpLeft className="w-3.5 h-3.5 text-[#518E6A]" />
+                <span>Reply</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setForwardMsg(contextMenuMsg);
+                  setIsForwardModalOpen(true);
+                  setContextMenuMsg(null);
+                }}
+                className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg hover:bg-[#FBF6F3] text-left transition-colors"
+              >
+                <Share2 className="w-3.5 h-3.5 text-blue-600" />
+                <span>Forward Message</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  togglePinMessage(contextMenuMsg.id);
+                  setContextMenuMsg(null);
+                }}
+                className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg hover:bg-[#FBF6F3] text-left transition-colors"
+              >
+                <Pin className="w-3.5 h-3.5 text-amber-500" />
+                <span>Pin Message</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleCopyMessageText(contextMenuMsg.content)}
+                className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg hover:bg-[#FBF6F3] text-left transition-colors"
+              >
+                <Copy className="w-3.5 h-3.5 text-[#65746C]" />
+                <span>Copy Text</span>
+              </button>
+
+              {/* Delete for Everyone */}
+              {(contextMenuMsg.senderId === currentUserId ||
+                contextMenuMsg.senderNickname === currentUserNickname ||
+                contextMenuMsg.senderName === currentUserName ||
+                isLeader ||
+                isCoreAdmin) && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteMessage(contextMenuMsg.id)}
+                  className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg hover:bg-rose-50 text-rose-600 text-left transition-colors border-t border-[#E8E2DD]/60 pt-2"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Delete for Everyone</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Forward Message Modal */}
+      {isForwardModalOpen && forwardMsg && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-[#E8E2DD] shadow-2xl w-full max-w-md p-5 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-[#E8E2DD] pb-3">
+              <div className="flex items-center space-x-2">
+                <Share2 className="w-4 h-4 text-[#518E6A]" />
+                <h4 className="font-bold text-sm text-[#242E29]">Forward Message</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsForwardModalOpen(false);
+                  setForwardMsg(null);
+                }}
+                className="text-[#65746C] hover:text-[#242E29]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3 rounded-xl bg-[#FBF6F3] border border-[#E8E2DD] text-xs text-[#242E29] max-h-28 overflow-y-auto italic">
+              <span className="font-bold not-italic text-[#3D5249]">@{forwardMsg.senderNickname}:</span> &ldquo;{forwardMsg.content}&rdquo;
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-[#3D5249]">
+                Select Destination Channel / Direct Message:
+              </label>
+              <div className="max-h-52 overflow-y-auto space-y-1 divide-y divide-[#E8E2DD]/60">
+                {channels.map((chan) => (
+                  <button
+                    key={chan.id}
+                    type="button"
+                    onClick={() => handleExecuteForward(chan.id)}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-[#FBF6F3] text-left transition-colors text-xs"
+                  >
+                    <div className="flex items-center space-x-2 truncate">
+                      {chan.type === "dm" ? (
+                        <div className="w-5 h-5 rounded-full bg-[#466B53] text-white flex items-center justify-center text-[9px] font-bold shrink-0">
+                          {chan.name.slice(0, 2).toUpperCase()}
+                        </div>
+                      ) : (
+                        <Hash className="w-3.5 h-3.5 text-[#518E6A]" />
+                      )}
+                      <span className="font-bold text-[#242E29] truncate">{chan.name}</span>
+                    </div>
+                    <span className="text-[10px] text-[#518E6A] font-bold shrink-0">Send →</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

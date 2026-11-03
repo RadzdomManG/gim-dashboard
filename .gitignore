@@ -52,3 +52,5 @@ GIM Operating System (1)/
 __MACOSX/
 
 
+.vercel
+.env*

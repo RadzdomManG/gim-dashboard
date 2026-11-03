@@ -143,15 +143,6 @@ export default function GimDashboard() {
   const [isGlobalCreateTaskOpen, setIsGlobalCreateTaskOpen] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const accepted = localStorage.getItem("gim_onboarding_accepted");
-      if (!accepted) {
-        setShowOnboardingModal(true);
-      }
-    }
-  }, []);
-
   // Global Ctrl+K / Cmd+K listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -329,9 +320,9 @@ export default function GimDashboard() {
   });
 
   const [currentUserKey, setCurrentUserKey] = useState<string>("radz");
-  const currentUser = userProfiles[currentUserKey];
+  const currentUser = userProfiles[currentUserKey] || userProfiles["radz"] || Object.values(userProfiles)[0];
 
-  // Load custom avatars and profiles from localStorage
+  // Load authenticated user, custom avatars, and profiles from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
@@ -339,6 +330,44 @@ export default function GimDashboard() {
         if (saved) {
           const parsed = JSON.parse(saved);
           setUserProfiles((prev) => ({ ...prev, ...parsed }));
+        }
+
+        // Check if there is an authenticated user from /login
+        const authSaved = localStorage.getItem("gim_auth_user");
+        if (authSaved) {
+          const authUser = JSON.parse(authSaved);
+          const userKey = (authUser.id || authUser.username || authUser.nickname || "radz").toLowerCase();
+          
+          setUserProfiles((prev) => {
+            const existing = prev[userKey];
+            const updatedProfile = {
+              name: authUser.name || authUser.username || "Team Member",
+              nickname: authUser.nickname || authUser.name || authUser.username || "Member",
+              role: authUser.role || "Specialist",
+              title: authUser.title || authUser.role || "Operational Specialist",
+              isCoreAdmin: authUser.isCoreAdmin ?? (authUser.role === "Owner" || authUser.role === "Admin"),
+              avatarColor: authUser.avatarColor || existing?.avatarColor || "bg-[#466B53]",
+              avatarUrl: authUser.avatarUrl || existing?.avatarUrl || "",
+              clientScope: authUser.clientScope || "all",
+            };
+            return {
+              ...prev,
+              [userKey]: updatedProfile,
+            };
+          });
+
+          setCurrentUserKey(userKey);
+
+          // Check onboarding specifically for this authenticated user!
+          const userOnboarded = localStorage.getItem(`gim_onboarded_${userKey}`);
+          if (!userOnboarded) {
+            setShowOnboardingModal(true);
+          }
+        } else {
+          const generalOnboarded = localStorage.getItem("gim_onboarded_radz");
+          if (!generalOnboarded) {
+            setShowOnboardingModal(true);
+          }
         }
       } catch (err) {
         console.error("Failed to load user profiles from localStorage:", err);
@@ -949,9 +978,9 @@ export default function GimDashboard() {
       {/* ========================================================================= */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* TOP HEADER */}
-        <header className="h-16 bg-[#FBF6F3]/90 backdrop-blur-md border-b border-[#E8E2DD] px-4 sm:px-8 flex items-center justify-between shrink-0 gap-3">
+        <header className="h-16 bg-[#FBF6F3]/95 backdrop-blur-md border-b border-[#E8E2DD] px-2.5 sm:px-6 flex items-center justify-between shrink-0 gap-1.5 sm:gap-3 overflow-hidden">
           {/* Left Header: Mobile hamburger & Global Client Workspace Switcher */}
-          <div className="flex items-center space-x-3 flex-1 min-w-0">
+          <div className="flex items-center space-x-1.5 sm:space-x-2.5 min-w-0 shrink">
             <button
               onClick={() => setMobileMenuOpen(true)}
               className="p-1.5 rounded-lg text-[#65746C] hover:text-[#242E29] hover:bg-white md:hidden shrink-0"
@@ -960,34 +989,32 @@ export default function GimDashboard() {
               <Menu className="w-5 h-5" />
             </button>
 
-            {/* Global Client Workspace Switcher — Instant Account Context (No ClickUp Logout/Login Required) */}
-            <div className="flex items-center space-x-2 bg-white border border-[#E8E2DD] rounded-xl px-2.5 py-1.5 shadow-2xs hover:border-[#518E6A] transition-all max-w-[280px] sm:max-w-xs">
-              <div className="w-5 h-5 rounded-md bg-[#466B53]/15 text-[#3D5249] flex items-center justify-center font-bold text-[10px] shrink-0">
-                <Building2 className="w-3.5 h-3.5 text-[#518E6A]" />
+            {/* Global Client Workspace Switcher */}
+            <div className="flex items-center space-x-1.5 bg-white border border-[#E8E2DD] rounded-xl px-2 py-1 shadow-2xs hover:border-[#518E6A] transition-all max-w-[125px] xs:max-w-[165px] sm:max-w-xs shrink-0">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-md bg-[#466B53]/15 text-[#3D5249] flex items-center justify-center font-bold text-[9px] sm:text-[10px] shrink-0">
+                <Building2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#518E6A]" />
               </div>
               <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-[#65746C] leading-none">
-                  Client Workspace
+                <span className="text-[7.5px] sm:text-[9px] font-bold uppercase tracking-wider text-[#65746C] leading-none truncate">
+                  Workspace
                 </span>
                 <select
                   value={selectedPortfolioClientId}
-                  onChange={(e) => {
-                    setSelectedPortfolioClientId(e.target.value);
-                  }}
-                  className="bg-transparent text-xs font-bold text-[#242E29] focus:outline-none cursor-pointer pr-1 leading-tight mt-0.5 truncate"
-                  title="Switch client account instantly without logging out of ClickUp"
+                  onChange={(e) => setSelectedPortfolioClientId(e.target.value)}
+                  className="bg-transparent text-[10px] sm:text-xs font-bold text-[#242E29] focus:outline-none cursor-pointer pr-1 leading-tight mt-0.5 truncate max-w-[85px] xs:max-w-[120px] sm:max-w-none"
+                  title="Switch client account instantly"
                 >
-                  <option value="all">⊞ All Clients (Unified 5 Workspaces)</option>
-                  <option value="little-treasures">Little Treasures Company (AU)</option>
+                  <option value="all">All Clients (Unified)</option>
+                  <option value="little-treasures">Little Treasures (AU)</option>
                   <option value="studio-nets">Studio Nets (AU)</option>
                   <option value="invogue-cleans">InVogue Cleans (AU)</option>
-                  <option value="aaron-ofosu">Aaron Ofosu Bootcamp (AU)</option>
+                  <option value="aaron-ofosu">Aaron Ofosu Bootcamp</option>
                   <option value="tch2thrive">Tch2Thrive (US)</option>
                 </select>
               </div>
             </div>
 
-            {/* Breadcrumb Context Label */}
+            {/* Breadcrumb Context Label (Desktop only) */}
             <div className="hidden lg:flex items-center space-x-1.5 text-xs text-[#65746C] truncate pl-1">
               <span className="text-[#E8E2DD]">/</span>
               <span className="font-semibold text-[#242E29] truncate">
@@ -1013,82 +1040,22 @@ export default function GimDashboard() {
           </div>
 
           {/* Right Header Controls */}
-          <div className="flex items-center space-x-2 sm:space-x-2.5 shrink-0">
+          <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
             {/* Quick Create Task Trigger (+ New Task) */}
             <Button
               variant="primary"
               size="sm"
               onClick={() => setIsGlobalCreateTaskOpen(true)}
-              className="hidden sm:inline-flex items-center space-x-1.5 text-xs shadow-xs"
-              title="Quickly add a task for any client"
+              className="p-1.5 h-8 w-8 sm:w-auto sm:px-3 rounded-xl flex items-center justify-center text-xs shadow-xs shrink-0"
+              title="Add New Task"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>New Task</span>
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">New Task</span>
             </Button>
 
-            {/* Active Sprint Context Pill (Desktop only) */}
-            <div className="hidden xl:flex items-center space-x-2 px-3 py-1 bg-white border border-[#E8E2DD] rounded-xl text-xs shadow-xs whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#518E6A] animate-pulse"></span>
-              <span className="font-semibold text-[#242E29]">
-                {selectedPortfolioClientId === "studio-nets"
-                  ? "Studio Nets SOPs"
-                  : selectedPortfolioClientId === "invogue-cleans"
-                  ? "InVogue Retention"
-                  : selectedPortfolioClientId === "aaron-ofosu"
-                  ? "Bootcamp Launch"
-                  : selectedPortfolioClientId === "tch2thrive"
-                  ? "Tch2Thrive Pipeline"
-                  : "Little Treasures Sprint"}
-              </span>
-            </div>
-
-            {/* Profile Switcher, Edit Nickname, and Invite Buttons: ONLY visible on Settings Tab for 3 Owners */}
-            {activeTab === "settings" && hasAdminAccess && (
-              <>
-                <div className="flex items-center space-x-1.5 bg-white border border-[#E8E2DD] rounded-lg px-2 py-1 shadow-xs">
-                  <KeyRound className="w-3.5 h-3.5 text-[#518E6A] shrink-0" />
-                  <select
-                    value={currentUserKey}
-                    onChange={(e) => setCurrentUserKey(e.target.value)}
-                    className="bg-transparent text-xs font-semibold text-[#242E29] focus:outline-none cursor-pointer pr-1"
-                  >
-                    <optgroup label="Core Admin Team (Universal Full Access)">
-                      <option value="radz">{userProfiles.radz.name} ({userProfiles.radz.nickname})</option>
-                      <option value="divine">{userProfiles.divine.name} ({userProfiles.divine.nickname})</option>
-                      <option value="ra">{userProfiles.ra.name} ({userProfiles.ra.nickname})</option>
-                    </optgroup>
-                    <optgroup label="Scoped Roles (RBAC Sandbox)">
-                      <option value="erwin">{userProfiles.erwin.name} ({userProfiles.erwin.nickname}) — Project Owner</option>
-                      <option value="smm">{userProfiles.smm.name} ({userProfiles.smm.nickname}) — SMM Specialist</option>
-                      <option value="zoe">{userProfiles.zoe.name} ({userProfiles.zoe.nickname}) — Client</option>
-                    </optgroup>
-                  </select>
-                </div>
-
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  icon={<Edit2 className="w-3 h-3 text-[#518E6A]" />}
-                  onClick={handleOpenEditProfile}
-                >
-                  Edit Nickname
-                </Button>
-
-                <Button
-                  variant="primary"
-                  size="sm"
-                  icon={<Mail className="w-3.5 h-3.5" />}
-                  className="hidden sm:inline-flex shadow-xs"
-                  onClick={() => setIsInviteModalOpen(true)}
-                >
-                  Invite User / Client
-                </Button>
-              </>
-            )}
-
-            {/* Clean User Presence Pill when on other dashboard tabs */}
+            {/* Clean User Presence Pill */}
             {activeTab !== "settings" && (
-              <div className="flex items-center space-x-2 px-2.5 py-1 bg-white border border-[#E8E2DD] rounded-xl text-xs shadow-xs">
+              <div className="flex items-center space-x-1.5 px-2 py-1 bg-white border border-[#E8E2DD] rounded-xl text-xs shadow-xs shrink-0">
                 <div className="relative">
                   {currentUser.avatarUrl ? (
                     <img
@@ -1098,39 +1065,60 @@ export default function GimDashboard() {
                     />
                   ) : (
                     <div
-                      className={`w-5 h-5 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-[10px] shrink-0`}
+                      className={`w-5 h-5 rounded-full ${currentUser.avatarColor || "bg-[#466B53]"} text-white flex items-center justify-center font-bold text-[9px] shrink-0`}
                     >
-                      {currentUser.nickname.slice(0, 2).toUpperCase()}
+                      {(currentUser.nickname || currentUser.name || "U").slice(0, 2).toUpperCase()}
                     </div>
                   )}
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 absolute -bottom-0.5 -right-0.5 ring-1 ring-white"></span>
                 </div>
-                <span className="font-semibold text-[#242E29] truncate max-w-[100px] sm:max-w-none">
-                  {currentUser.nickname}
+                <span className="font-semibold text-[#242E29] truncate max-w-[65px] sm:max-w-none hidden xs:inline">
+                  {currentUser.nickname || currentUser.name}
                 </span>
                 {currentUser.role === "Owner" ? (
-                  <span className="hidden sm:inline-block text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#3D5249] text-white">
+                  <span className="hidden md:inline-block text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#3D5249] text-white">
                     Owner
                   </span>
                 ) : currentUser.isCoreAdmin ? (
-                  <span className="hidden sm:inline-block text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#518E6A] text-white">
-                    Core Admin
+                  <span className="hidden md:inline-block text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#518E6A] text-white">
+                    Admin
                   </span>
                 ) : null}
+              </div>
+            )}
+
+            {/* Profile Switcher, Edit Nickname, and Invite Buttons: ONLY on Settings Tab */}
+            {activeTab === "settings" && hasAdminAccess && (
+              <div className="hidden sm:flex items-center space-x-1.5">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<Edit2 className="w-3 h-3 text-[#518E6A]" />}
+                  onClick={handleOpenEditProfile}
+                  className="hidden md:inline-flex"
+                >
+                  Edit Profile
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={<Mail className="w-3.5 h-3.5" />}
+                  className="shadow-xs"
+                  onClick={() => setIsInviteModalOpen(true)}
+                >
+                  <span className="hidden sm:inline">Invite User</span>
+                </Button>
               </div>
             )}
 
             {/* Global Search Button */}
             <button
               onClick={() => setIsGlobalSearchOpen(true)}
-              className="flex items-center space-x-2 px-2.5 py-1.5 bg-white border border-[#E8E2DD] rounded-xl text-xs text-[#65746C] hover:text-[#242E29] hover:border-[#518E6A] shadow-xs transition-colors"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 bg-white border border-[#E8E2DD] rounded-xl text-xs text-[#65746C] hover:text-[#242E29] hover:border-[#518E6A] shadow-xs transition-colors shrink-0 flex items-center space-x-1"
               title="Search everything across GIM (Ctrl+K)"
             >
               <Search className="w-3.5 h-3.5 text-[#518E6A]" />
               <span className="hidden md:inline font-medium text-xs">Search...</span>
-              <kbd className="hidden md:inline text-[9px] font-mono text-[#65746C]/60 bg-[#FBF6F3] px-1 py-0.2 rounded border border-[#E8E2DD]">
-                ⌘K
-              </kbd>
             </button>
 
             {/* Quick Theme Switcher */}
@@ -1141,29 +1129,28 @@ export default function GimDashboard() {
                 const nextIndex = (themes.indexOf(uiTheme) + 1) % themes.length;
                 applyTheme(themes[nextIndex]);
               }}
-              className="p-1.5 rounded-xl border border-[#E8E2DD] bg-white text-[#65746C] hover:text-[#242E29] hover:bg-[#FBF6F3] shadow-xs flex items-center space-x-1.5 transition-colors"
+              className="p-1.5 rounded-xl border border-[#E8E2DD] bg-white text-[#65746C] hover:text-[#242E29] hover:bg-[#FBF6F3] shadow-xs flex items-center shrink-0 transition-colors"
               title={`Active Theme: ${uiTheme.toUpperCase()}. Click to switch color scheme.`}
             >
               {uiTheme === "dark" ? (
-                <Moon className="w-4 h-4 text-amber-400" />
+                <Moon className="w-3.5 h-3.5 text-amber-400" />
               ) : uiTheme === "emerald" ? (
-                <Sparkles className="w-4 h-4 text-emerald-500" />
+                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
               ) : uiTheme === "slate" ? (
-                <Palette className="w-4 h-4 text-blue-400" />
+                <Palette className="w-3.5 h-3.5 text-blue-400" />
               ) : (
-                <Sun className="w-4 h-4 text-amber-600" />
+                <Sun className="w-3.5 h-3.5 text-amber-600" />
               )}
-              <span className="hidden xl:inline text-[10px] font-bold uppercase tracking-wider text-[#3D5249]">
-                {uiTheme}
-              </span>
             </button>
 
             {/* Notifications Dropdown Bell */}
-            <NotificationBell
-              onSelectTask={handleOpenSearchTask}
-              onSelectMessage={() => setActiveTab("messaging")}
-              onSelectApprovals={() => setActiveTab("tasks")}
-            />
+            <div className="shrink-0">
+              <NotificationBell
+                onSelectTask={handleOpenSearchTask}
+                onSelectMessage={() => setActiveTab("messaging")}
+                onSelectApprovals={() => setActiveTab("tasks")}
+              />
+            </div>
           </div>
         </header>
 
@@ -2671,8 +2658,14 @@ export default function GimDashboard() {
       {/* ========================================================================= */}
       <WelcomeOnboardingModal
         isOpen={showOnboardingModal}
-        onClose={() => setShowOnboardingModal(false)}
-        userName={currentUser.name}
+        onClose={() => {
+          setShowOnboardingModal(false);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(`gim_onboarded_${currentUserKey}`, "true");
+            localStorage.setItem("gim_onboarding_accepted", "true");
+          }
+        }}
+        userName={currentUser ? (currentUser.nickname || currentUser.name) : "Team Member"}
         userRole={currentUser.role}
         clientScope={currentUser.clientScope}
       />

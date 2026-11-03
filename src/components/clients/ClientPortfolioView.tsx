@@ -269,6 +269,7 @@ export function ClientPortfolioView({
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
   const [boardAssigneeFilter, setBoardAssigneeFilter] = useState("All");
   const [boardPriorityFilter, setBoardPriorityFilter] = useState("All");
+  const [mobileBoardColumnFilter, setMobileBoardColumnFilter] = useState<string>("all");
 
   const isAllClients = selectedClientId === "all";
 
@@ -482,7 +483,7 @@ export function ClientPortfolioView({
       </div>
 
       {/* 2. SUB-TAB SWITCHER (Calendar, Board, Dossier) */}
-      <div className="flex border-b border-[#3D5249]/15 bg-white rounded-t-2xl px-4 pt-2 shadow-xs">
+      <div className="flex border-b border-[#3D5249]/15 bg-white rounded-t-2xl px-2 sm:px-4 pt-2 shadow-xs overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveSubTab("calendar")}
           className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 ${
@@ -589,8 +590,47 @@ export function ClientPortfolioView({
             </div>
           </div>
 
+          {/* Mobile Column Switcher (Visible on screens < 640px) */}
+          <div className="sm:hidden flex items-center gap-1.5 overflow-x-auto pb-1.5 no-scrollbar">
+            <button
+              type="button"
+              onClick={() => setMobileBoardColumnFilter("all")}
+              className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 transition-colors ${
+                mobileBoardColumnFilter === "all"
+                  ? "bg-[#3D5249] text-white shadow-xs"
+                  : "bg-white border border-[#E8E2DD] text-[#65746C]"
+              }`}
+            >
+              All Columns
+            </button>
+            {boardColumns.map((c) => {
+              const count = tasks.filter((t) => t.status.toLowerCase() === c.status.toLowerCase()).length;
+              const isActive = mobileBoardColumnFilter === c.status;
+              return (
+                <button
+                  key={c.status}
+                  type="button"
+                  onClick={() => setMobileBoardColumnFilter(c.status)}
+                  className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 transition-colors flex items-center gap-1 ${
+                    isActive
+                      ? "bg-[#518E6A] text-white shadow-xs"
+                      : "bg-white border border-[#E8E2DD] text-[#242E29]"
+                  }`}
+                >
+                  <span>{c.title}</span>
+                  <span className="text-[10px] opacity-80 font-mono">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 items-start">
-            {boardColumns.map((col) => {
+            {boardColumns
+              .filter((col) => {
+                if (mobileBoardColumnFilter === "all") return true;
+                return col.status.toLowerCase() === mobileBoardColumnFilter.toLowerCase();
+              })
+              .map((col) => {
               const colTasks = tasks
                 .filter((t) => {
                   if (boardAssigneeFilter !== "All" && (t.assignee_name || "Unassigned") !== boardAssigneeFilter) return false;

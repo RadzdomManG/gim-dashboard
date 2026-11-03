@@ -506,8 +506,75 @@ export function TaskBacklogView({
             <p className="text-xs text-[#65746C]">Try clearing your search query or status filters.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+          <>
+            {/* Mobile-Friendly Responsive Task Cards (< 768px) */}
+            <div className="block md:hidden divide-y divide-[#E8E2DD]/70 bg-white">
+              {paginatedTasks.map((task) => (
+                <div
+                  key={task.id}
+                  onClick={() => setSelectedTask(task)}
+                  className="p-3.5 space-y-2 hover:bg-[#FBF6F3]/50 active:bg-[#FBF6F3] transition-colors cursor-pointer"
+                >
+                  {/* Top Bar: Gate code, Client source, Status */}
+                  <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {task.gateCode ? (
+                        <span className="font-bold text-[#3D5249] text-[10px] bg-[#466B53]/15 px-2 py-0.5 rounded border border-[#466B53]/25 shrink-0">
+                          {task.gateCode}
+                        </span>
+                      ) : null}
+                      <span className="text-[10px] font-semibold text-[#3D5249] bg-[#FBF6F3] px-2 py-0.5 rounded border border-[#E8E2DD] truncate max-w-[150px]">
+                        {task.client}
+                      </span>
+                    </div>
+
+                    <Badge
+                      variant={
+                        task.status.toLowerCase().includes("approved") || task.status.toLowerCase().includes("closed")
+                          ? "active"
+                          : task.status.toLowerCase().includes("review")
+                          ? "review"
+                          : task.status.toLowerCase().includes("progress")
+                          ? "brand"
+                          : "neutral"
+                      }
+                      className="text-[10px] shrink-0"
+                    >
+                      {task.status}
+                    </Badge>
+                  </div>
+
+                  {/* Task Name */}
+                  <div className="font-bold text-xs text-[#242E29] leading-snug line-clamp-2">
+                    {task.name}
+                  </div>
+
+                  {/* Bottom Bar: Assignee, Due date, ID */}
+                  <div className="flex items-center justify-between text-[11px] text-[#65746C] pt-1 border-t border-[#E8E2DD]/40">
+                    <div className="flex items-center space-x-1.5 truncate">
+                      <span className="text-[10px] font-mono text-[#65746C]">#{task.id}</span>
+                      {task.assignees && task.assignees.length > 0 && (
+                        <span className="font-medium text-[#242E29] bg-[#466B53]/10 text-[#466B53] px-1.5 py-0.2 rounded text-[10px] truncate max-w-[120px]">
+                          👤 {task.assignees[0].username.split(" ")[0]}
+                          {task.assignees.length > 1 && ` +${task.assignees.length - 1}`}
+                        </span>
+                      )}
+                    </div>
+
+                    {task.dueDateFormatted && (
+                      <span className="flex items-center gap-1 text-[10px] font-medium text-[#65746C] shrink-0">
+                        <Clock className="w-3 h-3 text-[#518E6A]" />
+                        {task.dueDateFormatted}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Full Data Table (>= 768px) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-[#E8E2DD] bg-[#FBF6F3] text-[#65746C]">
                   <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-[10px] w-20">Gate</th>
@@ -611,7 +678,8 @@ export function TaskBacklogView({
               </tbody>
             </table>
           </div>
-        )}
+        </>
+      )}
 
         {/* 5. PAGINATION CONTROLS */}
         {!loading && filteredTasks.length > pageSize && (
