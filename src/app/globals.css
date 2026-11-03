@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+:root {
+  --gim-dark-green: #3D5249;
+  --gim-warm-cream: #FBF6F3;
+  --gim-logo-green: #466B53;
+  --gim-secondary-green: #518E6A;
+  
+  --background: #FBF6F3;
+  --foreground: #3D5249;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  margin: 0;
+  padding: 0;
+}
