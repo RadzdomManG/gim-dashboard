@@ -15,6 +15,7 @@ import {
   Building2,
   Workflow,
   Sparkles,
+  Utensils,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -33,6 +34,43 @@ export interface SopDocument {
 
 const SOP_DOCS: SopDocument[] = [
   {
+    id: "sop-gim-ops-marketing",
+    title: "GIM Operations and Lean Marketing — Working Playbook",
+    category: "Strategy",
+    updatedDate: "Oct 20, 2026",
+    author: "Divine Origines",
+    summary:
+      "Core operating standard: Business outcome → evidence → constraint → future process → accountable owner → build → test → measured result → handover.",
+    content: `# GIM Operations and Lean Marketing — Working Playbook
+
+Prepared for Divine • 20 October 2026 • Version 0.2
+
+## 1. What GIM Should Standardize
+Business outcome → evidence → constraint → future process → accountable owner → build → test → measured result → handover.
+
+Standardize this method and its records. Select the actual processes and tools per client. Do not turn every proposal into a new CRM or website build.
+
+Each engagement needs seven records:
+1. **Client Brief:** Offer, customers, goals, scope, exclusions, and promised dates.
+2. **Evidence Register:** Source links, dates, relevant quotations/timestamps, facts, hypotheses, and unresolved questions.
+3. **Current Process Map:** What happens now, with real examples and exceptions.
+4. **Decision Log:** Decision, rationale, approver, effective date, and review condition.
+5. **Delivery Backlog:** Milestones translated into owned tasks with acceptance evidence.
+6. **Automation Register:** Trigger, data, rules, owner, tests, monitoring, and recovery.
+7. **Scorecard:** Baseline, current result, target, definition, and data source.
+
+## 2. Before the Kickoff
+Project owner assembles a short packet:
+- Signed scope, exclusions, success criteria, dates, and available team capacity.
+- Discovery notes and recording with relevant timestamps; latest client messages.
+- Tool inventory, account owner, and access request list. Store passwords in the approved credential system, never in the brief.
+
+## 3. During Discovery and Kickoff
+- Confirm the target metric, current baseline, and reporting period.
+- Walk through the customer journey end to end. Note where leads drop or staff intervene.
+- Identify the human bottleneck: who makes the decision, who approves exceptions, and who is on call when a webhook breaks?`,
+  },
+  {
     id: "sop-lt-spec",
     title: "Little Treasures: Paediatric Funnel & $99 Course Specification",
     category: "Client Delivery",
@@ -45,7 +83,7 @@ const SOP_DOCS: SopDocument[] = [
 
 ## 1. Executive Summary
 - **Client:** Zoe Horner (Founder & Lead Paediatric OT)
-- **Hard Milestone:** Summit Readiness by Friday 11 Dec 2026 (38 Days).
+- **Hard Milestone:** Summit Readiness by Friday 11 Dec 2026 (Working target).
 - **Core Deliverable:** GoHighLevel 6-page brand website, intake booking funnels, automated phone SMS alerts, and $99 online video course delivery.
 
 ## 2. Gate Verification Sequence (G1 - G18)
@@ -82,25 +120,24 @@ const SOP_DOCS: SopDocument[] = [
 5. **W21 - Revenue Reconciliation:** Automated daily settlement report dispatched at 11:30 PM AEST.`,
   },
   {
-    id: "sop-cc-spec",
-    title: "GIM Command Center & Operations Specification",
-    category: "Strategy",
-    updatedDate: "Nov 01, 2026",
-    author: "Divine Origines",
+    id: "sop-auto-testing",
+    title: "Automation Design & Testing Protocol",
+    category: "Automation & Tech",
+    updatedDate: "Oct 30, 2026",
+    author: "Radzdom Gallego (Radz)",
     summary:
-      "Core operating architecture for GIM: client delivery pipelines, gate sign-off protocols, and team workload matrices.",
-    content: `# Grace in Motion — Command Center Specification
+      "Automated payload schema validation, sandbox dry-runs, error catch blocks, and webhook alerting channels.",
+    content: `# Automation Design & Testing Protocol
 
-## 1. Core Operating Pillars
-1. **Portfolio Outcomes:** Real-time visibility into every client's active sprint velocity and launch targets.
-2. **Delivery Backlog:** Read-only connection to ClickUp mirroring tasks without write contamination.
-3. **Internal Sign-Off Queue:** Quality gates must be formally signed off by Divine, Radz, or RA before production deployment.
-4. **Team Capacity:** Weekly hours monitoring to prevent consultant burnout and maintain 80-85% utilization.
+## 1. Design Principles
+1. Every webhook must have an idempotency key to prevent double charging or double SMS delivery.
+2. Every external HTTP request must have a 5-second timeout and exponential backoff retry.
+3. Catch blocks must alert the internal #ops channel with the failed payload.
 
-## 2. Security & Boundaries
-- ClickUp is strictly read-only.
-- Production deployments on Vercel are frozen until verified locally on localhost.
-- RLS policies isolate client data completely.`,
+## 2. Testing Steps
+- Run synthetic test contact with \`gim-test\` prefix.
+- Verify status changes in Supabase and notify project owner.
+- Confirm client credentials remain isolated in approved secrets vault.`,
   },
   {
     id: "sop-ivc-plan",
@@ -129,7 +166,7 @@ interface SopPlaybookLibraryProps {
 }
 
 export function SopPlaybookLibrary({ clientScope = "all", isCoreAdmin = true }: SopPlaybookLibraryProps) {
-  const [selectedDocId, setSelectedDocId] = useState<string>("sop-lt-spec");
+  const [selectedDocId, setSelectedDocId] = useState<string>("sop-gim-ops-marketing");
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [copied, setCopied] = useState(false);
@@ -166,9 +203,10 @@ export function SopPlaybookLibrary({ clientScope = "all", isCoreAdmin = true }: 
     return true;
   });
 
-  const selectedDoc = accessibleDocs.find((d) => d.id === selectedDocId) || accessibleDocs[0] || SOP_DOCS[0];
+  const selectedDoc = accessibleDocs.find((d) => d.id === selectedDocId) || filteredDocs[0] || SOP_DOCS[0];
 
   const handleCopy = () => {
+    if (!selectedDoc) return;
     navigator.clipboard.writeText(selectedDoc.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
@@ -180,7 +218,7 @@ export function SopPlaybookLibrary({ clientScope = "all", isCoreAdmin = true }: 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center space-x-2">
-            <h2 className="text-xl font-bold tracking-tight text-[#242E29]">
+            <h2 className="text-xl font-bold font-serif tracking-tight text-[#242E29]">
               Internal SOP & Playbook Library
             </h2>
             <Badge variant="brand">Operational Intake Archives</Badge>
@@ -192,137 +230,158 @@ export function SopPlaybookLibrary({ clientScope = "all", isCoreAdmin = true }: 
 
         <Badge variant="neutral">
           <BookOpen className="w-3.5 h-3.5 mr-1 inline text-[#518E6A]" />
-          <span>{SOP_DOCS.length} Master Specifications</span>
+          <span>{accessibleDocs.length} Master Specifications</span>
         </Badge>
       </div>
 
-      {/* 2. MAIN 2-COLUMN VIEW: DOCUMENT LIST + VIEWER */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Document List (4 Cols) */}
-        <div className="lg:col-span-4 space-y-3">
-          <Card>
-            <CardContent className="p-3.5 space-y-3">
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#65746C]" />
-                <input
-                  type="text"
-                  placeholder="Search playbooks & specs..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 bg-[#FBF6F3]/50 border border-[#E8E2DD] rounded-lg text-xs text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
-                />
-              </div>
-
-              {/* Category Pills */}
-              <div className="flex flex-wrap gap-1 text-[10px]">
-                {["all", "Strategy", "Client Delivery", "Automation & Tech"].map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-2 py-0.5 rounded font-medium transition-colors ${
-                      selectedCategory === cat
-                        ? "bg-[#3D5249] text-white"
-                        : "bg-[#FBF6F3] text-[#65746C] hover:bg-[#E8E2DD]"
-                    }`}
-                  >
-                    {cat === "all" ? "All Documents" : cat}
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Document Cards */}
-          <div className="space-y-2">
-            {filteredDocs.map((doc) => {
-              const isSelected = doc.id === selectedDocId;
-              return (
-                <div
-                  key={doc.id}
-                  onClick={() => setSelectedDocId(doc.id)}
-                  className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
-                    isSelected
-                      ? "bg-white border-[#518E6A] ring-2 ring-[#518E6A]/20 shadow-xs"
-                      : "bg-white border-[#E8E2DD] hover:border-[#466B53]/40 hover:bg-[#FBF6F3]/30"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-bold text-[#466B53] uppercase tracking-wider">
-                      {doc.category}
-                    </span>
-                    <span className="text-[10px] text-[#65746C]">{doc.updatedDate}</span>
-                  </div>
-
-                  <h3 className="font-bold text-xs text-[#242E29] line-clamp-1">
-                    {doc.title}
-                  </h3>
-
-                  <p className="text-[11px] text-[#65746C] line-clamp-2 mt-1 leading-relaxed">
-                    {doc.summary}
-                  </p>
-
-                  {doc.clientScope && (
-                    <div className="mt-2 pt-2 border-t border-[#E8E2DD]/60 flex items-center justify-between text-[10px] text-[#65746C]">
-                      <span>Client: <strong>{doc.clientScope}</strong></span>
-                      <span>By: {doc.author}</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+      {/* Category Tabs & Search */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#E8E2DD] shadow-xs">
+        <div className="flex flex-wrap gap-1.5 text-xs">
+          {["all", "Strategy", "Client Delivery", "Automation & Tech", "Internal Operations"].map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3 py-1.5 rounded-xl font-semibold transition-colors ${
+                selectedCategory === cat
+                  ? "bg-[#3D5249] text-white shadow-xs"
+                  : "bg-[#FBF6F3] text-[#65746C] hover:bg-[#E8E2DD] hover:text-[#242E29]"
+              }`}
+            >
+              {cat === "all" ? "All Playbooks" : cat}
+            </button>
+          ))}
         </div>
 
-        {/* Right: Markdown Viewer (8 Cols) */}
-        <div className="lg:col-span-8">
-          <Card className="h-full flex flex-col">
-            {/* Header */}
-            <div className="p-4 border-b border-[#E8E2DD] bg-[#FBF6F3]/50 flex items-center justify-between">
-              <div>
-                <div className="flex items-center space-x-2 mb-1">
-                  <Badge variant="brand">{selectedDoc.category}</Badge>
-                  {selectedDoc.clientScope && (
-                    <Badge variant="neutral">{selectedDoc.clientScope}</Badge>
-                  )}
-                </div>
-                <h3 className="font-bold text-sm text-[#242E29]">{selectedDoc.title}</h3>
-                <p className="text-[11px] text-[#65746C] mt-0.5">
-                  Author: <strong>{selectedDoc.author}</strong> · Last Updated: {selectedDoc.updatedDate}
-                </p>
-              </div>
-
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleCopy}
-                className="flex items-center space-x-1 text-xs shrink-0"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5 text-[#518E6A]" />
-                    <span>Copy Markdown</span>
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {/* Document Content View */}
-            <div className="p-6 overflow-y-auto max-h-[640px] font-sans text-xs text-[#242E29] space-y-4 leading-relaxed whitespace-pre-wrap bg-white">
-              {selectedDoc.content}
-            </div>
-
-            {/* Footer */}
-            <div className="p-3 border-t border-[#E8E2DD] bg-[#FBF6F3]/40 text-center text-[11px] text-[#65746C]">
-              Archived from local GIM Operating System intake repository.
-            </div>
-          </Card>
+        <div className="relative w-full sm:w-64">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#65746C]" />
+          <input
+            type="text"
+            placeholder="Search playbooks, SOPs..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-[#E8E2DD] bg-white text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
+          />
         </div>
       </div>
+
+      {/* 2. MAIN 2-COLUMN VIEW: DOCUMENT LIST + VIEWER OR EMPTY STATE */}
+      {filteredDocs.length === 0 ? (
+        <Card className="p-12 text-center bg-white border border-dashed border-[#3D5249]/30 rounded-3xl max-w-2xl mx-auto shadow-sm">
+          <div className="w-16 h-16 rounded-2xl bg-[#FBF6F3] border border-[#E8E2DD] flex items-center justify-center mx-auto mb-4 text-3xl shadow-xs">
+            🍜
+          </div>
+          <h3 className="font-serif font-black text-xl text-[#242E29] tracking-tight">
+            WALA PANG LAMAN KASI GUTOM PA YUNG BUILDER
+          </h3>
+          <p className="text-xs text-[#65746C] mt-2 max-w-md mx-auto leading-relaxed">
+            Kasalukuyan pang inihahanda at niluluto ang playbook para sa kategoryang ito. Magkape muna tayo o pumili ng ibang kategorya sa itaas!
+          </p>
+          <div className="mt-5">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setSelectedCategory("all")}
+              className="text-xs"
+            >
+              Bumalik sa Lahat ng Playbooks
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left: Document List (4 Cols) */}
+          <div className="lg:col-span-4 space-y-3">
+            <div className="space-y-2">
+              {filteredDocs.map((doc) => {
+                const isSelected = doc.id === selectedDocId;
+                return (
+                  <div
+                    key={doc.id}
+                    onClick={() => setSelectedDocId(doc.id)}
+                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-white border-[#518E6A] ring-2 ring-[#518E6A]/20 shadow-xs"
+                        : "bg-white border-[#E8E2DD] hover:border-[#466B53]/40 hover:bg-[#FBF6F3]/30"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-[#466B53] uppercase tracking-wider">
+                        {doc.category}
+                      </span>
+                      <span className="text-[10px] text-[#65746C]">{doc.updatedDate}</span>
+                    </div>
+
+                    <h3 className="font-bold text-xs text-[#242E29] line-clamp-1">
+                      {doc.title}
+                    </h3>
+
+                    <p className="text-[11px] text-[#65746C] line-clamp-2 mt-1 leading-relaxed">
+                      {doc.summary}
+                    </p>
+
+                    {doc.clientScope && (
+                      <div className="mt-2 pt-2 border-t border-[#E8E2DD]/60 flex items-center justify-between text-[10px] text-[#65746C]">
+                        <span>Client: <strong>{doc.clientScope}</strong></span>
+                        <span>By: {doc.author}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right: Markdown Viewer (8 Cols) */}
+          <div className="lg:col-span-8">
+            <Card className="h-full flex flex-col bg-white border border-[#E8E2DD]">
+              {/* Header */}
+              <div className="p-4 border-b border-[#E8E2DD] bg-[#FBF6F3]/50 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center space-x-2 mb-1">
+                    <Badge variant="brand">{selectedDoc.category}</Badge>
+                    {selectedDoc.clientScope && (
+                      <Badge variant="neutral">{selectedDoc.clientScope}</Badge>
+                    )}
+                  </div>
+                  <h3 className="font-bold text-sm text-[#242E29]">{selectedDoc.title}</h3>
+                  <p className="text-[11px] text-[#65746C] mt-0.5">
+                    Author: <strong>{selectedDoc.author}</strong> · Last Updated: {selectedDoc.updatedDate}
+                  </p>
+                </div>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleCopy}
+                  className="flex items-center space-x-1 text-xs shrink-0"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-[#518E6A]" />
+                      <span>Copy Markdown</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Document Content View */}
+              <div className="p-6 overflow-y-auto max-h-[640px] font-sans text-xs text-[#242E29] space-y-4 leading-relaxed whitespace-pre-wrap bg-white">
+                {selectedDoc.content}
+              </div>
+
+              {/* Footer */}
+              <div className="p-3 border-t border-[#E8E2DD] bg-[#FBF6F3]/40 text-center text-[11px] text-[#65746C]">
+                Archived from local GIM Operating System intake repository.
+              </div>
+            </Card>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

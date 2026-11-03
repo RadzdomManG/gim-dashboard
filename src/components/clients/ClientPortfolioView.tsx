@@ -494,6 +494,17 @@ export function ClientPortfolioView({
               </button>
             );
           })}
+
+          {/* + New Client Button Pill */}
+          <button
+            type="button"
+            onClick={() => setIsOnboardModalOpen(true)}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 border border-dashed border-[#518E6A] text-[#518E6A] hover:bg-[#518E6A]/10 hover:border-[#3D5249]"
+            title="Onboard New Client Account"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>+ New Client</span>
+          </button>
         </div>
       </div>
 

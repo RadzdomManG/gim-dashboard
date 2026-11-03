@@ -2,25 +2,115 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ShieldCheck,
   Lock,
-  Mail,
-  KeyRound,
+  User,
   ArrowRight,
   AlertCircle,
-  CheckCircle2,
-  Building2,
-  Users,
 } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+
+// Verified personnel credentials database
+export const VERIFIED_ACCOUNTS: Record<
+  string,
+  {
+    password: string;
+    user: {
+      id: string;
+      username: string;
+      name: string;
+      nickname: string;
+      email: string;
+      role: "Owner" | "Admin" | "Operations Manager" | "Project Owner" | "Team Member" | "Team Specialist" | "Social Media Specialist" | "Client User";
+      isCoreAdmin: boolean;
+      avatarColor: string;
+      title: string;
+      clientScope: string;
+    };
+  }
+> = {
+  "divine.origines": {
+    password: "GIM_2026!OS!",
+    user: {
+      id: "divine-001",
+      username: "divine.origines",
+      name: "Divine Origines",
+      nickname: "Divine",
+      email: "divine@graceinmotion.agency",
+      role: "Owner",
+      isCoreAdmin: false, // Divine is Owner, Radz & RA are Core Admins
+      avatarColor: "bg-[#3D5249]",
+      title: "Founder & Strategy Lead",
+      clientScope: "all",
+    },
+  },
+  "rdzgllgo": {
+    password: "Radzrose012116!",
+    user: {
+      id: "radz-001",
+      username: "rdzgllgo",
+      name: "Radzdom Gallego",
+      nickname: "Radz",
+      email: "radz@graceinmotion.agency",
+      role: "Admin",
+      isCoreAdmin: true,
+      avatarColor: "bg-[#466B53]",
+      title: "Core Admin & Automation Specialist / Tech Lead",
+      clientScope: "all",
+    },
+  },
+  "ra.malinao": {
+    password: "RA_GIM2026!",
+    user: {
+      id: "ra-001",
+      username: "ra.malinao",
+      name: "Ma. Rose Anne (RA) Malinao",
+      nickname: "RA",
+      email: "ra@graceinmotion.agency",
+      role: "Admin",
+      isCoreAdmin: true,
+      avatarColor: "bg-[#518E6A]",
+      title: "Core Admin & Commercial Operations / Invoicing",
+      clientScope: "all",
+    },
+  },
+  "erwin.manaog": {
+    password: "Erwin_GIM2026!",
+    user: {
+      id: "erwin-001",
+      username: "erwin.manaog",
+      name: "Erwin Manaog",
+      nickname: "Erwin",
+      email: "erwin@graceinmotion.agency",
+      role: "Project Owner",
+      isCoreAdmin: false,
+      avatarColor: "bg-blue-600",
+      title: "Project Owner & Delivery Lead",
+      clientScope: "Little Treasures Company",
+    },
+  },
+  "camille.smm": {
+    password: "Camille_GIM2026!",
+    user: {
+      id: "camille-001",
+      username: "camille.smm",
+      name: "Camille Bautista",
+      nickname: "Camille",
+      email: "camille.smm@graceinmotion.agency",
+      role: "Social Media Specialist",
+      isCoreAdmin: false,
+      avatarColor: "bg-purple-600",
+      title: "Social Media Specialist",
+      clientScope: "Little Treasures Company",
+    },
+  },
+};
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,20 +120,62 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    // Simulate authentic authentication with direct redirect
-    setTimeout(() => {
-      setLoading(false);
-      router.push("/");
-    }, 600);
-  };
+    const cleanUsername = username.trim().toLowerCase();
 
-  const handleQuickLogin = (roleEmail: string) => {
-    setEmail(roleEmail);
-    setPassword("••••••••••••");
-    setLoading(true);
+    // 1. Check built-in verified accounts
+    const account = VERIFIED_ACCOUNTS[cleanUsername];
+    if (account && account.password === password) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("gim_auth_user", JSON.stringify(account.user));
+      }
+      setTimeout(() => {
+        setLoading(false);
+        router.push("/");
+      }, 500);
+      return;
+    }
+
+    // 2. Check dynamic invited accounts stored in localStorage
+    if (typeof window !== "undefined") {
+      try {
+        const storedInvites = localStorage.getItem("gim_invited_users");
+        if (storedInvites) {
+          const invites = JSON.parse(storedInvites);
+          const matched = invites.find(
+            (inv: any) =>
+              (inv.username?.toLowerCase() === cleanUsername || inv.name?.toLowerCase() === cleanUsername) &&
+              inv.password === password
+          );
+          if (matched) {
+            const userObj = {
+              id: matched.id || `usr-${Date.now()}`,
+              username: matched.username || cleanUsername,
+              name: matched.name,
+              nickname: matched.name.split(" ")[0],
+              email: matched.email || `${cleanUsername}@graceinmotion.agency`,
+              role: matched.role || "Team Member",
+              isCoreAdmin: matched.role === "Admin",
+              avatarColor: "bg-[#466B53]",
+              title: matched.title || matched.role,
+              clientScope: matched.clientScope || "all",
+            };
+            localStorage.setItem("gim_auth_user", JSON.stringify(userObj));
+            setTimeout(() => {
+              setLoading(false);
+              router.push("/");
+            }, 500);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Local invite lookup failed:", err);
+      }
+    }
+
+    // Authentication failure
     setTimeout(() => {
       setLoading(false);
-      router.push("/");
+      setError("Invalid username or password. Only verified GIM personnel may access Mission Control.");
     }, 400);
   };
 
@@ -67,7 +199,7 @@ export default function LoginPage() {
           GIM Mission Control
         </h2>
         <p className="text-xs text-[#65746C]">
-          Authorized access portal for Grace in Motion team and authenticated clients
+          Authorized access portal for Grace in Motion personnel
         </p>
       </div>
 
@@ -84,17 +216,18 @@ export default function LoginPage() {
           <form onSubmit={handleSignIn} className="space-y-4 text-xs">
             <div>
               <label className="block text-xs font-semibold text-[#242E29] mb-1">
-                Email Address
+                Username
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#65746C]" />
+                <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#65746C]" />
                 <input
-                  type="email"
+                  type="text"
                   required
-                  placeholder="name@graceinmotion.agency"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-[#FBF6F3]/50 border border-[#E8E2DD] rounded-lg text-xs text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
+                  autoComplete="username"
+                  placeholder="Enter assigned username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2.5 bg-[#FBF6F3]/50 border border-[#E8E2DD] rounded-xl text-xs text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A] font-medium transition-all"
                 />
               </div>
             </div>
@@ -104,19 +237,17 @@ export default function LoginPage() {
                 <label className="block text-xs font-semibold text-[#242E29]">
                   Password
                 </label>
-                <a href="#" className="text-[11px] text-[#466B53] hover:underline font-medium">
-                  Forgot password?
-                </a>
               </div>
               <div className="relative">
                 <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#65746C]" />
                 <input
                   type="password"
                   required
+                  autoComplete="current-password"
                   placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-[#FBF6F3]/50 border border-[#E8E2DD] rounded-lg text-xs text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
+                  className="w-full pl-9 pr-3 py-2.5 bg-[#FBF6F3]/50 border border-[#E8E2DD] rounded-xl text-xs text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A] transition-all"
                 />
               </div>
             </div>
@@ -126,76 +257,19 @@ export default function LoginPage() {
               size="md"
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center space-x-1.5"
+              className="w-full flex items-center justify-center space-x-1.5 py-2.5 mt-2"
             >
-              <span>{loading ? "Authenticating..." : "Sign In to GIM"}</span>
+              <span>{loading ? "Verifying Credentials..." : "Sign In to GIM"}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </form>
 
-          {/* Core Admin Quick Sign-In Options */}
-          <div className="pt-4 border-t border-[#E8E2DD] space-y-2.5">
-            <p className="text-[10px] font-semibold text-[#65746C] uppercase tracking-wider text-center">
-              Quick Sign-In by Role
-            </p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("radz@graceinmotion.agency")}
-                className="p-2.5 rounded-lg border border-[#E8E2DD] bg-[#FBF6F3]/50 hover:border-[#518E6A] hover:bg-white text-left transition-colors"
-              >
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="font-bold text-[#242E29]">Radzdom (Radz)</span>
-                  <Badge variant="brand" className="text-[9px] px-1 py-0">Admin</Badge>
-                </div>
-                <p className="text-[10px] text-[#65746C] truncate">AI & Automations Lead</p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("divine@graceinmotion.agency")}
-                className="p-2.5 rounded-lg border border-[#E8E2DD] bg-[#FBF6F3]/50 hover:border-[#518E6A] hover:bg-white text-left transition-colors"
-              >
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="font-bold text-[#242E29]">Divine Origines</span>
-                  <Badge variant="dark" className="text-[9px] px-1 py-0">Owner</Badge>
-                </div>
-                <p className="text-[10px] text-[#65746C] truncate">Executive Strategy</p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("ra@graceinmotion.agency")}
-                className="p-2.5 rounded-lg border border-[#E8E2DD] bg-[#FBF6F3]/50 hover:border-[#518E6A] hover:bg-white text-left transition-colors"
-              >
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="font-bold text-[#242E29]">RA Malinao</span>
-                  <Badge variant="brand" className="text-[9px] px-1 py-0">Admin</Badge>
-                </div>
-                <p className="text-[10px] text-[#65746C] truncate">Operations & Invoicing</p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("zoe@littletreasures.com.au")}
-                className="p-2.5 rounded-lg border border-[#E8E2DD] bg-[#FBF6F3]/50 hover:border-[#518E6A] hover:bg-white text-left transition-colors"
-              >
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="font-bold text-[#242E29]">Zoe Horner</span>
-                  <Badge variant="upcoming" className="text-[9px] px-1 py-0">Client</Badge>
-                </div>
-                <p className="text-[10px] text-[#65746C] truncate">Little Treasures</p>
-              </button>
+          <div className="pt-4 border-t border-[#E8E2DD] text-center">
+            <div className="flex items-center justify-center space-x-1.5 text-[11px] text-[#65746C]">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#518E6A]" />
+              <span>Strict Access Governance: Only authenticated accounts permitted</span>
             </div>
           </div>
-        </div>
-
-        {/* Security Footer Notice */}
-        <div className="mt-4 text-center">
-          <p className="text-[11px] text-[#65746C] flex items-center justify-center space-x-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#518E6A]" />
-            <span>Supabase PostgreSQL & Row Level Security (RLS) Active</span>
-          </p>
         </div>
       </div>
     </div>

@@ -29,6 +29,9 @@ import {
   CheckCheck,
   ArrowLeft,
   CornerUpLeft,
+  Sliders,
+  UserPlus,
+  UserMinus,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -246,6 +249,48 @@ export function MessagingCenter({
   const [isSearchingMessages, setIsSearchingMessages] = useState(false);
   const [replyingToMessage, setReplyingToMessage] = useState<{ senderName: string; content: string } | null>(null);
   const [showEmojiPickerForMsg, setShowEmojiPickerForMsg] = useState<string | null>(null);
+  const [isChannelInfoOpen, setIsChannelInfoOpen] = useState(false);
+  const [infoDrawerTab, setInfoDrawerTab] = useState<"members" | "media" | "search">("members");
+  const [addMemberSelectId, setAddMemberSelectId] = useState("");
+
+  const isLeader =
+    currentUserRole === "Owner" ||
+    isCoreAdmin ||
+    ["divine", "radz", "ra"].includes(currentUserId.toLowerCase()) ||
+    ["divine", "radz", "ra"].includes(currentUserNickname.toLowerCase());
+
+  const handleAddMemberToChannel = (memberId: string) => {
+    if (!memberId) return;
+    setChannels((prev) =>
+      prev.map((c) => {
+        if (c.id !== activeChannelId) return c;
+        const currentMembers = c.memberIds || [];
+        if (currentMembers.includes(memberId)) return c;
+        const nextMembers = [...currentMembers, memberId];
+        return {
+          ...c,
+          memberIds: nextMembers,
+          membersCount: Math.max(c.membersCount + 1, nextMembers.length),
+        };
+      })
+    );
+    setAddMemberSelectId("");
+  };
+
+  const handleRemoveMemberFromChannel = (memberId: string) => {
+    setChannels((prev) =>
+      prev.map((c) => {
+        if (c.id !== activeChannelId) return c;
+        const currentMembers = c.memberIds || [];
+        const nextMembers = currentMembers.filter((id) => id !== memberId);
+        return {
+          ...c,
+          memberIds: nextMembers,
+          membersCount: Math.max(1, (c.membersCount || 2) - 1),
+        };
+      })
+    );
+  };
 
   const toggleMessageReaction = (msgId: string, emoji: string) => {
     updateAndPersistMessages((prev) => {
@@ -498,6 +543,10 @@ export function MessagingCenter({
           m.senderNickname.toLowerCase().includes(searchMessageQuery.toLowerCase())
       )
     : activeMessages;
+
+  const channelAttachments = activeMessages.flatMap((m) => m.attachments || []);
+  const channelImages = channelAttachments.filter((a) => a.type === "image");
+  const channelFilesAndLinks = channelAttachments.filter((a) => a.type === "document" || a.type === "link" || a.type === "video");
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -809,7 +858,7 @@ export function MessagingCenter({
           </div>
 
           {/* Right Area: Active Chat & Composer (8 Cols) */}
-          <div className={`md:col-span-8 flex flex-col bg-white ${mobileView === "list" ? "hidden md:flex" : "flex"}`}>
+          <div className={`md:col-span-8 flex flex-col bg-white relative overflow-hidden ${mobileView === "list" ? "hidden md:flex" : "flex"}`}>
             {/* Chat Top Header */}
             <div className="p-3.5 border-b border-[#E8E2DD] bg-[#FBF6F3]/40 flex items-center justify-between">
               <div className="flex items-center space-x-2 min-w-0">
@@ -856,10 +905,24 @@ export function MessagingCenter({
                   <Search className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline text-[11px]">Backread</span>
                 </button>
-                <Badge variant="neutral">
-                  <Users className="w-3 h-3 mr-1 inline" />
-                  {activeChannel.membersCount} members
-                </Badge>
+                <button
+                  type="button"
+                  onClick={() => setIsChannelInfoOpen(!isChannelInfoOpen)}
+                  className={`px-2.5 py-1 rounded-lg border text-xs font-semibold flex items-center space-x-1.5 transition-colors ${
+                    isChannelInfoOpen
+                      ? "bg-[#3D5249] text-white border-[#3D5249] shadow-xs"
+                      : "bg-white text-[#65746C] border-[#E8E2DD] hover:text-[#242E29]"
+                  }`}
+                  title="Channel Details, Members & Shared Media"
+                >
+                  <Users className="w-3.5 h-3.5 text-[#518E6A]" />
+                  <span>{activeChannel.membersCount} members</span>
+                  <Sliders className="w-3 h-3 ml-0.5" />
+                </button>
+
+
+
+
               </div>
             </div>
 
@@ -1228,6 +1291,224 @@ export function MessagingCenter({
                   </div>
 
                   <span className="text-[10px] text-[#65746C]">Shift + Enter for new line</span>
+
+
+            {/* Messenger-style Conversation Details & Settings Drawer */}
+            {isChannelInfoOpen && (
+              <div className="absolute inset-y-0 right-0 w-full sm:w-80 bg-white border-l border-[#E8E2DD] shadow-2xl z-30 flex flex-col animate-in slide-in-from-right-10 duration-150">
+                {/* Header */}
+                <div className="p-3.5 border-b border-[#E8E2DD] flex items-center justify-between bg-[#FBF6F3]">
+                  <div className="flex items-center space-x-2">
+                    <Sliders className="w-4 h-4 text-[#518E6A]" />
+                    <h4 className="font-bold text-xs text-[#242E29]">Conversation Details</h4>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsChannelInfoOpen(false)}
+                    className="p-1 rounded text-[#65746C] hover:text-[#242E29]"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Subtabs */}
+                <div className="grid grid-cols-3 border-b border-[#E8E2DD] text-xs font-semibold text-center bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setInfoDrawerTab("members")}
+                    className={`py-2 px-1 border-b-2 transition-colors ${
+                      infoDrawerTab === "members"
+                        ? "border-[#518E6A] text-[#3D5249] bg-[#FBF6F3]/50 font-bold"
+                        : "border-transparent text-[#65746C] hover:text-[#242E29]"
+                    }`}
+                  >
+                    Members ({activeChannel.membersCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInfoDrawerTab("media")}
+                    className={`py-2 px-1 border-b-2 transition-colors ${
+                      infoDrawerTab === "media"
+                        ? "border-[#518E6A] text-[#3D5249] bg-[#FBF6F3]/50 font-bold"
+                        : "border-transparent text-[#65746C] hover:text-[#242E29]"
+                    }`}
+                  >
+                    Media ({channelAttachments.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInfoDrawerTab("search")}
+                    className={`py-2 px-1 border-b-2 transition-colors ${
+                      infoDrawerTab === "search"
+                        ? "border-[#518E6A] text-[#3D5249] bg-[#FBF6F3]/50 font-bold"
+                        : "border-transparent text-[#65746C] hover:text-[#242E29]"
+                    }`}
+                  >
+                    Search
+                  </button>
+                </div>
+
+                {/* Tab 1: Members */}
+                {infoDrawerTab === "members" && (
+                  <div className="p-3.5 space-y-3 flex-1 overflow-y-auto">
+                    {/* Add Member control for Divine, Radz, RA */}
+                    {isLeader && (
+                      <div className="p-2.5 bg-[#FBF6F3] rounded-xl border border-[#E8E2DD] space-y-2">
+                        <span className="text-[11px] font-bold text-[#3D5249] flex items-center gap-1">
+                          <UserPlus className="w-3.5 h-3.5 text-[#518E6A]" />
+                          <span>Add Member to Channel</span>
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <select
+                            value={addMemberSelectId}
+                            onChange={(e) => setAddMemberSelectId(e.target.value)}
+                            className="flex-1 text-xs px-2 py-1.5 rounded-lg border border-[#E8E2DD] bg-white text-[#242E29]"
+                          >
+                            <option value="">Choose member...</option>
+                            {AVAILABLE_TEAM_MEMBERS.map((m) => (
+                              <option key={m.id} value={m.id}>
+                                {m.name} ({m.role})
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => handleAddMemberToChannel(addMemberSelectId)}
+                            disabled={!addMemberSelectId}
+                            className="px-2.5 py-1.5 rounded-lg bg-[#518E6A] text-white text-xs font-semibold hover:bg-[#466B53] disabled:opacity-50"
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Members List */}
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#65746C]">
+                        Active Channel Members ({activeChannel.membersCount})
+                      </span>
+                      {AVAILABLE_TEAM_MEMBERS.slice(0, activeChannel.membersCount || 4).map((m) => {
+                        const isProtected = ["divine", "radz", "ra"].includes(m.id);
+                        return (
+                          <div
+                            key={m.id}
+                            className="p-2 rounded-xl border border-[#E8E2DD] flex items-center justify-between bg-white text-xs hover:border-[#518E6A]/50 transition-colors"
+                          >
+                            <div className="flex items-center space-x-2 truncate">
+                              <div className="w-6 h-6 rounded-full bg-[#3D5249] text-white flex items-center justify-center font-bold text-[10px] shrink-0">
+                                {m.name.slice(0, 2).toUpperCase()}
+                              </div>
+                              <div className="truncate">
+                                <p className="font-semibold text-[#242E29] leading-tight truncate">{m.name}</p>
+                                <p className="text-[10px] text-[#65746C] truncate">{m.role}</p>
+                              </div>
+                            </div>
+                            {isLeader && !isProtected && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMemberFromChannel(m.id)}
+                                className="text-[10px] font-semibold text-rose-600 hover:text-rose-800 px-1.5 py-0.5 rounded hover:bg-rose-50 shrink-0 ml-1"
+                                title="Remove from channel"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 2: Shared Media & Files */}
+                {infoDrawerTab === "media" && (
+                  <div className="p-3.5 space-y-4 flex-1 overflow-y-auto">
+                    {/* Images */}
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#65746C] flex items-center gap-1">
+                        <ImageIcon className="w-3 h-3 text-[#518E6A]" />
+                        <span>Images ({channelImages.length})</span>
+                      </span>
+                      {channelImages.length === 0 ? (
+                        <p className="text-[11px] text-[#65746C] italic">No images in this channel.</p>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2">
+                          {channelImages.map((img) => (
+                            <a
+                              key={img.id}
+                              href={img.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-lg border border-[#E8E2DD] overflow-hidden group relative block bg-white"
+                            >
+                              <img src={img.url} alt={img.name} className="h-20 w-full object-cover" />
+                              <div className="p-1 text-[9px] text-[#242E29] truncate bg-white">
+                                {img.name}
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Files & Links */}
+                    <div className="space-y-2 pt-2 border-t border-[#E8E2DD]">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#65746C] flex items-center gap-1">
+                        <Link2 className="w-3 h-3 text-blue-600" />
+                        <span>Files & Links ({channelFilesAndLinks.length})</span>
+                      </span>
+                      {channelFilesAndLinks.length === 0 ? (
+                        <p className="text-[11px] text-[#65746C] italic">No links or files shared yet.</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {channelFilesAndLinks.map((f) => (
+                            <a
+                              key={f.id}
+                              href={f.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="p-2 rounded-lg border border-[#E8E2DD] flex items-center justify-between text-xs hover:border-[#518E6A] bg-white group"
+                            >
+                              <span className="truncate font-medium text-[#242E29] group-hover:text-[#518E6A]">
+                                {f.name}
+                              </span>
+                              <ExternalLink className="w-3 h-3 text-[#65746C] group-hover:text-[#518E6A] shrink-0 ml-1" />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 3: Backread Search */}
+                {infoDrawerTab === "search" && (
+                  <div className="p-3.5 space-y-3 flex-1 overflow-y-auto">
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#65746C]" />
+                      <input
+                        type="text"
+                        placeholder="Search conversation..."
+                        value={searchMessageQuery}
+                        onChange={(e) => setSearchMessageQuery(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-[#E8E2DD] bg-white text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
+                      />
+                    </div>
+                    {searchMessageQuery ? (
+                      <p className="text-[11px] text-[#65746C]">
+                        Found {displayedMessages.length} message{displayedMessages.length === 1 ? "" : "es"}
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-[#65746C] italic">
+                        Type keywords above to backread messages, notes, and decisions in this channel.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
                 </div>
               </form>
             </div>

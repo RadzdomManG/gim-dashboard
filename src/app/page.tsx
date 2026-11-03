@@ -45,15 +45,17 @@ import {
   Menu,
   User,
   Plus,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { TaskBacklogView } from "@/components/tasks/TaskBacklogView";
 import { ClientPortfolioView } from "@/components/clients/ClientPortfolioView";
-import { DeliverableSignOffQueue } from "@/components/approvals/DeliverableSignOffQueue";
 import { MessagingCenter } from "@/components/messaging/MessagingCenter";
-import { TeamCapacityWorksheet } from "@/components/capacity/TeamCapacityWorksheet";
+import { TeamTimesheetView } from "@/components/timesheet/TeamTimesheetView";
+import { ClientInvoicingView } from "@/components/invoices/ClientInvoicingView";
+import { WelcomeOnboardingModal } from "@/components/onboarding/WelcomeOnboardingModal";
 import { ClientPortalView } from "@/components/client-portal/ClientPortalView";
 import { SopPlaybookLibrary } from "@/components/library/SopPlaybookLibrary";
 import { UserInvitationModal } from "@/components/invitations/UserInvitationModal";
@@ -67,9 +69,9 @@ type NavTab =
   | "overview"
   | "clients"
   | "tasks"
-  | "approvals"
   | "messaging"
-  | "capacity"
+  | "timesheet"
+  | "invoicing"
   | "library"
   | "team"
   | "settings";
@@ -124,6 +126,16 @@ export default function GimDashboard() {
   const [selectedPortfolioClientId, setSelectedPortfolioClientId] = useState<string>("all");
   const [selectedPortfolioSubTab, setSelectedPortfolioSubTab] = useState<"calendar" | "board" | "dossier">("calendar");
   const [isGlobalCreateTaskOpen, setIsGlobalCreateTaskOpen] = useState(false);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const accepted = localStorage.getItem("gim_onboarding_accepted");
+      if (!accepted) {
+        setShowOnboardingModal(true);
+      }
+    }
+  }, []);
 
   // Global Ctrl+K / Cmd+K listener
   useEffect(() => {
@@ -197,7 +209,7 @@ export default function GimDashboard() {
       nickname: "Divine",
       email: "divine@graceinmotion.agency",
       role: "Owner",
-      isCoreAdmin: true,
+      isCoreAdmin: false,
       avatarColor: "bg-[#466B53]",
       title: "Founder & Strategy Lead",
       clientScope: "all",
@@ -417,21 +429,18 @@ export default function GimDashboard() {
             ? clickupStats.reviewCount > 0
               ? `${clickupStats.reviewCount} Review`
               : `${clickupStats.totalTasks}`
-            : "Live",
-        },
-        {
-          id: "approvals",
-          label: "Sign-Off Queue",
-          icon: FileCheck2,
-          badge: "2 Action",
+            : "Active",
         },
       ],
     },
     {
-      title: "Collaboration & Knowledge",
+      title: "Collaboration & Operations",
       items: [
         { id: "messaging", label: "Team Messaging", icon: MessageSquare, badge: "Live" },
-        { id: "capacity", label: "Capacity Worksheet", icon: BarChart3 },
+        { id: "timesheet", label: "Timesheets & EOS", icon: Clock },
+        ...(hasAdminAccess || currentUser.nickname.toLowerCase() === "ra"
+          ? [{ id: "invoicing" as NavTab, label: "Invoicing & Billing", icon: DollarSign, badge: "RA Lead" }]
+          : []),
         { id: "library", label: "SOP & Playbooks", icon: FolderKanban },
       ],
     },
@@ -582,55 +591,71 @@ export default function GimDashboard() {
     },
   ];
 
-  // Team capacity and workload matrix
+  // Team live attendance and shift presence matrix (Replaces capacity pills with live presence)
   const teamWorkload = [
     {
       name: userProfiles.divine.name,
       nickname: userProfiles.divine.nickname,
       role: "Owner · Strategy Lead",
       focus: "Executive Direction & Client Discovery",
-      load: "6 Active Accounts",
-      status: "At Capacity",
+      load: "7h 15m logged today",
+      status: "Online",
+      shift: "08:00 AM - 05:00 PM",
       initials: "DO",
-      color: "bg-[#466B53]",
+      color: "bg-[#3D5249]",
     },
     {
       name: userProfiles.radz.name,
       nickname: userProfiles.radz.nickname,
-      role: "Admin · Automation Specialist & Tech Lead",
-      focus: "Platform Architecture, GHL & n8n Workflows",
-      load: "8 Active Tasks",
-      status: "Optimal",
+      role: "Admin · Tech & Automation Lead",
+      focus: "GIM Platform Systems, GHL & n8n Workflows",
+      load: "6h 45m logged today",
+      status: "Online",
+      shift: "08:30 AM - 05:30 PM",
       initials: "RG",
       color: "bg-[#518E6A]",
     },
     {
       name: userProfiles.ra.name,
       nickname: userProfiles.ra.nickname,
-      role: "Admin · Commercial & Operations",
-      focus: "Invoicing, Contracts & Subcontractors",
-      load: "Commercial Operations & Billing",
-      status: "Optimal",
+      role: "Admin · Commercial Operations & Invoicing",
+      focus: "Invoicing, Client Contracts & Billing",
+      load: "5h 50m logged · On Break (22m)",
+      status: "On Break",
+      shift: "09:00 AM - 06:00 PM",
       initials: "RA",
       color: "bg-[#3D5249]",
     },
     {
       name: userProfiles.erwin.name,
       nickname: userProfiles.erwin.nickname,
-      role: "Project Owner · Delivery Lead",
-      focus: "Little Treasures & Studio Nets Sprint Velocity",
-      load: "14 Sprint Subtasks",
-      status: "Heavy Load",
+      role: "Project Owner · Little Treasures",
+      focus: "Summit Launch Funnel & Sprint Velocity",
+      load: "7h 10m logged today",
+      status: "Online",
+      shift: "08:00 AM - 05:00 PM",
       initials: "EM",
       color: "bg-[#466B53]",
+    },
+    {
+      name: userProfiles.smm.name,
+      nickname: userProfiles.smm.nickname,
+      role: "Social Media Specialist",
+      focus: "Little Treasures Reel Batches & Meta Ads",
+      load: "6h 20m logged today",
+      status: "Online",
+      shift: "09:00 AM - 06:00 PM",
+      initials: "CB",
+      color: "bg-[#518E6A]",
     },
     {
       name: "BJ Ricafrente",
       nickname: "BJ",
       role: "Operations Specialist",
       focus: "Client Kickoffs & Tool Subscriptions",
-      load: "3 Workflows",
-      status: "Available",
+      load: "4h 15m logged · Away",
+      status: "Away",
+      shift: "10:00 AM - 07:00 PM",
       initials: "BR",
       color: "bg-slate-600",
     },
@@ -884,12 +909,12 @@ export default function GimDashboard() {
                   ? "Client Workspaces & Calendar"
                   : activeTab === "tasks"
                   ? "Tasks & Pipeline"
-                  : activeTab === "approvals"
-                  ? "Sign-Off Queue"
                   : activeTab === "messaging"
-                  ? "Team Messaging (Slack Hub)"
-                  : activeTab === "capacity"
-                  ? "Capacity Worksheet"
+                  ? "Team Messaging"
+                  : activeTab === "timesheet"
+                  ? "Timesheets & Shift Tracking"
+                  : activeTab === "invoicing"
+                  ? "Invoicing & Retainers"
                   : activeTab === "library"
                   ? "SOP & Playbooks"
                   : activeTab === "team"
@@ -929,8 +954,6 @@ export default function GimDashboard() {
                   ? "Tch2Thrive Pipeline"
                   : "Little Treasures Sprint"}
               </span>
-              <span className="text-[#65746C] text-[10px]">·</span>
-              <span className="text-[11px] text-[#466B53] font-medium">Live Mirror</span>
             </div>
 
             {/* Profile Switcher, Edit Nickname, and Invite Buttons: ONLY visible on Settings Tab for 3 Owners */}
@@ -991,11 +1014,15 @@ export default function GimDashboard() {
                 <span className="font-semibold text-[#242E29] truncate max-w-[100px] sm:max-w-none">
                   {currentUser.nickname}
                 </span>
-                {currentUser.isCoreAdmin && (
+                {currentUser.role === "Owner" ? (
+                  <span className="hidden sm:inline-block text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#3D5249] text-white">
+                    Owner
+                  </span>
+                ) : currentUser.isCoreAdmin ? (
                   <span className="hidden sm:inline-block text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#518E6A] text-white">
                     Core Admin
                   </span>
-                )}
+                ) : null}
               </div>
             )}
 
@@ -1016,7 +1043,7 @@ export default function GimDashboard() {
             <NotificationBell
               onSelectTask={handleOpenSearchTask}
               onSelectMessage={() => setActiveTab("messaging")}
-              onSelectApprovals={() => setActiveTab("approvals")}
+              onSelectApprovals={() => setActiveTab("tasks")}
             />
           </div>
         </header>
@@ -1128,7 +1155,7 @@ export default function GimDashboard() {
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-[#65746C] group-hover:text-[#518E6A] transition-colors flex items-center gap-1">
-                        Sprint Tasks (ClickUp Mirror)
+                        Active Sprint Tasks
                         <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </p>
                       <div className="text-2xl font-bold text-[#242E29] mt-1">
@@ -1148,7 +1175,10 @@ export default function GimDashboard() {
 
                 {/* Review Checkpoints */}
                 <Card
-                  onClick={() => setActiveTab("approvals")}
+                  onClick={() => {
+                    setTaskStatusFilter("In Review");
+                    setActiveTab("tasks");
+                  }}
                   className="cursor-pointer hover:border-amber-400 transition-all hover:shadow-xs group"
                 >
                   <CardContent className="p-4 flex items-center justify-between">
@@ -1379,20 +1409,36 @@ export default function GimDashboard() {
                   <Card>
                     <CardHeader>
                       <div>
-                        <CardTitle>Team Capacity & Role Allocation</CardTitle>
+                        <CardTitle>Team Shift Attendance & Live Presence</CardTitle>
                         <CardDescription>
-                          Assignees, operational load, and focus areas across active accounts
+                          Real-time team presence, active shift schedules, and logged duration
                         </CardDescription>
                       </div>
-                      <Badge variant="neutral">5 Team Members</Badge>
+                      <Badge variant="neutral">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-1 animate-pulse" />
+                        {teamWorkload.filter((m) => m.status === "Online").length} Online
+                      </Badge>
                     </CardHeader>
 
                     <div className="divide-y divide-[#E8E2DD]/60">
                       {teamWorkload.map((member, idx) => (
                         <div key={idx} className="p-3.5 flex items-center justify-between text-xs hover:bg-[#FBF6F3]/40 transition-colors">
                           <div className="flex items-center space-x-3">
-                            <div className={`w-8 h-8 rounded-full ${member.color} text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs`}>
-                              {member.initials}
+                            <div className="relative">
+                              <div className={`w-8 h-8 rounded-full ${member.color} text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs`}>
+                                {member.initials}
+                              </div>
+                              <span
+                                className={`w-2.5 h-2.5 rounded-full absolute -bottom-0.5 -right-0.5 ring-2 ring-white ${
+                                  member.status === "Online"
+                                    ? "bg-emerald-500"
+                                    : member.status === "On Break"
+                                    ? "bg-amber-500 animate-pulse"
+                                    : member.status === "Away"
+                                    ? "bg-orange-500"
+                                    : "bg-slate-400"
+                                }`}
+                              />
                             </div>
                             <div>
                               <h4 className="font-semibold text-[#242E29]">
@@ -1403,16 +1449,21 @@ export default function GimDashboard() {
                           </div>
                           <div className="hidden sm:block text-right">
                             <p className="text-[#242E29] font-medium text-[11px]">{member.focus}</p>
-                            <p className="text-[10px] text-[#65746C]">{member.load}</p>
+                            <p className="text-[10px] text-[#518E6A] font-semibold">{member.load}</p>
                           </div>
                           <div>
-                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
-                              member.status === "At Capacity"
-                                ? "bg-amber-100 text-amber-800"
-                                : member.status === "Optimal"
-                                ? "bg-emerald-100 text-emerald-800"
-                                : "bg-slate-100 text-slate-700"
+                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border inline-flex items-center gap-1 ${
+                              member.status === "Online"
+                                ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                                : member.status === "On Break"
+                                ? "bg-amber-100 text-amber-800 border-amber-300"
+                                : member.status === "Away"
+                                ? "bg-orange-100 text-orange-800 border-orange-300"
+                                : "bg-slate-100 text-slate-700 border-slate-300"
                             }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${
+                                member.status === "Online" ? "bg-emerald-600" : member.status === "On Break" ? "bg-amber-600" : "bg-orange-600"
+                              }`} />
                               {member.status}
                             </span>
                           </div>
@@ -1495,18 +1546,6 @@ export default function GimDashboard() {
           )}
 
           {/* ========================================================================= */}
-          {/* TAB: DELIVERABLE SIGN-OFF QUEUE (QUALITY GATES) */}
-          {/* ========================================================================= */}
-          {activeTab === "approvals" && (
-            <DeliverableSignOffQueue
-              currentUserName={currentUser.name}
-              currentUserNickname={currentUser.nickname}
-              isCoreAdmin={currentUser.isCoreAdmin}
-              clientScope={currentUser.clientScope}
-            />
-          )}
-
-          {/* ========================================================================= */}
           {/* TAB: TEAM MESSAGING & COMMUNICATION HUB */}
           {/* ========================================================================= */}
           {activeTab === "messaging" && (
@@ -1522,10 +1561,22 @@ export default function GimDashboard() {
           )}
 
           {/* ========================================================================= */}
-          {/* TAB: TEAM CAPACITY & WORKLOAD WORKSHEET */}
+          {/* TAB: TEAM TIMESHEETS, EOS REPORTS & LIVE ATTENDANCE */}
           {/* ========================================================================= */}
-          {activeTab === "capacity" && (
-            <TeamCapacityWorksheet />
+          {activeTab === "timesheet" && (
+            <TeamTimesheetView />
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB: COMMERCIAL INVOICING & RETAINER MANAGEMENT (RA MALINAO LEAD) */}
+          {/* ========================================================================= */}
+          {activeTab === "invoicing" && (
+            <ClientInvoicingView
+              currentUserName={currentUser.name}
+              currentUserRole={currentUser.role}
+              isCoreAdmin={currentUser.isCoreAdmin}
+              currentUserNickname={currentUser.nickname}
+            />
           )}
 
           {/* ========================================================================= */}
@@ -2034,7 +2085,7 @@ export default function GimDashboard() {
           )}
 
           {/* PLACEHOLDER VIEWS FOR OTHER MODULES */}
-          {!["overview", "clients", "tasks", "approvals", "messaging", "capacity", "library", "team", "settings"].includes(activeTab) && (
+          {!["overview", "clients", "tasks", "messaging", "timesheet", "invoicing", "library", "team", "settings"].includes(activeTab) && (
             <div className="bg-white rounded-xl border border-[#E8E2DD] shadow-[0_2px_8px_-2px_rgba(61,82,73,0.06)] p-12 text-center max-w-xl mx-auto my-12">
               <div className="w-11 h-11 rounded-full bg-[#466B53]/10 text-[#466B53] flex items-center justify-center mx-auto mb-3">
                 {React.createElement(
@@ -2251,6 +2302,16 @@ export default function GimDashboard() {
         onTaskCreated={() => {
           setIsGlobalCreateTaskOpen(false);
         }}
+      />
+
+      {/* ========================================================================= */}
+      {/* 10. FIRST-TIME USER WELCOME & ONBOARDING TOUR MODAL */}
+      {/* ========================================================================= */}
+      <WelcomeOnboardingModal
+        isOpen={showOnboardingModal}
+        onClose={() => setShowOnboardingModal(false)}
+        userName={currentUser.name}
+        userRole={currentUser.role}
       />
     </div>
   );
