@@ -77,15 +77,6 @@ export function ClientCalendarView({
     );
   });
 
-  // Calculate upcoming / overdue deadlines
-  const urgentOrOverdueTasks = clientTasks.filter((t) => {
-    if (!t.due_date || t.status === "Approved" || t.status === "Completed") return false;
-    const due = new Date(t.due_date);
-    const now = new Date(2026, 10, 3); // Current simulation context: Nov 3, 2026
-    const diffDays = (due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-    return diffDays <= 7; // Within 7 days
-  });
-
   // Map tasks to day of current month
   const tasksByDay: Record<number, TaskItem[]> = {};
   clientTasks.forEach((t) => {
@@ -101,27 +92,7 @@ export function ClientCalendarView({
 
   return (
     <div className="space-y-4">
-      {/* 1. URGENT NOTIFICATION BANNER */}
-      {urgentOrOverdueTasks.length > 0 && (
-        <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-amber-200/80 flex items-center justify-center shrink-0">
-              <AlertTriangle className="w-4 h-4 text-amber-800" />
-            </div>
-            <div>
-              <span className="font-bold">
-                {urgentOrOverdueTasks.length} Deadline Alert{urgentOrOverdueTasks.length > 1 ? "s" : ""}:
-              </span>{" "}
-              {urgentOrOverdueTasks.map((t) => t.title).join(", ")}
-            </div>
-          </div>
-          <span className="text-[11px] font-mono text-amber-800 font-semibold shrink-0">
-            Real-time Delivery Watch
-          </span>
-        </div>
-      )}
-
-      {/* 2. CALENDAR HEADER BAR */}
+      {/* 1. CALENDAR HEADER BAR */}
       <div className="bg-white rounded-2xl p-4 border border-[#3D5249]/15 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 border border-[#3D5249]/20 rounded-xl p-1 bg-[#FBF6F3]/50">
