@@ -1,31 +1,35 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
+  X,
   Plus,
   Calendar,
+  AlertCircle,
   User,
   Clock,
   Building2,
   FileText,
   Tag,
   CheckCircle2,
-  X,
   RefreshCw,
   Image as ImageIcon,
   Video as VideoIcon,
   Link2,
   Paperclip,
   Trash2,
+  UploadCloud,
+  FileCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { soundManager } from "@/lib/audio/sounds";
 
 interface MediaAttachment {
   id: string;
-  type: "image" | "video" | "link";
+  type: "image" | "video" | "pdf" | "document" | "link";
   url: string;
   name: string;
+  size?: string;
 }
 
 interface CreateTaskModalProps {
@@ -68,9 +72,10 @@ export function CreateTaskModal({
 
   // Attachments state
   const [attachments, setAttachments] = useState<MediaAttachment[]>([]);
-  const [showAttachInput, setShowAttachInput] = useState<"image" | "video" | "link" | null>(null);
-  const [attachUrl, setAttachUrl] = useState("");
-  const [attachName, setAttachName] = useState("");
+  const [showLinkInput, setShowLinkInput] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkLabel, setLinkLabel] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Accessibility: Escape key close (Design Standard 7.4)
   useEffect(() => {
@@ -84,18 +89,56 @@ export function CreateTaskModal({
 
   if (!isOpen) return null;
 
-  const handleAddAttachment = () => {
-    if (!attachUrl.trim() || !showAttachInput) return;
+  // Handle local file uploads from PC (Images, Videos, PDFs, Docs)
+  const handleLocalFilesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      const fileSizeKB = Math.round(file.size / 1024);
+      const sizeStr = fileSizeKB > 1024 ? `${(fileSizeKB / 1024).toFixed(1)} MB` : `${fileSizeKB} KB`;
+
+      let fileType: "image" | "video" | "pdf" | "document" = "document";
+      if (file.type.startsWith("image/")) {
+        fileType = "image";
+      } else if (file.type.startsWith("video/")) {
+        fileType = "video";
+      } else if (file.type.includes("pdf") || file.name.toLowerCase().endsWith(".pdf")) {
+        fileType = "pdf";
+      }
+
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        const newAtt: MediaAttachment = {
+          id: `file-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          type: fileType,
+          url: dataUrl,
+          name: file.name,
+          size: sizeStr,
+        };
+        setAttachments((prev) => [...prev, newAtt]);
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    // Reset input value so the same file can be re-uploaded if needed
+    e.target.value = "";
+  };
+
+  const handleAddLinkAttachment = () => {
+    if (!linkUrl.trim()) return;
     const newAtt: MediaAttachment = {
-      id: `att-${Date.now()}`,
-      type: showAttachInput,
-      url: attachUrl.trim(),
-      name: attachName.trim() || (showAttachInput === "image" ? "Attached Image" : showAttachInput === "video" ? "Attached Video" : "Attached Link"),
+      id: `link-${Date.now()}`,
+      type: "link",
+      url: linkUrl.trim(),
+      name: linkLabel.trim() || linkUrl.trim(),
     };
-    setAttachments([...attachments, newAtt]);
-    setAttachUrl("");
-    setAttachName("");
-    setShowAttachInput(null);
+    setAttachments((prev) => [...prev, newAtt]);
+    setLinkUrl("");
+    setLinkLabel("");
+    setShowLinkInput(false);
   };
 
   const handleRemoveAttachment = (id: string) => {
@@ -121,7 +164,10 @@ export function CreateTaskModal({
     let finalDescription = description.trim();
     if (attachments.length > 0) {
       const attachmentsBlock = attachments
-        .map((a) => `[${a.type.toUpperCase()}: ${a.name}](${a.url})`)
+        .map((a) => {
+          if (a.type === "link") return `[LINK: ${a.name}](${a.url})`;
+          return `[${a.type.toUpperCase()}: ${a.name} (${a.size || "File"})]`;
+        })
         .join("\n");
       finalDescription = finalDescription
         ? `${finalDescription}\n\n**Media & Attachments:**\n${attachmentsBlock}`
@@ -138,10 +184,8 @@ export function CreateTaskModal({
           description: finalDescription,
           status,
           priority,
-          due_date: dueDate ? new Date(dueDate).toISOString() : null,
-          assignee_name: assigneeName,
-          assignee_id: assigneeName.toLowerCase().replace(/\s+/g, "-"),
-          created_by: currentUserName,
+          due_date: dueDate,
+          assignee_name: assigneeName.trim(),
           tags,
           attachments,
         }),
@@ -149,41 +193,64 @@ export function CreateTaskModal({
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to create task.");
+        throw new Error(data.error || "Failed to create task");
       }
 
+      // Play success chime
       soundManager.play("task");
+
+      // Broadcast task change for real-time views
+      try {
+        window.dispatchEvent(new CustomEvent("gim:task-mutated", { detail: { action: "create" } }));
+      } catch (err) {
+        console.error("Failed to broadcast task mutation:", err);
+      }
+
       if (onTaskCreated) onTaskCreated();
       onClose();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Creation failed.";
-      setErrorMsg(msg);
+    } catch (err: any) {
+      setErrorMsg(err.message || "An unexpected error occurred.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#242E29]/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-[#3D5249]/15 overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150">
+      <div
+        className="bg-white rounded-2xl border border-[#E8E2DD] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-150 my-8"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
+        {/* Hidden File Input for PC uploads */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          multiple
+          accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.zip"
+          onChange={handleLocalFilesUpload}
+          className="hidden"
+        />
+
         {/* Header */}
-        <div className="px-5 py-4 bg-[#3D5249] text-white flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
-              <Plus className="w-4 h-4 text-white" />
+        <div className="bg-[#3D5249] p-5 text-white flex items-center justify-between">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+              <Plus className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold font-serif tracking-tight text-white">
-                Add Client Task / Milestone
-              </h2>
-              <p className="text-xs text-[#FBF6F3]/80">
-                Created by {currentUserName} ({currentUserRole})
+              <h3 id="modal-title" className="font-bold text-base leading-tight">
+                Create New Deliverable Task
+              </h3>
+              <p className="text-xs text-white/80">
+                Direct Supabase creation with local PC file attachments and client scoping
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -239,14 +306,14 @@ export function CreateTaskModal({
                 onChange={(e) => setAssigneeName(e.target.value)}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-[#3D5249]/20 bg-white text-[#242E29]"
               >
-                <option value="Radzdom Gallego">Radzdom Gallego (Admin)</option>
-                <option value="Divine Origines">Divine Origines (Owner)</option>
-                <option value="Ma. Rose Anne Malinao">Ma. Rose Anne (Admin)</option>
-                <option value="Erwin Manaog">Erwin Manaog (Senior Specialist)</option>
-                <option value="Camille Bautista">Camille Bautista (SMM)</option>
-                <option value="BJ Ricafrente">BJ Ricafrente</option>
-                <option value="Joy Fabular">Joy Fabular</option>
-                <option value="Jedy Caillio">Jedy Caillio</option>
+                <option value="Radzdom Gallego">Radzdom Gallego (Radz)</option>
+                <option value="Divine Origines">Divine Origines (Divine)</option>
+                <option value="Ma. Rose Anne Malinao">Ma. Rose Anne Malinao (RA)</option>
+                <option value="Erwin Manaog">Erwin Manaog (Erwin)</option>
+                <option value="BJ Ricafrente">BJ Ricafrente (BJ)</option>
+                <option value="Joy Fabular">Joy Fabular (Joy)</option>
+                <option value="Camille Bautista">Camille Bautista (Camille)</option>
+                <option value="Jedy Caillio">Jedy Caillio (Jedy)</option>
               </select>
             </div>
           </div>
@@ -254,20 +321,7 @@ export function CreateTaskModal({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-[#3D5249] mb-1">
-                Target Deadline
-              </label>
-              <input
-                type="date"
-                required
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-[#3D5249]/20 bg-white text-[#242E29]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#3D5249] mb-1">
-                Initial Status
+                Status
               </label>
               <select
                 value={status}
@@ -277,7 +331,7 @@ export function CreateTaskModal({
                 <option value="To Do">To Do</option>
                 <option value="In Progress">In Progress</option>
                 <option value="In Review">In Review</option>
-                <option value="Approved">Approved</option>
+                <option value="Approved">Approved / Done</option>
               </select>
             </div>
 
@@ -290,57 +344,69 @@ export function CreateTaskModal({
                 onChange={(e) => setPriority(e.target.value as any)}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-[#3D5249]/20 bg-white text-[#242E29]"
               >
+                <option value="Low">Low</option>
                 <option value="Normal">Normal</option>
                 <option value="High">High</option>
                 <option value="Urgent">Urgent</option>
-                <option value="Low">Low</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#3D5249] mb-1">
+                Due Date
+              </label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-[#3D5249]/20 bg-white text-[#242E29]"
+              />
             </div>
           </div>
 
-          {/* Media & Attachments Section */}
-          <div className="p-3.5 bg-[#FBF6F3] rounded-xl border border-[#E8E2DD] space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#3D5249] flex items-center gap-1.5">
-                <Paperclip className="w-3.5 h-3.5 text-[#518E6A]" />
-                <span>Media & Attachments</span>
-              </span>
-              <div className="flex items-center gap-1">
+          {/* Local File Uploads & Media Attachments (NOT URL - Direct PC Upload) */}
+          <div className="p-3.5 bg-[#FBF6F3] rounded-xl border border-[#E8E2DD] space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <label className="block text-xs font-bold text-[#3D5249]">
+                  Attachments & Media
+                </label>
+                <p className="text-[11px] text-[#65746C]">
+                  Upload pictures, videos, PDFs, and files directly from your computer
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {/* 1-Click Upload from Local PC */}
                 <button
                   type="button"
-                  onClick={() => setShowAttachInput("image")}
-                  className="px-2 py-1 text-[11px] font-semibold rounded bg-white border border-[#E8E2DD] hover:border-[#518E6A] text-[#242E29] flex items-center gap-1 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#518E6A] hover:bg-[#466B53] text-white flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                 >
-                  <ImageIcon className="w-3 h-3 text-[#518E6A]" />
-                  <span>Image</span>
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  <span>Upload from PC</span>
                 </button>
+
+                {/* Optional Web Link */}
                 <button
                   type="button"
-                  onClick={() => setShowAttachInput("video")}
-                  className="px-2 py-1 text-[11px] font-semibold rounded bg-white border border-[#E8E2DD] hover:border-[#518E6A] text-[#242E29] flex items-center gap-1 transition-colors"
+                  onClick={() => setShowLinkInput(!showLinkInput)}
+                  className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-white border border-[#E8E2DD] hover:border-[#518E6A] text-[#242E29] flex items-center gap-1 transition-colors"
                 >
-                  <VideoIcon className="w-3 h-3 text-purple-600" />
-                  <span>Video</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAttachInput("link")}
-                  className="px-2 py-1 text-[11px] font-semibold rounded bg-white border border-[#E8E2DD] hover:border-[#518E6A] text-[#242E29] flex items-center gap-1 transition-colors"
-                >
-                  <Link2 className="w-3 h-3 text-blue-600" />
-                  <span>Link / Doc</span>
+                  <Link2 className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Attach Link</span>
                 </button>
               </div>
             </div>
 
-            {/* Input prompt when clicking Image/Video/Link */}
-            {showAttachInput && (
+            {/* Optional URL prompt only if Attach Link is clicked */}
+            {showLinkInput && (
               <div className="p-2.5 bg-white rounded-lg border border-[#518E6A] space-y-2">
                 <div className="flex items-center justify-between text-xs font-semibold text-[#3D5249]">
-                  <span>Attach {showAttachInput.toUpperCase()}</span>
+                  <span>Attach Web Link / Loom / Google Doc</span>
                   <button
                     type="button"
-                    onClick={() => setShowAttachInput(null)}
+                    onClick={() => setShowLinkInput(false)}
                     className="text-[#65746C] hover:text-red-500"
                   >
                     <X className="w-3.5 h-3.5" />
@@ -349,63 +415,98 @@ export function CreateTaskModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input
                     type="url"
-                    placeholder={
-                      showAttachInput === "image"
-                        ? "https://... image URL (PNG, JPG)"
-                        : showAttachInput === "video"
-                        ? "https://... video (Loom, Vimeo, YouTube)"
-                        : "https://... link (Figma, Google Doc)"
-                    }
-                    value={attachUrl}
-                    onChange={(e) => setAttachUrl(e.target.value)}
+                    placeholder="https://... (Loom, Figma, Drive)"
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
                     className="px-2.5 py-1 text-xs rounded border border-[#E8E2DD] bg-white text-[#242E29]"
                   />
                   <input
                     type="text"
-                    placeholder="Label / Title (optional)"
-                    value={attachName}
-                    onChange={(e) => setAttachName(e.target.value)}
+                    placeholder="Title / Description (optional)"
+                    value={linkLabel}
+                    onChange={(e) => setLinkLabel(e.target.value)}
                     className="px-2.5 py-1 text-xs rounded border border-[#E8E2DD] bg-white text-[#242E29]"
                   />
                 </div>
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={handleAddAttachment}
-                    disabled={!attachUrl.trim()}
+                    onClick={handleAddLinkAttachment}
+                    disabled={!linkUrl.trim()}
                     className="px-3 py-1 bg-[#518E6A] text-white rounded text-xs font-semibold hover:bg-[#466B53] disabled:opacity-50"
                   >
-                    Add Attachment
+                    Add Link
                   </button>
                 </div>
               </div>
             )}
 
-            {/* Rendered Attachment Badges */}
-            {attachments.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-1">
+            {/* Uploaded Files Previews */}
+            {attachments.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                 {attachments.map((att) => (
                   <div
                     key={att.id}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-[#E8E2DD] rounded-lg text-xs text-[#242E29] shadow-2xs"
+                    className="flex items-center justify-between p-2 bg-white border border-[#E8E2DD] rounded-xl text-xs text-[#242E29] shadow-2xs hover:border-[#518E6A]/50 transition-colors"
                   >
-                    {att.type === "image" ? (
-                      <ImageIcon className="w-3.5 h-3.5 text-[#518E6A]" />
-                    ) : att.type === "video" ? (
-                      <VideoIcon className="w-3.5 h-3.5 text-purple-600" />
-                    ) : (
-                      <Link2 className="w-3.5 h-3.5 text-blue-600" />
-                    )}
-                    <span className="font-medium truncate max-w-[140px]">{att.name}</span>
+                    <div className="flex items-center space-x-2.5 min-w-0 pr-2">
+                      {att.type === "image" ? (
+                        att.url.startsWith("data:") ? (
+                          <img
+                            src={att.url}
+                            alt={att.name}
+                            className="w-8 h-8 rounded-lg object-cover ring-1 ring-[#518E6A]/30 shrink-0"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-[#518E6A] flex items-center justify-center shrink-0">
+                            <ImageIcon className="w-4 h-4" />
+                          </div>
+                        )
+                      ) : att.type === "video" ? (
+                        <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                          <VideoIcon className="w-4 h-4" />
+                        </div>
+                      ) : att.type === "pdf" ? (
+                        <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-[9px] shrink-0 border border-rose-200">
+                          PDF
+                        </div>
+                      ) : att.type === "link" ? (
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                          <Link2 className="w-4 h-4" />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                      )}
+
+                      <div className="min-w-0">
+                        <p className="font-semibold text-xs text-[#242E29] truncate">{att.name}</p>
+                        <p className="text-[10px] text-[#65746C]">
+                          {att.size || (att.type === "link" ? "External Link" : "Attached File")}
+                        </p>
+                      </div>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => handleRemoveAttachment(att.id)}
-                      className="text-[#65746C] hover:text-red-500 ml-1"
+                      className="p-1 rounded-md text-[#65746C] hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
+                      title="Remove file"
                     >
-                      <X className="w-3 h-3" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border border-dashed border-[#518E6A]/40 rounded-xl p-3 text-center bg-white/70 hover:bg-white hover:border-[#518E6A] transition-colors cursor-pointer"
+              >
+                <UploadCloud className="w-5 h-5 text-[#518E6A] mx-auto mb-1" />
+                <p className="text-xs font-semibold text-[#242E29]">Click to browse files from your computer</p>
+                <p className="text-[10px] text-[#65746C]">Supports PNG, JPG, MP4, PDF, DOCX, XLSX, ZIP</p>
               </div>
             )}
           </div>

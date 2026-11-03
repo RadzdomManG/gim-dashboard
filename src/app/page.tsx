@@ -52,6 +52,11 @@ import {
   Globe,
   Sparkles,
   EyeOff,
+  Moon,
+  Sun,
+  Palette,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -71,6 +76,7 @@ import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { TaskDetailModal, TaskItem } from "@/components/tasks/TaskDetailModal";
 import { CreateTaskModal } from "@/components/tasks/CreateTaskModal";
+import { soundManager } from "@/lib/audio/sounds";
 
 type NavTab =
   | "overview"
@@ -211,6 +217,48 @@ export default function GimDashboard() {
   }, []);
 
   // User Profiles with editable nicknames
+    // User Theme and Appearance State
+  const [uiTheme, setUiTheme] = useState<"classic" | "dark" | "slate" | "emerald">("classic");
+  const [soundSettings, setSoundSettings] = useState({
+    master: true,
+    task: true,
+    message: true,
+    reminder: true,
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedTheme = (localStorage.getItem("gim_ui_theme") as any) || "classic";
+      setUiTheme(savedTheme);
+      if (savedTheme === "dark") {
+        document.documentElement.className = "dark";
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+      document.documentElement.setAttribute("data-theme", savedTheme);
+      setSoundSettings(soundManager.getSettings());
+    }
+  }, []);
+
+  const applyTheme = (themeName: "classic" | "dark" | "slate" | "emerald") => {
+    setUiTheme(themeName);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("gim_ui_theme", themeName);
+      if (themeName === "dark") {
+        document.documentElement.className = "dark";
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+      document.documentElement.setAttribute("data-theme", themeName);
+    }
+  };
+
+  const handleToggleSound = (key: "master" | "task" | "message" | "reminder") => {
+    const updated = { ...soundSettings, [key]: !soundSettings[key] };
+    setSoundSettings(updated);
+    soundManager.updateSettings({ [key]: updated[key] });
+  };
+
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({
     divine: {
       id: "divine",
@@ -1083,6 +1131,31 @@ export default function GimDashboard() {
               <kbd className="hidden md:inline text-[9px] font-mono text-[#65746C]/60 bg-[#FBF6F3] px-1 py-0.2 rounded border border-[#E8E2DD]">
                 ⌘K
               </kbd>
+            </button>
+
+            {/* Quick Theme Switcher */}
+            <button
+              type="button"
+              onClick={() => {
+                const themes: Array<"classic" | "dark" | "slate" | "emerald"> = ["classic", "dark", "slate", "emerald"];
+                const nextIndex = (themes.indexOf(uiTheme) + 1) % themes.length;
+                applyTheme(themes[nextIndex]);
+              }}
+              className="p-1.5 rounded-xl border border-[#E8E2DD] bg-white text-[#65746C] hover:text-[#242E29] hover:bg-[#FBF6F3] shadow-xs flex items-center space-x-1.5 transition-colors"
+              title={`Active Theme: ${uiTheme.toUpperCase()}. Click to switch color scheme.`}
+            >
+              {uiTheme === "dark" ? (
+                <Moon className="w-4 h-4 text-amber-400" />
+              ) : uiTheme === "emerald" ? (
+                <Sparkles className="w-4 h-4 text-emerald-500" />
+              ) : uiTheme === "slate" ? (
+                <Palette className="w-4 h-4 text-blue-400" />
+              ) : (
+                <Sun className="w-4 h-4 text-amber-600" />
+              )}
+              <span className="hidden xl:inline text-[10px] font-bold uppercase tracking-wider text-[#3D5249]">
+                {uiTheme}
+              </span>
             </button>
 
             {/* Notifications Dropdown Bell */}
@@ -2130,40 +2203,182 @@ export default function GimDashboard() {
                 </CardContent>
               </Card>
 
-              {/* System Governance & Security Boundaries Summary */}
+              {/* UI Theme & Appearance Card */}
               <Card>
                 <CardHeader>
                   <div>
-                    <CardTitle>System Boundaries & Governance</CardTitle>
-                    <CardDescription>Active operating controls and data protections</CardDescription>
+                    <CardTitle>UI Appearance & Color Theme</CardTitle>
+                    <CardDescription>Personalize dashboard contrast, color palette, and night mode</CardDescription>
                   </div>
-                  <ShieldCheck className="w-5 h-5 text-[#466B53]" />
+                  <Palette className="w-5 h-5 text-[#466B53]" />
                 </CardHeader>
-                <div className="p-5 space-y-3 text-xs">
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-[#E8E2DD] bg-[#FBF6F3]/40">
-                    <div>
-                      <p className="font-semibold text-[#242E29]">ClickUp Integration Mode</p>
-                      <p className="text-[11px] text-[#65746C]">100% Read-Only Mirror (Mutations blocked)</p>
+                <CardContent className="p-5 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    {/* Theme 1: Classic GIM */}
+                    <div
+                      onClick={() => applyTheme("classic")}
+                      className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
+                        uiTheme === "classic"
+                          ? "border-[#518E6A] bg-[#518E6A]/5 shadow-sm ring-1 ring-[#518E6A]/30"
+                          : "border-[#E8E2DD] bg-white hover:border-[#518E6A]/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-4 h-4 rounded-full bg-[#FBF6F3] border border-[#3D5249]/30"></span>
+                          <span className="w-4 h-4 rounded-full bg-[#3D5249]"></span>
+                          <span className="w-4 h-4 rounded-full bg-[#518E6A]"></span>
+                        </div>
+                        {uiTheme === "classic" && <Check className="w-4 h-4 text-[#518E6A]" />}
+                      </div>
+                      <p className="font-bold text-xs text-[#242E29]">Classic GIM Cream</p>
+                      <p className="text-[10px] text-[#65746C] mt-0.5">Signature warm cream and dark green</p>
                     </div>
-                    <Badge variant="active" dot>Enforced</Badge>
+
+                    {/* Theme 2: Dark Forest Mode */}
+                    <div
+                      onClick={() => applyTheme("dark")}
+                      className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
+                        uiTheme === "dark"
+                          ? "border-[#518E6A] bg-[#1A2420] shadow-sm ring-1 ring-[#518E6A]/30"
+                          : "border-[#E8E2DD] bg-[#121A16] hover:border-[#518E6A]/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-4 h-4 rounded-full bg-[#121A16] border border-white/20"></span>
+                          <span className="w-4 h-4 rounded-full bg-[#1A2420]"></span>
+                          <span className="w-4 h-4 rounded-full bg-[#466B53]"></span>
+                        </div>
+                        {uiTheme === "dark" && <Check className="w-4 h-4 text-[#518E6A]" />}
+                      </div>
+                      <p className="font-bold text-xs text-white">Dark Forest Mode</p>
+                      <p className="text-[10px] text-white/70 mt-0.5">Sleek midnight charcoal and pine</p>
+                    </div>
+
+                    {/* Theme 3: Midnight Slate */}
+                    <div
+                      onClick={() => applyTheme("slate")}
+                      className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
+                        uiTheme === "slate"
+                          ? "border-blue-500 bg-[#1E293B] shadow-sm ring-1 ring-blue-500/30"
+                          : "border-[#E8E2DD] bg-[#0B1120] hover:border-blue-500/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-4 h-4 rounded-full bg-[#0B1120] border border-white/20"></span>
+                          <span className="w-4 h-4 rounded-full bg-[#1E293B]"></span>
+                          <span className="w-4 h-4 rounded-full bg-[#3B82F6]"></span>
+                        </div>
+                        {uiTheme === "slate" && <Check className="w-4 h-4 text-blue-400" />}
+                      </div>
+                      <p className="font-bold text-xs text-white">Midnight Slate</p>
+                      <p className="text-[10px] text-white/70 mt-0.5">High-contrast modern studio navy</p>
+                    </div>
+
+                    {/* Theme 4: Emerald Pine */}
+                    <div
+                      onClick={() => applyTheme("emerald")}
+                      className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
+                        uiTheme === "emerald"
+                          ? "border-emerald-500 bg-[#0C382C] shadow-sm ring-1 ring-emerald-500/30"
+                          : "border-[#E8E2DD] bg-[#06241B] hover:border-emerald-500/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="w-4 h-4 rounded-full bg-[#06241B] border border-white/20"></span>
+                          <span className="w-4 h-4 rounded-full bg-[#0C382C]"></span>
+                          <span className="w-4 h-4 rounded-full bg-[#10B981]"></span>
+                        </div>
+                        {uiTheme === "emerald" && <Check className="w-4 h-4 text-emerald-400" />}
+                      </div>
+                      <p className="font-bold text-xs text-white">Emerald Pine</p>
+                      <p className="text-[10px] text-white/70 mt-0.5">Vibrant deep emerald night</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Notification Preferences & Sound Settings Card */}
+              <Card>
+                <CardHeader>
+                  <div>
+                    <CardTitle>Notifications & Audio Chimes</CardTitle>
+                    <CardDescription>Control alerts for tasks, team chat mentions, and audio chimes</CardDescription>
+                  </div>
+                  <Bell className="w-5 h-5 text-[#466B53]" />
+                </CardHeader>
+                <CardContent className="p-5 space-y-3">
+                  {/* Toggle 1: Master Audio */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/50">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-lg bg-[#518E6A]/15 text-[#3D5249]">
+                        {soundSettings.master ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                      </div>
+                      <div>
+                        <p className="font-bold text-xs text-[#242E29]">Master Audio Chimes</p>
+                        <p className="text-[11px] text-[#65746C]">Synthesized audio alerts on events</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleSound("master")}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                        soundSettings.master ? "bg-[#518E6A]" : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          soundSettings.master ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-[#E8E2DD] bg-[#FBF6F3]/40">
+                  {/* Toggle 2: Task Alerts */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/50">
                     <div>
-                      <p className="font-semibold text-[#242E29]">Vercel Deployment State</p>
-                      <p className="text-[11px] text-[#65746C]">Production Deployments Frozen (Localhost active)</p>
+                      <p className="font-bold text-xs text-[#242E29]">Task Assignment & Due Date Alerts</p>
+                      <p className="text-[11px] text-[#65746C]">Notify when you are assigned or task nears target SLA</p>
                     </div>
-                    <Badge variant="review" dot>Frozen</Badge>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleSound("task")}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                        soundSettings.task ? "bg-[#518E6A]" : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          soundSettings.task ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-[#E8E2DD] bg-[#FBF6F3]/40">
+                  {/* Toggle 3: Message Alerts */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/50">
                     <div>
-                      <p className="font-semibold text-[#242E29]">Role-Based Access Control (RBAC)</p>
-                      <p className="text-[11px] text-[#65746C]">Universal Admin Access for Divine, Radz, and RA</p>
+                      <p className="font-bold text-xs text-[#242E29]">Team Chat & Direct Mentions</p>
+                      <p className="text-[11px] text-[#65746C]">Pop audio chime and notification badge on messages</p>
                     </div>
-                    <Badge variant="dark">Active</Badge>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleSound("message")}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                        soundSettings.message ? "bg-[#518E6A]" : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          soundSettings.message ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
                   </div>
-                </div>
+                </CardContent>
               </Card>
             </div>
           )}

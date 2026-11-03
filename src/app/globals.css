@@ -37,6 +37,7 @@ body {
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Subtle, polished scrollbars matching GIM aesthetic */
@@ -53,4 +54,185 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(61, 82, 73, 0.35);
+}
+
+/* ========================================================================= */
+/* THEME 1: DARK FOREST MODE (Dark Charcoal & Deep Pine)                     */
+/* ========================================================================= */
+html.dark,
+html[data-theme="dark"] {
+  --background: #121A16;
+  --foreground: #EDE8E3;
+}
+
+html.dark body,
+html[data-theme="dark"] body {
+  background-color: #121A16;
+  color: #EDE8E3;
+}
+
+html.dark .bg-white,
+html[data-theme="dark"] .bg-white {
+  background-color: #1A2420 !important;
+  color: #EDE8E3 !important;
+}
+
+html.dark .bg-\[\#FBF6F3\],
+html[data-theme="dark"] .bg-\[\#FBF6F3\] {
+  background-color: #121A16 !important;
+}
+
+html.dark .bg-\[\#FBF6F3\]\/30,
+html.dark .bg-\[\#FBF6F3\]\/40,
+html.dark .bg-\[\#FBF6F3\]\/50,
+html.dark .bg-\[\#FBF6F3\]\/60,
+html.dark .bg-\[\#FBF6F3\]\/70,
+html.dark .bg-\[\#FBF6F3\]\/80,
+html[data-theme="dark"] .bg-\[\#FBF6F3\]\/30,
+html[data-theme="dark"] .bg-\[\#FBF6F3\]\/40,
+html[data-theme="dark"] .bg-\[\#FBF6F3\]\/50,
+html[data-theme="dark"] .bg-\[\#FBF6F3\]\/60,
+html[data-theme="dark"] .bg-\[\#FBF6F3\]\/70,
+html[data-theme="dark"] .bg-\[\#FBF6F3\]\/80 {
+  background-color: #15201B !important;
+}
+
+html.dark .text-\[\#242E29\],
+html[data-theme="dark"] .text-\[\#242E29\] {
+  color: #EDE8E3 !important;
+}
+
+html.dark .text-\[\#65746C\],
+html[data-theme="dark"] .text-\[\#65746C\] {
+  color: #9DB0A5 !important;
+}
+
+html.dark .border-\[\#E8E2DD\],
+html.dark .border-\[\#E8E2DD\]\/60,
+html.dark .border-\[\#E8E2DD\]\/70,
+html.dark .border-\[\#E8E2DD\]\/80,
+html[data-theme="dark"] .border-\[\#E8E2DD\],
+html[data-theme="dark"] .border-\[\#E8E2DD\]\/60,
+html[data-theme="dark"] .border-\[\#E8E2DD\]\/70,
+html[data-theme="dark"] .border-\[\#E8E2DD\]\/80 {
+  border-color: #27362E !important;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea,
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background-color: #1E2A24 !important;
+  color: #EDE8E3 !important;
+  border-color: #2D3E35 !important;
+}
+
+/* ========================================================================= */
+/* THEME 2: MIDNIGHT SLATE (Modern Studio Slate)                             */
+/* ========================================================================= */
+html[data-theme="slate"] {
+  --background: #0B1120;
+  --foreground: #F8FAFC;
+}
+
+html[data-theme="slate"] body {
+  background-color: #0B1120;
+  color: #F8FAFC;
+}
+
+html[data-theme="slate"] .bg-white {
+  background-color: #1E293B !important;
+  color: #F8FAFC !important;
+}
+
+html[data-theme="slate"] .bg-\[\#FBF6F3\] {
+  background-color: #0B1120 !important;
+}
+
+html[data-theme="slate"] .bg-\[\#FBF6F3\]\/30,
+html[data-theme="slate"] .bg-\[\#FBF6F3\]\/40,
+html[data-theme="slate"] .bg-\[\#FBF6F3\]\/50,
+html[data-theme="slate"] .bg-\[\#FBF6F3\]\/60,
+html[data-theme="slate"] .bg-\[\#FBF6F3\]\/70,
+html[data-theme="slate"] .bg-\[\#FBF6F3\]\/80 {
+  background-color: #131E30 !important;
+}
+
+html[data-theme="slate"] .text-\[\#242E29\] {
+  color: #F8FAFC !important;
+}
+
+html[data-theme="slate"] .text-\[\#65746C\] {
+  color: #94A3B8 !important;
+}
+
+html[data-theme="slate"] .border-\[\#E8E2DD\],
+html[data-theme="slate"] .border-\[\#E8E2DD\]\/60,
+html[data-theme="slate"] .border-\[\#E8E2DD\]\/70,
+html[data-theme="slate"] .border-\[\#E8E2DD\]\/80 {
+  border-color: #334155 !important;
+}
+
+html[data-theme="slate"] input,
+html[data-theme="slate"] select,
+html[data-theme="slate"] textarea {
+  background-color: #1E293B !important;
+  color: #F8FAFC !important;
+  border-color: #475569 !important;
+}
+
+/* ========================================================================= */
+/* THEME 3: EMERALD PINE (Vibrant Dark Emerald)                              */
+/* ========================================================================= */
+html[data-theme="emerald"] {
+  --background: #06241B;
+  --foreground: #ECFDF5;
+}
+
+html[data-theme="emerald"] body {
+  background-color: #06241B;
+  color: #ECFDF5;
+}
+
+html[data-theme="emerald"] .bg-white {
+  background-color: #0C382C !important;
+  color: #ECFDF5 !important;
+}
+
+html[data-theme="emerald"] .bg-\[\#FBF6F3\] {
+  background-color: #06241B !important;
+}
+
+html[data-theme="emerald"] .bg-\[\#FBF6F3\]\/30,
+html[data-theme="emerald"] .bg-\[\#FBF6F3\]\/40,
+html[data-theme="emerald"] .bg-\[\#FBF6F3\]\/50,
+html[data-theme="emerald"] .bg-\[\#FBF6F3\]\/60,
+html[data-theme="emerald"] .bg-\[\#FBF6F3\]\/70,
+html[data-theme="emerald"] .bg-\[\#FBF6F3\]\/80 {
+  background-color: #082E22 !important;
+}
+
+html[data-theme="emerald"] .text-\[\#242E29\] {
+  color: #ECFDF5 !important;
+}
+
+html[data-theme="emerald"] .text-\[\#65746C\] {
+  color: #6EE7B7 !important;
+}
+
+html[data-theme="emerald"] .border-\[\#E8E2DD\],
+html[data-theme="emerald"] .border-\[\#E8E2DD\]\/60,
+html[data-theme="emerald"] .border-\[\#E8E2DD\]\/70,
+html[data-theme="emerald"] .border-\[\#E8E2DD\]\/80 {
+  border-color: #14533D !important;
+}
+
+html[data-theme="emerald"] input,
+html[data-theme="emerald"] select,
+html[data-theme="emerald"] textarea {
+  background-color: #0E4133 !important;
+  color: #ECFDF5 !important;
+  border-color: #1B694F !important;
 }

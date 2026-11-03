@@ -32,6 +32,8 @@ import {
   Sliders,
   UserPlus,
   UserMinus,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -242,6 +244,60 @@ export function MessagingCenter({
   const [isChannelInfoOpen, setIsChannelInfoOpen] = useState(false);
   const [infoDrawerTab, setInfoDrawerTab] = useState<"members" | "media" | "search">("members");
   const [addMemberSelectId, setAddMemberSelectId] = useState("");
+
+    // Pinned Channels and Groups
+  const [pinnedChannelIds, setPinnedChannelIds] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("gim_pinned_channels");
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return ["general"];
+  });
+
+  const togglePinChannel = (channelId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setPinnedChannelIds((prev) => {
+      const next = prev.includes(channelId) ? prev.filter((id) => id !== channelId) : [...prev, channelId];
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("gim_pinned_channels", JSON.stringify(next));
+        } catch (e) {}
+      }
+      return next;
+    });
+  };
+
+  // Pinned Messages per channel
+  const [pinnedMessageIds, setPinnedMessageIds] = useState<Record<string, string[]>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("gim_pinned_messages");
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return {};
+  });
+
+  const togglePinMessage = (msgId: string) => {
+    setPinnedMessageIds((prev) => {
+      const currentList = prev[activeChannelId] || [];
+      const nextList = currentList.includes(msgId)
+        ? currentList.filter((id) => id !== msgId)
+        : [...currentList, msgId];
+      const next = { ...prev, [activeChannelId]: nextList };
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("gim_pinned_messages", JSON.stringify(next));
+        } catch (e) {}
+      }
+      return next;
+    });
+  };
 
   const isLeader =
     currentUserRole === "Owner" ||
@@ -534,6 +590,9 @@ export function MessagingCenter({
       )
     : activeMessages;
 
+  const channelPinnedIds = pinnedMessageIds[activeChannelId] || [];
+  const channelPinnedMsgs = activeMessages.filter((m) => channelPinnedIds.includes(m.id));
+
   const channelAttachments = activeMessages.flatMap((m) => m.attachments || []);
   const channelImages = channelAttachments.filter((a) => a.type === "image");
   const channelFilesAndLinks = channelAttachments.filter((a) => a.type === "document" || a.type === "link" || a.type === "video");
@@ -743,7 +802,61 @@ export function MessagingCenter({
             </div>
 
             {/* Channels List */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-4">
+            <div className="flex-1 overflow-y-auto p-2 space-y-3">
+              {/* 📌 PINNED CHANNELS & CONVERSATIONS */}
+              {pinnedChannelIds.length > 0 && (
+                <div className="pb-1 border-b border-[#E8E2DD]/60">
+                  <div className="px-2 text-[10px] font-bold text-[#466B53] uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <Pin className="w-3 h-3 fill-[#466B53]" />
+                    <span>Pinned ({pinnedChannelIds.length})</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    {channels
+                      .filter((c) => pinnedChannelIds.includes(c.id))
+                      .map((channel) => {
+                        const isActive = channel.id === activeChannelId;
+                        return (
+                          <div
+                            key={channel.id}
+                            onClick={() => {
+                              setActiveChannelId(channel.id);
+                              setMobileView("chat");
+                            }}
+                            className={`group w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                              isActive
+                                ? "bg-[#3D5249] text-white font-semibold shadow-xs"
+                                : "text-[#242E29] hover:bg-white hover:border-[#E8E2DD]"
+                            }`}
+                          >
+                            <div className="flex items-center space-x-2 truncate min-w-0">
+                              {channel.type === "dm" ? (
+                                <div className="w-4 h-4 rounded-full bg-[#466B53] text-white flex items-center justify-center text-[8px] font-bold shrink-0">
+                                  {channel.name.slice(0, 2).toUpperCase()}
+                                </div>
+                              ) : channel.isPrivate ? (
+                                <Lock className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-amber-400" : "text-amber-600"}`} />
+                              ) : (
+                                <Hash className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-[#518E6A]" : "text-[#65746C]"}`} />
+                              )}
+                              <span className="truncate">{channel.name}</span>
+                            </div>
+                            <div className="flex items-center space-x-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={(e) => togglePinChannel(channel.id, e)}
+                                className="opacity-0 group-hover:opacity-100 p-1 text-amber-400 hover:text-amber-300 transition-opacity"
+                                title="Unpin conversation"
+                              >
+                                <Pin className="w-3 h-3 fill-current" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
               {/* Group Channels */}
               <div>
                 <div className="flex items-center justify-between px-2 text-[10px] font-semibold text-[#65746C] uppercase tracking-wider mb-1">
@@ -763,14 +876,15 @@ export function MessagingCenter({
                     .filter((c) => c.type === "channel")
                     .map((channel) => {
                       const isActive = channel.id === activeChannelId;
+                      const isPinned = pinnedChannelIds.includes(channel.id);
                       return (
-                        <button
+                        <div
                           key={channel.id}
                           onClick={() => {
                             setActiveChannelId(channel.id);
                             setMobileView("chat");
                           }}
-                          className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-colors ${
+                          className={`group w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
                             isActive
                               ? "bg-[#3D5249] text-white font-semibold shadow-xs"
                               : "text-[#242E29] hover:bg-white hover:border-[#E8E2DD]"
@@ -784,12 +898,22 @@ export function MessagingCenter({
                             )}
                             <span className="truncate">{channel.name}</span>
                           </div>
-                          {channel.unreadCount && !isActive && (
-                            <span className="w-4 h-4 rounded-full bg-[#518E6A] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
-                              {channel.unreadCount}
-                            </span>
-                          )}
-                        </button>
+                          <div className="flex items-center space-x-1 shrink-0">
+                            {channel.unreadCount && !isActive && (
+                              <span className="w-4 h-4 rounded-full bg-[#518E6A] text-white text-[9px] font-bold flex items-center justify-center">
+                                {channel.unreadCount}
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => togglePinChannel(channel.id, e)}
+                              className={`p-1 transition-opacity ${isPinned ? "text-amber-400" : "opacity-0 group-hover:opacity-100 text-[#65746C] hover:text-[#242E29]"}`}
+                              title={isPinned ? "Unpin channel" : "Pin channel to top"}
+                            >
+                              <Pin className={`w-3 h-3 ${isPinned ? "fill-current" : ""}`} />
+                            </button>
+                          </div>
+                        </div>
                       );
                     })}
                 </div>
@@ -805,14 +929,15 @@ export function MessagingCenter({
                     .filter((c) => c.type === "dm")
                     .map((channel) => {
                       const isActive = channel.id === activeChannelId;
+                      const isPinned = pinnedChannelIds.includes(channel.id);
                       return (
-                        <button
+                        <div
                           key={channel.id}
                           onClick={() => {
                             setActiveChannelId(channel.id);
                             setMobileView("chat");
                           }}
-                          className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-colors ${
+                          className={`group w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
                             isActive
                               ? "bg-[#3D5249] text-white font-semibold shadow-xs"
                               : "text-[#242E29] hover:bg-white hover:border-[#E8E2DD]"
@@ -824,7 +949,15 @@ export function MessagingCenter({
                             </div>
                             <span className="truncate">{channel.name}</span>
                           </div>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={(e) => togglePinChannel(channel.id, e)}
+                            className={`p-1 transition-opacity ${isPinned ? "text-amber-400" : "opacity-0 group-hover:opacity-100 text-[#65746C] hover:text-[#242E29]"}`}
+                            title={isPinned ? "Unpin conversation" : "Pin conversation to top"}
+                          >
+                            <Pin className={`w-3 h-3 ${isPinned ? "fill-current" : ""}`} />
+                          </button>
+                        </div>
                       );
                     })}
                 </div>
@@ -947,6 +1080,26 @@ export function MessagingCenter({
               </div>
             )}
 
+            {/* Top Pinned Message Banner */}
+            {channelPinnedMsgs.length > 0 && (
+              <div className="px-4 py-2 bg-[#FAF3EB] border-b border-[#E8E2DD] flex items-center justify-between text-xs text-[#242E29]">
+                <div className="flex items-center space-x-2 truncate min-w-0">
+                  <Pin className="w-3.5 h-3.5 text-[#518E6A] fill-[#518E6A] shrink-0" />
+                  <span className="font-bold text-[#3D5249] shrink-0">Pinned ({channelPinnedMsgs.length}):</span>
+                  <span className="truncate italic text-[#65746C]">
+                    &ldquo;{channelPinnedMsgs[channelPinnedMsgs.length - 1].content}&rdquo;
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => togglePinMessage(channelPinnedMsgs[channelPinnedMsgs.length - 1].id)}
+                  className="text-[10px] text-[#65746C] hover:text-rose-600 font-semibold shrink-0 ml-2"
+                >
+                  Unpin
+                </button>
+              </div>
+            )}
+
             {/* Messages Thread Stream */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {activeMessages.length === 0 ? (
@@ -963,39 +1116,138 @@ export function MessagingCenter({
                 </div>
               ) : (
                 displayedMessages.map((msg) => {
-                  const isCurrentUser = msg.senderId === currentUserId;
+                  const isCurrentUser =
+                    msg.senderId === currentUserId ||
+                    msg.senderNickname === currentUserNickname ||
+                    msg.senderName === currentUserName;
+                  const isPinned = channelPinnedIds.includes(msg.id);
+
                   return (
-                    <div key={msg.id} className="flex items-start space-x-3 text-xs group">
-                      <div className={`w-8 h-8 rounded-full ${msg.senderAvatar} text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs mt-0.5`}>
+                    <div
+                      key={msg.id}
+                      className={`group relative flex items-start space-x-3 text-xs p-1.5 rounded-xl transition-colors ${
+                        isPinned ? "bg-amber-50/60 border-l-2 border-amber-500 pl-2" : "hover:bg-black/[0.015]"
+                      }`}
+                    >
+                      {/* Avatar */}
+                      <div className={`w-8 h-8 rounded-full ${msg.senderAvatar || "bg-[#3D5249]"} text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs mt-0.5`}>
                         {msg.senderNickname.slice(0, 2).toUpperCase()}
                       </div>
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <div className="flex items-center space-x-2">
+
+                      <div className="flex-1 min-w-0">
+                        {/* Header Row: Sender, Nickname, Role, Timestamp, and Sent/Seen on ONE single line */}
+                        <div className="flex items-center space-x-2 flex-wrap text-xs leading-none mb-1">
                           <span className="font-bold text-[#242E29]">{msg.senderName}</span>
-                          <span className="text-[#466B53] font-semibold text-[10px]">({msg.senderNickname})</span>
+                          <span className="text-[#466B53] font-semibold text-[11px]">({msg.senderNickname})</span>
                           {msg.isCoreAdmin && <Badge variant="dark">Core Admin</Badge>}
+                          {msg.senderRole === "Owner" && <Badge variant="brand">Owner</Badge>}
                           <span className="text-[10px] text-[#65746C]">{msg.timestamp}</span>
+
+                          {/* Delivery & Read Receipts inline next to timestamp! */}
+                          {isCurrentUser && (
+                            <span className="inline-flex items-center space-x-1 text-[10px]">
+                              <span className="text-[#65746C]">•</span>
+                              {Object.keys(seenUsers).length > 0 ? (
+                                <span className="inline-flex items-center space-x-1 text-[#466B53] font-medium">
+                                  <CheckCheck className="w-3 h-3 text-[#518E6A]" />
+                                  <span>Seen</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center space-x-1 text-[#65746C]">
+                                  <CheckCircle2 className="w-3 h-3 text-[#518E6A]" />
+                                  <span>Sent</span>
+                                </span>
+                              )}
+                            </span>
+                          )}
+
+                          {isPinned && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded font-semibold ml-1">
+                              <Pin className="w-2.5 h-2.5 fill-amber-700" /> Pinned
+                            </span>
+                          )}
                         </div>
 
-                        {/* Replying To Quote Banner */}
+                        {/* Replying To Quote Banner if any */}
                         {msg.reply_to && (
-                          <div className="p-1.5 mb-1 bg-black/5 border-l-2 border-[#518E6A] rounded text-[10px] text-[#65746C] max-w-2xl">
+                          <div className="p-1.5 mb-1.5 bg-black/5 border-l-2 border-[#518E6A] rounded text-[10px] text-[#65746C] max-w-2xl">
                             <span className="font-semibold text-[#3D5249]">@{msg.reply_to.senderName}:</span>{" "}
                             <span className="italic line-clamp-1">&ldquo;{msg.reply_to.content}&rdquo;</span>
                           </div>
                         )}
 
-                        {/* Text Content */}
-                        <div className="text-xs text-[#242E29] leading-relaxed whitespace-pre-wrap bg-[#FBF6F3]/50 p-2.5 rounded-xl border border-[#E8E2DD]/70 inline-block max-w-2xl">
-                          {msg.content}
+                        {/* Bubble & Hover Actions Row */}
+                        <div className="relative inline-block max-w-2xl group/bubble">
+                          {/* Message Text Bubble */}
+                          <div className="text-xs text-[#242E29] leading-relaxed whitespace-pre-wrap bg-[#FBF6F3]/80 px-3.5 py-2 rounded-2xl rounded-tl-xs border border-[#E8E2DD]/80 shadow-2xs break-words">
+                            {msg.content}
+                          </div>
+
+                          {/* Floating Hover Toolbar (Slack style) */}
+                          <div className="absolute -top-3 right-1 opacity-0 group-hover:opacity-100 group-hover/bubble:opacity-100 transition-opacity flex items-center bg-white border border-[#E8E2DD] shadow-md rounded-full px-1.5 py-0.5 gap-0.5 z-20">
+                            {/* Quick Emoji Reaction */}
+                            <button
+                              type="button"
+                              onClick={() => setShowEmojiPickerForMsg(showEmojiPickerForMsg === msg.id ? null : msg.id)}
+                              className="p-1 rounded-full text-[#65746C] hover:text-[#242E29] hover:bg-black/5 transition-colors"
+                              title="React with emoji"
+                            >
+                              <Smile className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Reply Button */}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setReplyingToMessage({
+                                  senderName: msg.senderNickname || msg.senderName,
+                                  content: msg.content,
+                                })
+                              }
+                              className="p-1 rounded-full text-[#65746C] hover:text-[#518E6A] hover:bg-black/5 transition-colors"
+                              title="Reply in thread"
+                            >
+                              <CornerUpLeft className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Pin / Unpin Button */}
+                            <button
+                              type="button"
+                              onClick={() => togglePinMessage(msg.id)}
+                              className={`p-1 rounded-full hover:bg-black/5 transition-colors ${
+                                isPinned ? "text-amber-600" : "text-[#65746C] hover:text-amber-600"
+                              }`}
+                              title={isPinned ? "Unpin message" : "Pin message"}
+                            >
+                              <Pin className={`w-3.5 h-3.5 ${isPinned ? "fill-amber-600" : ""}`} />
+                            </button>
+                          </div>
+
+                          {/* Emoji Picker Popup */}
+                          {showEmojiPickerForMsg === msg.id && (
+                            <div className="absolute -top-10 left-0 flex items-center gap-1 bg-white border border-[#E8E2DD] rounded-xl p-1 shadow-lg z-30 animate-in fade-in">
+                              {["👍", "❤️", "🙌", "🔥", "👀", "✅", "🚀", "🎉"].map((emoji) => (
+                                <button
+                                  key={emoji}
+                                  type="button"
+                                  onClick={() => {
+                                    toggleMessageReaction(msg.id, emoji);
+                                    setShowEmojiPickerForMsg(null);
+                                  }}
+                                  className="p-1 text-sm hover:scale-125 transition-transform"
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
 
                         {/* Attachments Section */}
                         {msg.attachments && msg.attachments.length > 0 && (
-                          <div className="space-y-2 pt-1">
+                          <div className="space-y-2 pt-1.5 max-w-md">
                             {msg.attachments.map((att) => (
                               <div key={att.id}>
-                                {/* Image Attachment */}
                                 {att.type === "image" && (
                                   <div className="max-w-sm rounded-xl border border-[#E8E2DD] overflow-hidden bg-[#FBF6F3] p-2 space-y-1.5">
                                     <div className="h-40 bg-[#3D5249]/10 rounded-lg flex items-center justify-center overflow-hidden">
@@ -1012,7 +1264,6 @@ export function MessagingCenter({
                                   </div>
                                 )}
 
-                                {/* Video Attachment */}
                                 {att.type === "video" && (
                                   <div className="max-w-md rounded-xl border border-[#E8E2DD] overflow-hidden bg-black p-1 space-y-1">
                                     <video
@@ -1027,7 +1278,6 @@ export function MessagingCenter({
                                   </div>
                                 )}
 
-                                {/* Document / File Attachment */}
                                 {att.type === "document" && (
                                   <div className="flex items-center space-x-3 p-2.5 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/80 max-w-md hover:border-[#518E6A]/50 transition-colors">
                                     <div className="p-2 rounded-lg bg-[#466B53]/15 text-[#3D5249]">
@@ -1048,7 +1298,6 @@ export function MessagingCenter({
                                   </div>
                                 )}
 
-                                {/* External Link Attachment */}
                                 {att.type === "link" && (
                                   <div className="flex items-center space-x-2.5 p-2.5 rounded-xl border border-[#518E6A]/30 bg-[#EDFDF5]/60 max-w-md">
                                     <Link2 className="w-4 h-4 text-[#38A169] shrink-0" />
@@ -1071,82 +1320,21 @@ export function MessagingCenter({
                           </div>
                         )}
 
-                        {/* Message Action Bar: Reactions & Reply */}
-                        <div className="flex items-center justify-between pt-0.5 text-xs max-w-2xl">
-                          {/* Reactions Chips & Quick Emoji Trigger */}
-                          <div className="flex items-center gap-1 flex-wrap">
-                            {msg.reactions &&
-                              msg.reactions.map((r, rIdx) => (
-                                <button
-                                  key={rIdx}
-                                  type="button"
-                                  onClick={() => toggleMessageReaction(msg.id, r.emoji)}
-                                  className="px-1.5 py-0.5 rounded-full bg-[#FBF6F3] border border-[#E8E2DD] text-[10px] flex items-center gap-1 hover:border-[#518E6A]"
-                                  title={`Reacted by ${r.users.join(", ")}`}
-                                >
-                                  <span>{r.emoji}</span>
-                                  <span className="font-bold">{r.count}</span>
-                                </button>
-                              ))}
-
-                            {/* Quick Emoji Reaction Trigger */}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setShowEmojiPickerForMsg(showEmojiPickerForMsg === msg.id ? null : msg.id)
-                              }
-                              className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-[#65746C] hover:text-[#242E29] transition-opacity"
-                              title="React with emoji"
-                            >
-                              <Smile className="w-3.5 h-3.5" />
-                            </button>
-
-                            {showEmojiPickerForMsg === msg.id && (
-                              <div className="flex items-center gap-1 bg-white border border-[#E8E2DD] rounded-xl p-1 shadow-md z-10 animate-in fade-in">
-                                {["👍", "❤️", "🙌", "🔥", "👀", "✅", "🚀"].map((emoji) => (
-                                  <button
-                                    key={emoji}
-                                    type="button"
-                                    onClick={() => toggleMessageReaction(msg.id, emoji)}
-                                    className="p-1 text-sm hover:scale-125 transition-transform"
-                                  >
-                                    {emoji}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Reply Button */}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setReplyingToMessage({
-                                senderName: msg.senderNickname || msg.senderName,
-                                content: msg.content,
-                              })
-                            }
-                            className="opacity-0 group-hover:opacity-100 flex items-center gap-1 text-[10px] text-[#518E6A] font-semibold hover:underline transition-opacity px-1 py-0.5 rounded hover:bg-[#518E6A]/10"
-                          >
-                            <CornerUpLeft className="w-3 h-3" />
-                            <span>Reply</span>
-                          </button>
-                        </div>
-
-                        {/* Read Receipts ("Seen by ...") on messages sent by current user */}
-                        {isCurrentUser && (
-                          <div className="flex items-center space-x-1 text-[10px] -mt-0.5">
-                            {Object.keys(seenUsers).length > 0 ? (
-                              <div className="flex items-center space-x-1 text-[#466B53] font-medium">
-                                <CheckCheck className="w-3.5 h-3.5 text-[#518E6A]" />
-                                <span>Seen by {Object.values(seenUsers).map((u) => u.name).join(", ")}</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center space-x-1 text-[#65746C]">
-                                <CheckCircle2 className="w-3 h-3 text-[#65746C]" />
-                                <span>Sent</span>
-                              </div>
-                            )}
+                        {/* Reaction Chips (ONLY shown if reactions exist) */}
+                        {msg.reactions && msg.reactions.length > 0 && (
+                          <div className="flex items-center gap-1 flex-wrap pt-1">
+                            {msg.reactions.map((r, rIdx) => (
+                              <button
+                                key={rIdx}
+                                type="button"
+                                onClick={() => toggleMessageReaction(msg.id, r.emoji)}
+                                className="px-2 py-0.5 rounded-full bg-white border border-[#E8E2DD] text-[11px] flex items-center gap-1 hover:border-[#518E6A] shadow-2xs"
+                                title={`Reacted by ${r.users.join(", ")}`}
+                              >
+                                <span>{r.emoji}</span>
+                                <span className="font-bold text-[#3D5249]">{r.count}</span>
+                              </button>
+                            ))}
                           </div>
                         )}
                       </div>

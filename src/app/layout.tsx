@@ -9,8 +9,16 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "GIM",
-  description: "Operations platform for Grace In Motion team and client workflows",
+  title: "GIM — Grace in Motion Mission Control",
+  description: "Operations platform for Grace in Motion team and client workflows",
+  icons: {
+    icon: [
+      { url: "/gim-mark-green.png", sizes: "32x32", type: "image/png" },
+      { url: "/gim-mark-green.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/gim-mark-green.png",
+    apple: "/gim-mark-green.png",
+  },
 };
 
 export default function RootLayout({
