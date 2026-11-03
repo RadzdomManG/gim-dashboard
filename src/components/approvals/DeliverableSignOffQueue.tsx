@@ -118,12 +118,14 @@ interface DeliverableSignOffQueueProps {
   currentUserName: string;
   currentUserNickname: string;
   isCoreAdmin: boolean;
+  clientScope?: string | string[];
 }
 
 export function DeliverableSignOffQueue({
   currentUserName,
   currentUserNickname,
   isCoreAdmin,
+  clientScope = "all",
 }: DeliverableSignOffQueueProps) {
   const [approvals, setApprovals] = useState<ApprovalItem[]>(INITIAL_APPROVALS);
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -132,6 +134,15 @@ export function DeliverableSignOffQueue({
   const [activeAction, setActiveAction] = useState<"approve" | "reject" | null>(null);
 
   const filteredApprovals = approvals.filter((item) => {
+    // Client scope enforcement
+    if (clientScope && clientScope !== "all") {
+      const allowed = Array.isArray(clientScope) ? clientScope : [clientScope];
+      const hasAccess = allowed.some((scope) =>
+        item.client.toLowerCase().includes(scope.toLowerCase()) || scope.toLowerCase().includes(item.client.toLowerCase())
+      );
+      if (!hasAccess) return false;
+    }
+
     if (filterStatus === "all") return true;
     return item.status.toLowerCase() === filterStatus.toLowerCase();
   });

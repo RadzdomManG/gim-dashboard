@@ -56,6 +56,7 @@ import { TeamCapacityWorksheet } from "@/components/capacity/TeamCapacityWorkshe
 import { ClientPortalView } from "@/components/client-portal/ClientPortalView";
 import { SopPlaybookLibrary } from "@/components/library/SopPlaybookLibrary";
 import { UserInvitationModal } from "@/components/invitations/UserInvitationModal";
+import { EditClientAccessModal, TeamMemberAccess } from "@/components/team/EditClientAccessModal";
 
 type NavTab =
   | "overview"
@@ -234,6 +235,7 @@ export default function GimDashboard() {
 
   // Invitation Modal State
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [editAccessMember, setEditAccessMember] = useState<TeamMemberAccess | null>(null);
   const [inviteForm, setInviteForm] = useState({
     name: "",
     email: "",
@@ -1215,6 +1217,7 @@ export default function GimDashboard() {
           {/* ========================================================================= */}
           {activeTab === "clients" && (
             <ClientPortfolioView
+              clientScope={currentUser.clientScope}
               onSelectTasks={(clientName) => {
                 setTaskSearchQuery(clientName);
                 setActiveTab("tasks");
@@ -1240,6 +1243,7 @@ export default function GimDashboard() {
               currentUserName={currentUser.name}
               currentUserNickname={currentUser.nickname}
               isCoreAdmin={currentUser.isCoreAdmin}
+              clientScope={currentUser.clientScope}
             />
           )}
 
@@ -1506,13 +1510,32 @@ export default function GimDashboard() {
                             </Badge>
                           </td>
                           <td className="py-3 px-4 text-right">
-                            {hasAdminAccess && inv.status !== "Revoked" ? (
-                              <button
-                                onClick={() => handleRevokeInvite(inv.id)}
-                                className="text-[11px] text-rose-700 hover:text-rose-900 font-semibold underline ml-2"
-                              >
-                                Revoke
-                              </button>
+                            {hasAdminAccess ? (
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => {
+                                    setEditAccessMember({
+                                      id: inv.id,
+                                      name: inv.name,
+                                      nickname: inv.name.split(" ")[0],
+                                      email: inv.email,
+                                      role: inv.role,
+                                      assignedClients: inv.clientScope === "all" ? [] : [inv.clientScope],
+                                    });
+                                  }}
+                                  className="text-[11px] text-[#518E6A] hover:text-[#466B53] font-semibold underline"
+                                >
+                                  Edit Scope
+                                </button>
+                                {inv.status !== "Revoked" && (
+                                  <button
+                                    onClick={() => handleRevokeInvite(inv.id)}
+                                    className="text-[11px] text-rose-700 hover:text-rose-900 font-semibold underline"
+                                  >
+                                    Revoke
+                                  </button>
+                                )}
+                              </div>
                             ) : (
                               <span className="text-[11px] text-[#65746C]/60">Locked</span>
                             )}
@@ -1877,6 +1900,27 @@ export default function GimDashboard() {
       <UserInvitationModal
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
+      />
+
+      {/* ========================================================================= */}
+      {/* 6. EDIT CLIENT TENANT ACCESS MODAL (Core 3 Admins Only) */}
+      {/* ========================================================================= */}
+      <EditClientAccessModal
+        isOpen={!!editAccessMember}
+        onClose={() => setEditAccessMember(null)}
+        member={editAccessMember}
+        onSaved={(memberId, updatedClients) => {
+          setInvitations((prev) =>
+            prev.map((i) =>
+              i.id === memberId
+                ? {
+                    ...i,
+                    clientScope: updatedClients.length === 6 ? "all" : updatedClients.join(", "),
+                  }
+                : i
+            )
+          );
+        }}
       />
     </div>
   );

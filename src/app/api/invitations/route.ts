@@ -15,6 +15,7 @@ export async function GET() {
         full_name,
         role,
         client_id,
+        assigned_clients,
         token,
         expires_at,
         accepted_at,
@@ -42,7 +43,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, full_name, role = 'team_member', client_id } = body;
+    const { email, full_name, role = 'team_member', client_id, assigned_clients = [] } = body;
 
     if (!email || !email.includes('@')) {
       return NextResponse.json({ error: 'Valid email is required.' }, { status: 400 });
@@ -50,6 +51,7 @@ export async function POST(req: NextRequest) {
 
     const trimmedEmail = email.trim().toLowerCase();
     const displayName = (full_name || trimmedEmail.split('@')[0]).trim();
+    const clientList: string[] = Array.isArray(assigned_clients) ? assigned_clients : [];
 
     // Map role to valid PostgreSQL enum
     const validRoles = [
@@ -82,6 +84,7 @@ export async function POST(req: NextRequest) {
             full_name: displayName,
             role: assignedRole,
             client_id: client_id || null,
+            assigned_clients: clientList,
           },
         },
       });
@@ -103,6 +106,7 @@ export async function POST(req: NextRequest) {
           full_name: displayName,
           role: assignedRole,
           client_id: client_id || null,
+          assigned_clients: clientList,
         },
       });
 
@@ -128,6 +132,7 @@ export async function POST(req: NextRequest) {
         full_name: displayName,
         role: assignedRole,
         client_id: client_id || null,
+        assigned_clients: clientList,
         token: uniqueToken,
         expires_at: expiresAt.toISOString(),
         is_revoked: false,

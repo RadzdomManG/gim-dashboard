@@ -216,9 +216,10 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
 
 interface ClientPortfolioViewProps {
   onSelectTasks?: (clientName: string) => void;
+  clientScope?: string | string[];
 }
 
-export function ClientPortfolioView({ onSelectTasks }: ClientPortfolioViewProps) {
+export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: ClientPortfolioViewProps) {
   const [selectedClientId, setSelectedClientId] = useState<string>("little-treasures");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -226,6 +227,15 @@ export function ClientPortfolioView({ onSelectTasks }: ClientPortfolioViewProps)
   const [isOnboardModalOpen, setIsOnboardModalOpen] = useState(false);
 
   const filteredClients = CLIENT_PORTFOLIO.filter((c) => {
+    // Client scope enforcement
+    if (clientScope && clientScope !== "all") {
+      const allowed = Array.isArray(clientScope) ? clientScope : [clientScope];
+      const hasAccess = allowed.some((scope) =>
+        c.name.toLowerCase().includes(scope.toLowerCase()) || scope.toLowerCase().includes(c.name.toLowerCase())
+      );
+      if (!hasAccess) return false;
+    }
+
     if (statusFilter !== "all" && c.status.toLowerCase() !== statusFilter.toLowerCase()) {
       return false;
     }

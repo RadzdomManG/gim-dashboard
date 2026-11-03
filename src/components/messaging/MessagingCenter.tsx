@@ -62,6 +62,7 @@ export interface ChatChannel {
   description?: string;
   isPrivate: boolean;
   membersCount: number;
+  memberIds?: string[];
   unreadCount?: number;
   lastMessageSnippet?: string;
   lastMessageTime?: string;
@@ -75,6 +76,7 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     description: "Company-wide operational announcements and team discussions.",
     isPrivate: false,
     membersCount: 7,
+    memberIds: [], // Open to all team members
   },
   {
     id: "little-treasures",
@@ -83,6 +85,7 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     description: "Daily sprint updates, GHL funnels, and Dec 11 summit build.",
     isPrivate: false,
     membersCount: 4,
+    memberIds: ["divine", "radz", "erwin", "bj"],
   },
   {
     id: "wrts-ops",
@@ -91,6 +94,7 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     description: "21 n8n workflows, ClassReach CRM sync, and operational monitoring.",
     isPrivate: false,
     membersCount: 3,
+    memberIds: ["divine", "radz", "erwin"],
   },
   {
     id: "leadership",
@@ -99,6 +103,7 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     description: "Restricted strategy, client retainers & resource allocation.",
     isPrivate: true,
     membersCount: 3,
+    memberIds: ["divine", "radz", "ra"],
   },
   {
     id: "dm-divine",
@@ -106,6 +111,7 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     type: "dm",
     isPrivate: true,
     membersCount: 2,
+    memberIds: ["divine", "radz"],
   },
   {
     id: "dm-ra",
@@ -113,6 +119,7 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     type: "dm",
     isPrivate: true,
     membersCount: 2,
+    memberIds: ["ra", "radz"],
   },
   {
     id: "dm-erwin",
@@ -120,7 +127,18 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     type: "dm",
     isPrivate: true,
     membersCount: 2,
+    memberIds: ["erwin", "radz"],
   },
+];
+
+const AVAILABLE_TEAM_MEMBERS = [
+  { id: "divine", name: "Divine Origines", role: "Owner" },
+  { id: "radz", name: "Radzdom Gallego", role: "Admin" },
+  { id: "ra", name: "Ma. Rose Anne Malinao", role: "Admin" },
+  { id: "erwin", name: "Erwin Manaog", role: "Senior Specialist" },
+  { id: "bj", name: "BJ Ricafrente", role: "Specialist" },
+  { id: "joy", name: "Joy Fabular", role: "Specialist" },
+  { id: "jedy", name: "Jedy Caillio", role: "Creative Specialist" },
 ];
 
 const INITIAL_MESSAGES: Record<string, ChatMessage[]> = {};
@@ -184,6 +202,7 @@ export function MessagingCenter({
   const [newChannelName, setNewChannelName] = useState("");
   const [newChannelDesc, setNewChannelDesc] = useState("");
   const [newChannelPrivate, setNewChannelPrivate] = useState(false);
+  const [selectedChannelMembers, setSelectedChannelMembers] = useState<string[]>([currentUserId, "divine"]);
 
   // Supabase Realtime Synchronization
   useEffect(() => {
@@ -375,14 +394,17 @@ export function MessagingCenter({
     if (!newChannelName.trim()) return;
 
     const formattedId = newChannelName.toLowerCase().replace(/\s+/g, "-");
+    const membersToAssign = selectedChannelMembers.length > 0 ? selectedChannelMembers : [currentUserId];
+
     const newChan: ChatChannel = {
       id: formattedId,
       name: formattedId,
       type: "channel",
       description: newChannelDesc.trim() || "Operational collaboration channel.",
       isPrivate: newChannelPrivate,
-      membersCount: newChannelPrivate ? 3 : 7,
-      lastMessageSnippet: "Channel created.",
+      membersCount: membersToAssign.length,
+      memberIds: membersToAssign,
+      lastMessageSnippet: "Group chat created.",
       lastMessageTime: "Just now",
     };
 
@@ -392,11 +414,31 @@ export function MessagingCenter({
     setNewChannelName("");
     setNewChannelDesc("");
     setNewChannelPrivate(false);
+    setSelectedChannelMembers([currentUserId, "divine"]);
   };
 
-  const filteredChannels = channels.filter((c) =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredChannels = channels.filter((c) => {
+    if (searchQuery.trim() && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+
+    // 1. General channel (#general-gim) is open to the whole team
+    if (c.id === "general" || c.name === "general-gim") {
+      return true;
+    }
+
+    // 2. Core Admins have universal visibility to oversee all spaces
+    if (isCoreAdmin) {
+      return true;
+    }
+
+    // 3. Group chats and private channels: ONLY members who are in memberIds can access
+    if (c.memberIds && c.memberIds.length > 0) {
+      return c.memberIds.includes(currentUserId);
+    }
+
+    return !c.isPrivate;
+  });
 
   return (
     <div className="space-y-4">
@@ -943,6 +985,55 @@ export function MessagingCenter({
                   onChange={(e) => setNewChannelDesc(e.target.value)}
                   className="w-full p-2.5 bg-[#FBF6F3]/50 border border-[#E8E2DD] rounded-lg text-xs text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
                 />
+              </div>
+
+              {/* Add Members to Group Chat */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-[#3D5249]">
+                    Add Group Chat Members *
+                  </label>
+                  <span className="text-[10px] text-[#65746C]">
+                    Only checked members will have access to this chat
+                  </span>
+                </div>
+                <div className="space-y-1.5 max-h-36 overflow-y-auto p-2 bg-[#FBF6F3]/50 border border-[#E8E2DD] rounded-xl">
+                  {AVAILABLE_TEAM_MEMBERS.map((m) => {
+                    const isChecked = selectedChannelMembers.includes(m.id);
+                    return (
+                      <label
+                        key={m.id}
+                        onClick={() => {
+                          setSelectedChannelMembers((prev) =>
+                            prev.includes(m.id)
+                              ? prev.filter((id) => id !== m.id)
+                              : [...prev, m.id]
+                          );
+                        }}
+                        className={`p-2 rounded-lg border cursor-pointer transition-all flex items-center justify-between ${
+                          isChecked
+                            ? "bg-white border-[#518E6A] ring-1 ring-[#518E6A]"
+                            : "bg-white/50 border-[#3D5249]/10 hover:border-[#3D5249]/30"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {}}
+                            className="text-[#518E6A] focus:ring-[#518E6A] rounded border-[#3D5249]/20"
+                          />
+                          <span className="font-semibold text-xs text-[#242E29]">
+                            {m.name}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-[#65746C] font-mono">
+                          {m.role}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="p-3 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/50 flex items-center justify-between">

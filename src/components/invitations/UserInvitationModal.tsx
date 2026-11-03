@@ -26,6 +26,7 @@ export interface InvitationRecord {
   full_name: string;
   role: string;
   client_id?: string | null;
+  assigned_clients?: string[] | null;
   token: string;
   expires_at: string;
   accepted_at?: string | null;
@@ -61,6 +62,7 @@ export function UserInvitationModal({
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState("team_member");
   const [clientId, setClientId] = useState("");
+  const [selectedClients, setSelectedClients] = useState<string[]>(["Little Treasures Company"]);
   const [isLoading, setIsLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
@@ -113,6 +115,7 @@ export function UserInvitationModal({
           full_name: fullName.trim() || email.split("@")[0],
           role,
           client_id: role === "client_user" ? clientId || null : null,
+          assigned_clients: role === "admin" ? ["All Clients"] : selectedClients,
         }),
       });
 
@@ -391,27 +394,88 @@ export function UserInvitationModal({
                 </div>
               </div>
 
-              {/* Client Tenant Selection (Only if Client Stakeholder is selected) */}
-              {role === "client_user" && (
-                <div className="p-4 rounded-xl bg-[#FBF6F3] border border-[#518E6A]/20 space-y-2">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[#3D5249]">
-                    Select Client Tenant Boundary <span className="text-red-500">*</span>
-                  </label>
-                  <p className="text-xs text-[#65746C]">
-                    This user will only have access to their designated client dashboard and portal. All other clients and internal GIM discussions will remain hidden.
-                  </p>
-                  <select
-                    value={clientId}
-                    onChange={(e) => setClientId(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-[#3D5249]/20 bg-white text-[#242E29] focus:outline-none focus:ring-2 focus:ring-[#518E6A]/30"
-                  >
-                    <option value="">-- Choose Authentic Client --</option>
-                    {clientsList.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} ({c.code})
-                      </option>
-                    ))}
-                  </select>
+              {/* Client Scope Selection (Multi-Client Assignment) */}
+              {role === "admin" ? (
+                <div className="p-3.5 rounded-xl bg-[#3D5249]/5 border border-[#3D5249]/15 flex items-start gap-2.5 text-xs text-[#3D5249]">
+                  <Shield className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Universal Admin Scope:</strong> Admins automatically hold full visibility across all 6 client accounts, automations, and deliverables.
+                  </span>
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-[#FBF6F3] border border-[#518E6A]/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#3D5249]">
+                        Select Assigned Clients (Tenant Scope) <span className="text-red-500">*</span>
+                      </label>
+                      <p className="text-[11px] text-[#65746C] mt-0.5">
+                        Choose which clients this member will handle (e.g., SMM handling Little Treasures &amp; InVogue). They will only see data for these clients.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedClients(clientsList.map((c) => c.name))}
+                        className="text-[#518E6A] hover:underline font-semibold text-[11px]"
+                      >
+                        All
+                      </button>
+                      <span className="text-[#65746C]">&bull;</span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedClients([])}
+                        className="text-[#65746C] hover:underline text-[11px]"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {clientsList.map((client) => {
+                      const isChecked = selectedClients.includes(client.name);
+                      return (
+                        <label
+                          key={client.id}
+                          onClick={() => {
+                            setSelectedClients((prev) =>
+                              prev.includes(client.name)
+                                ? prev.filter((c) => c !== client.name)
+                                : [...prev, client.name]
+                            );
+                            if (role === "client_user") {
+                              setClientId(client.id);
+                            }
+                          }}
+                          className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center gap-2.5 ${
+                            isChecked
+                              ? "bg-white border-[#518E6A] ring-1 ring-[#518E6A]"
+                              : "bg-white/70 border-[#3D5249]/15 hover:border-[#3D5249]/30"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {}}
+                            className="text-[#518E6A] focus:ring-[#518E6A] rounded border-[#3D5249]/20"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-bold text-[#242E29] truncate">
+                              {client.name}
+                            </div>
+                            <span className="text-[10px] text-[#65746C] font-mono">
+                              Code: {client.code}
+                            </span>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  <div className="text-[11px] text-[#65746C] italic pt-1">
+                    * The 3 Core Admins (Divine, Radz, RA) can edit, add, or revoke client access anytime from Settings.
+                  </div>
                 </div>
               )}
 
@@ -487,11 +551,21 @@ export function UserInvitationModal({
                             <td className="py-3 px-3">
                               <div className="font-semibold text-[#242E29]">{inv.full_name}</div>
                               <div className="text-[11px] text-[#65746C]">{inv.email}</div>
-                              {inv.clients && (
+                              {inv.assigned_clients && inv.assigned_clients.length > 0 ? (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {inv.assigned_clients.map((c, idx) => (
+                                    <span key={idx} className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-[#3D5249]/10 text-[#3D5249]">
+                                      {c}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : inv.clients ? (
                                 <span className="inline-flex items-center gap-1 text-[10px] text-[#518E6A] font-medium mt-0.5">
                                   <Building2 className="w-3 h-3" />
                                   {inv.clients.name}
                                 </span>
+                              ) : (
+                                <span className="text-[10px] text-[#65746C] font-mono mt-0.5 block">Universal Scope</span>
                               )}
                             </td>
                             <td className="py-3 px-3">
