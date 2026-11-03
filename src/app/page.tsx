@@ -78,6 +78,8 @@ type UserRole =
   | "Operations Manager"
   | "Project Owner"
   | "Team Member"
+  | "Team Specialist"
+  | "Social Media Specialist"
   | "Client User";
 
 interface UserProfile {
@@ -218,6 +220,17 @@ export default function GimDashboard() {
       isCoreAdmin: false,
       avatarColor: "bg-[#466B53]",
       title: "Project Owner (Little Treasures)",
+      clientScope: "Little Treasures Company",
+    },
+    smm: {
+      id: "smm",
+      name: "Camille Bautista",
+      nickname: "Camille",
+      email: "camille.smm@graceinmotion.agency",
+      role: "Social Media Specialist",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#518E6A]",
+      title: "Social Media Manager (SMM)",
       clientScope: "Little Treasures Company",
     },
     zoe: {
@@ -882,8 +895,9 @@ export default function GimDashboard() {
                       <option value="ra">{userProfiles.ra.name} ({userProfiles.ra.nickname})</option>
                     </optgroup>
                     <optgroup label="Scoped Roles (RBAC Sandbox)">
-                      <option value="erwin">{userProfiles.erwin.name} ({userProfiles.erwin.nickname})</option>
-                      <option value="zoe">{userProfiles.zoe.name} ({userProfiles.zoe.nickname})</option>
+                      <option value="erwin">{userProfiles.erwin.name} ({userProfiles.erwin.nickname}) — Project Owner</option>
+                      <option value="smm">{userProfiles.smm.name} ({userProfiles.smm.nickname}) — SMM Specialist</option>
+                      <option value="zoe">{userProfiles.zoe.name} ({userProfiles.zoe.nickname}) — Client</option>
                     </optgroup>
                   </select>
                 </div>
@@ -964,6 +978,24 @@ export default function GimDashboard() {
               className="font-semibold underline hover:text-[#4A3225] text-[11px]"
             >
               Switch to Core Admin
+            </button>
+          </div>
+        )}
+
+        {/* Team Specialist / PO Scoped View Notice */}
+        {!currentUser.isCoreAdmin && !isClientUser && (
+          <div className="bg-[#EBF3EF] border-b border-[#D2E4DA] px-4 sm:px-8 py-2 flex items-center justify-between text-xs text-[#244234]">
+            <div className="flex items-center space-x-2">
+              <ShieldCheck className="w-4 h-4 text-[#518E6A] shrink-0" />
+              <span>
+                <strong>{currentUser.role} View Active:</strong> Authenticated as <strong>{currentUser.name} ({currentUser.nickname})</strong> &lt;{currentUser.email}&gt;. Scope: <strong>{currentUser.clientScope}</strong>. You can add tasks, upload pictures/videos, and post comments, but editing tasks assigned to other members is locked.
+              </span>
+            </div>
+            <button
+              onClick={() => setCurrentUserKey("radz")}
+              className="font-semibold underline hover:text-[#183125] text-[11px] shrink-0 ml-2"
+            >
+              Switch back to Radz (Admin)
             </button>
           </div>
         )}
@@ -1335,6 +1367,9 @@ export default function GimDashboard() {
           {activeTab === "clients" && (
             <ClientPortfolioView
               clientScope={currentUser.clientScope}
+              currentUserName={currentUser.name}
+              currentUserNickname={currentUser.nickname}
+              isCoreAdmin={currentUser.isCoreAdmin}
               onSelectTasks={(clientName) => {
                 setTaskSearchQuery(clientName);
                 setActiveTab("tasks");

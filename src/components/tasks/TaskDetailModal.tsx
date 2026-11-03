@@ -24,6 +24,8 @@ import {
   Smile,
   Download,
   UploadCloud,
+  Lock,
+  Shield,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -67,6 +69,7 @@ interface TaskDetailModalProps {
   onTaskUpdated?: (updated: TaskItem) => void;
   currentUserName?: string;
   currentUserNickname?: string;
+  isCoreAdmin?: boolean;
 }
 
 const QUICK_EMOJIS = ["👍", "❤️", "🙌", "🔥", "👀", "✅", "🚀"];
@@ -78,6 +81,7 @@ export function TaskDetailModal({
   onTaskUpdated,
   currentUserName = "Radzdom Gallego",
   currentUserNickname = "Radz",
+  isCoreAdmin = false,
 }: TaskDetailModalProps) {
   const [currentTask, setCurrentTask] = useState<TaskItem | null>(task);
   const [comments, setComments] = useState<TaskComment[]>([]);
@@ -91,6 +95,29 @@ export function TaskDetailModal({
 
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  // Permission Guardrail: Admins, assignee, or creator can edit. Others can only read and comment.
+  const isAdmin =
+    !!isCoreAdmin ||
+    ["Radz", "Divine", "RA", "Radzdom Gallego", "Divine Origines", "Ma. Rose Anne Malinao"].some(
+      (name) =>
+        name.toLowerCase() === (currentUserNickname || "").toLowerCase() ||
+        name.toLowerCase() === (currentUserName || "").toLowerCase()
+    );
+
+  const isAssignee =
+    !!currentTask &&
+    !!currentTask.assignee_name &&
+    (currentTask.assignee_name.toLowerCase().includes((currentUserNickname || "").toLowerCase()) ||
+      currentTask.assignee_name.toLowerCase().includes((currentUserName || "").toLowerCase()));
+
+  const isCreator =
+    !!currentTask &&
+    !!currentTask.created_by &&
+    (currentTask.created_by.toLowerCase().includes((currentUserNickname || "").toLowerCase()) ||
+      currentTask.created_by.toLowerCase().includes((currentUserName || "").toLowerCase()));
+
+  const canEditTask = isAdmin || isAssignee || isCreator;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -344,9 +371,26 @@ export function TaskDetailModal({
         <div className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1">
           {/* Status Workflow Selector (To Do, In Progress, In Review, Approved, Closed) */}
           <div className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#3D5249]">
-              Workflow Status Pipeline
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#3D5249]">
+                Workflow Status Pipeline
+              </label>
+              {!canEditTask && (
+                <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Lock className="w-3 h-3" /> Assigned to {currentTask.assignee_name || "another member"} (Read-Only)
+                </span>
+              )}
+            </div>
+
+            {!canEditTask && (
+              <div className="p-2.5 rounded-xl bg-amber-50/90 border border-amber-200 text-xs text-amber-900 flex items-center gap-2">
+                <Lock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                <span>
+                  <strong>Locked:</strong> You can review notes, media, and post comments, but editing task status is restricted to <strong>{currentTask.assignee_name || "the assignee"}</strong> and Core Admins.
+                </span>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               {(["To Do", "In Progress", "In Review", "Approved", "Closed"] as const).map((statusOption) => {
                 const isActive = currentTask.status.toLowerCase() === statusOption.toLowerCase();
@@ -354,10 +398,12 @@ export function TaskDetailModal({
                   <button
                     key={statusOption}
                     type="button"
-                    disabled={isUpdatingStatus}
-                    onClick={() => handleStatusChange(statusOption)}
+                    disabled={isUpdatingStatus || !canEditTask}
+                    onClick={() => canEditTask && handleStatusChange(statusOption)}
                     className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 border ${
-                      isActive
+                      !canEditTask
+                        ? "opacity-60 cursor-not-allowed bg-slate-100 text-slate-500 border-slate-200"
+                        : isActive
                         ? statusOption === "Closed"
                           ? "bg-purple-800 text-white border-purple-800 shadow-xs"
                           : statusOption === "Approved"

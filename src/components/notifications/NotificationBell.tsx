@@ -11,12 +11,17 @@ import {
   ExternalLink,
   Layers,
   X,
+  Volume2,
+  VolumeX,
+  Play,
+  Settings2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { soundManager } from "@/lib/audio/sounds";
 
 export interface NotificationItem {
   id: string;
-  type: "deadline" | "comment" | "approval" | "message";
+  type: "deadline" | "comment" | "approval" | "message" | "task";
   title: string;
   description: string;
   time: string;
@@ -39,11 +44,23 @@ export function NotificationBell({
   onSelectApprovals,
 }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showSoundSettings, setShowSoundSettings] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Sound preferences state
+  const [soundPrefs, setSoundPrefs] = useState({
+    master: true,
+    task: true,
+    message: true,
+    reminder: true,
+  });
+
   const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setSoundPrefs(soundManager.getSettings());
+
     // Fetch upcoming deadlines from tasks API
     fetch("/api/tasks?client=all")
       .then((res) => res.json())
@@ -82,6 +99,17 @@ export function NotificationBell({
           // Add sample team and approval notifications
           const teamAlerts: NotificationItem[] = [
             {
+              id: "notif-task-assigned",
+              type: "task",
+              title: "Task Assigned to You: G5 Website 6 Pages",
+              description: "Erwin Manaog requested final review on mobile responsiveness.",
+              time: "10 mins ago",
+              client: "Little Treasures Company",
+              taskId: "14zf25zm1yv",
+              isRead: false,
+              priority: "Urgent",
+            },
+            {
               id: "notif-g5-review",
               type: "approval",
               title: "Gate Sign-Off Pending: G5 Website 6 Pages",
@@ -112,7 +140,7 @@ export function NotificationBell({
             },
           ];
 
-          const combined = [...upcoming.slice(0, 5), ...teamAlerts];
+          const combined = [...teamAlerts, ...upcoming.slice(0, 5)];
           setNotifications(combined);
           setUnreadCount(combined.filter((n) => !n.isRead).length);
         }
@@ -125,11 +153,23 @@ export function NotificationBell({
     const handleClickOutside = (e: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
         setIsOpen(false);
+        setShowSoundSettings(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleToggleSound = (key: "master" | "task" | "message" | "reminder") => {
+    const updated = { ...soundPrefs, [key]: !soundPrefs[key] };
+    setSoundPrefs(updated);
+    soundManager.updateSettings(updated);
+  };
+
+  const handleTestSound = (type: "task" | "message" | "reminder", e: React.MouseEvent) => {
+    e.stopPropagation();
+    soundManager.play(type);
+  };
 
   const handleMarkAllAsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
@@ -143,7 +183,7 @@ export function NotificationBell({
     setUnreadCount((prev) => Math.max(0, prev - 1));
     setIsOpen(false);
 
-    if (item.type === "deadline" || item.type === "comment") {
+    if (item.type === "deadline" || item.type === "comment" || item.type === "task") {
       if (item.taskId && onSelectTask) {
         onSelectTask(item.taskId, item.client);
       }
@@ -157,9 +197,15 @@ export function NotificationBell({
   return (
     <div className="relative" ref={popoverRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          const next = !isOpen;
+          setIsOpen(next);
+          if (next && unreadCount > 0) {
+            soundManager.play("reminder");
+          }
+        }}
         className="relative p-2 rounded-xl hover:bg-[#E8E2DD]/50 text-[#65746C] hover:text-[#242E29] transition-colors"
-        title="Delivery Watch & Notifications"
+        title="Delivery Watch, Audio & Notifications"
       >
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
@@ -179,15 +225,112 @@ export function NotificationBell({
                 </span>
               )}
             </div>
-            {unreadCount > 0 && (
+
+            <div className="flex items-center gap-2">
               <button
-                onClick={handleMarkAllAsRead}
-                className="text-[11px] text-[#518E6A] hover:underline font-medium"
+                onClick={() => setShowSoundSettings(!showSoundSettings)}
+                className={`p-1 rounded-md transition-colors ${
+                  showSoundSettings ? "bg-[#518E6A] text-white" : "text-[#65746C] hover:text-[#242E29] hover:bg-white"
+                }`}
+                title="Audio Sound Settings"
               >
-                Mark all read
+                {soundPrefs.master ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
               </button>
-            )}
+
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-[11px] text-[#518E6A] hover:underline font-medium"
+                >
+                  Mark all read
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* Sound Preferences Sub-panel */}
+          {showSoundSettings && (
+            <div className="p-3 bg-[#518E6A]/5 border-b border-[#E8E2DD] space-y-2 text-xs">
+              <div className="flex items-center justify-between pb-1 border-b border-[#E8E2DD]/60">
+                <span className="font-bold text-[#242E29] flex items-center gap-1.5">
+                  <Volume2 className="w-3.5 h-3.5 text-[#518E6A]" />
+                  Audio Notification Tones
+                </span>
+                <button
+                  onClick={() => handleToggleSound("master")}
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded transition-colors ${
+                    soundPrefs.master ? "bg-[#518E6A] text-white" : "bg-slate-200 text-slate-700"
+                  }`}
+                >
+                  {soundPrefs.master ? "Enabled" : "Muted"}
+                </button>
+              </div>
+
+              {soundPrefs.master && (
+                <div className="space-y-1.5 pt-1">
+                  {/* Task Assignment Sound */}
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={soundPrefs.task}
+                        onChange={() => handleToggleSound("task")}
+                        className="rounded border-[#3D5249]/30 text-[#518E6A] focus:ring-[#518E6A]"
+                      />
+                      <span className="text-[#242E29]">Task Assignment Tone</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={(e) => handleTestSound("task", e)}
+                      className="px-1.5 py-0.5 rounded bg-white border border-[#E8E2DD] text-[10px] font-medium text-[#518E6A] hover:bg-[#518E6A] hover:text-white flex items-center gap-0.5"
+                    >
+                      <Play className="w-2.5 h-2.5" /> Test
+                    </button>
+                  </div>
+
+                  {/* Message Sound */}
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={soundPrefs.message}
+                        onChange={() => handleToggleSound("message")}
+                        className="rounded border-[#3D5249]/30 text-[#518E6A] focus:ring-[#518E6A]"
+                      />
+                      <span className="text-[#242E29]">Chat &amp; Message Pop</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={(e) => handleTestSound("message", e)}
+                      className="px-1.5 py-0.5 rounded bg-white border border-[#E8E2DD] text-[10px] font-medium text-[#518E6A] hover:bg-[#518E6A] hover:text-white flex items-center gap-0.5"
+                    >
+                      <Play className="w-2.5 h-2.5" /> Test
+                    </button>
+                  </div>
+
+                  {/* Reminder Sound */}
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={soundPrefs.reminder}
+                        onChange={() => handleToggleSound("reminder")}
+                        className="rounded border-[#3D5249]/30 text-[#518E6A] focus:ring-[#518E6A]"
+                      />
+                      <span className="text-[#242E29]">Deadline &amp; Alert Chime</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={(e) => handleTestSound("reminder", e)}
+                      className="px-1.5 py-0.5 rounded bg-white border border-[#E8E2DD] text-[10px] font-medium text-[#518E6A] hover:bg-[#518E6A] hover:text-white flex items-center gap-0.5"
+                    >
+                      <Play className="w-2.5 h-2.5" /> Test
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* List */}
           <div className="divide-y divide-[#E8E2DD]/60 max-h-80 overflow-y-auto">
@@ -203,6 +346,11 @@ export function NotificationBell({
                   }`}
                 >
                   <div className="mt-0.5 shrink-0">
+                    {item.type === "task" && (
+                      <div className="w-6 h-6 rounded-md bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      </div>
+                    )}
                     {item.type === "deadline" && (
                       <div className="w-6 h-6 rounded-md bg-amber-100 text-amber-800 flex items-center justify-center">
                         <Clock className="w-3.5 h-3.5" />

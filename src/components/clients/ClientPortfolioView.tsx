@@ -22,6 +22,7 @@ import {
   LayoutGrid,
   AlertTriangle,
   User,
+  Lock,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -222,9 +223,33 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
 interface ClientPortfolioViewProps {
   onSelectTasks?: (clientName: string) => void;
   clientScope?: string | string[];
+  currentUserName?: string;
+  currentUserNickname?: string;
+  isCoreAdmin?: boolean;
 }
 
-export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: ClientPortfolioViewProps) {
+export function ClientPortfolioView({
+  onSelectTasks,
+  clientScope = "all",
+  currentUserName = "Radzdom Gallego",
+  currentUserNickname = "Radz",
+  isCoreAdmin = true,
+}: ClientPortfolioViewProps) {
+  // Permission helper: only Core Admins, assignee, or creator can move or modify tasks
+  const canModifyTask = (task: TaskItem) => {
+    if (isCoreAdmin) return true;
+    const nick = (currentUserNickname || "").toLowerCase();
+    const name = (currentUserName || "").toLowerCase();
+    const assignee = (task.assignee_name || "").toLowerCase();
+    const creator = (task.created_by || "").toLowerCase();
+    return (
+      (nick && assignee.includes(nick)) ||
+      (name && assignee.includes(name)) ||
+      (nick && creator.includes(nick)) ||
+      (name && creator.includes(name))
+    );
+  };
+
   // Filter clients based on logged-in member's access scope
   const accessibleClients = CLIENT_PORTFOLIO.filter((c) => {
     if (clientScope && clientScope !== "all") {
@@ -254,10 +279,32 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
   const [boardAssigneeFilter, setBoardAssigneeFilter] = useState("All");
   const [boardPriorityFilter, setBoardPriorityFilter] = useState("All");
 
-  const selectedClient =
-    accessibleClients.find((c) => c.id === selectedClientId) ||
-    accessibleClients[0] ||
-    CLIENT_PORTFOLIO[0];
+  const isAllClients = selectedClientId === "all";
+
+  const selectedClient = isAllClients
+    ? {
+        id: "all",
+        name: "All Clients",
+        code: "ALL",
+        industry: "Unified Agency Operations",
+        location: "Global",
+        contactName: "All Stakeholders",
+        contactRole: "Portfolio Overview",
+        accountLead: "Divine Origines & Radz",
+        specialist: "All Specialists",
+        status: "Active Sprint" as const,
+        statusVariant: "active" as const,
+        retainer: "Portfolio Total",
+        progress: 78,
+        currentSprint: "All Client Sprints & Deliverables",
+        targetMilestone: "Agency Sprints",
+        description: "Unified master portfolio view across all authentic client accounts.",
+        deliverables: [],
+        keyTechStack: ["ClickUp", "Supabase", "GoHighLevel", "n8n", "Stripe"],
+      }
+    : accessibleClients.find((c) => c.id === selectedClientId) ||
+      accessibleClients[0] ||
+      CLIENT_PORTFOLIO[0];
 
   const handleQuickStatusChange = async (
     task: TaskItem,
@@ -290,7 +337,8 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
   const fetchTasks = async () => {
     setIsLoadingTasks(true);
     try {
-      const res = await fetch(`/api/tasks?client=${encodeURIComponent(selectedClient.name)}`);
+      const clientQuery = isAllClients ? "all" : selectedClient.name;
+      const res = await fetch(`/api/tasks?client=${encodeURIComponent(clientQuery)}`);
       if (res.ok) {
         const data = await res.json();
         setTasks(data.tasks || []);
@@ -309,7 +357,7 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
     try {
       const supabase = createClient();
       const channel = supabase
-        .channel(`realtime:client_tasks:${selectedClient.id}`)
+        .channel(`realtime:client_tasks:${selectedClientId}`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "client_tasks" },
@@ -325,7 +373,7 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
     } catch {
       // offline fallback
     }
-  }, [selectedClient.id, selectedClient.name]);
+  }, [selectedClientId, selectedClient.name]);
 
   // Status board grouping (including Closed deliverables)
   const boardColumns: { status: TaskItem["status"]; title: string; color: string }[] = [
@@ -378,12 +426,33 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
           </div>
         </div>
 
-        {/* Clean Client Switcher (Pill Selector) - Focused on One Client at a Time */}
+        {/* Clean Client Switcher (Pill Selector) - Focused on One Client at a Time + ALL option */}
         <div className="pt-2 border-t border-[#3D5249]/10 flex items-center gap-2 overflow-x-auto pb-1">
           <span className="text-[11px] font-bold uppercase tracking-wider text-[#3D5249] shrink-0 mr-1 flex items-center gap-1">
             <Building2 className="w-3.5 h-3.5 text-[#518E6A]" />
             Active Client:
           </span>
+
+          {/* ALL CLIENTS PILL */}
+          <button
+            onClick={() => setSelectedClientId("all")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 border ${
+              isAllClients
+                ? "bg-[#3D5249] text-white border-[#3D5249] shadow-xs"
+                : "bg-[#FBF6F3] text-[#65746C] border-[#3D5249]/15 hover:border-[#3D5249]/40 hover:text-[#242E29]"
+            }`}
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>All Clients</span>
+            <span
+              className={`text-[10px] font-mono px-1 py-0.2 rounded ${
+                isAllClients ? "bg-white/20 text-white" : "bg-[#3D5249]/10 text-[#3D5249]"
+              }`}
+            >
+              ALL
+            </span>
+          </button>
+
           {accessibleClients.map((client) => {
             const isSelected = client.id === selectedClientId;
             return (
@@ -564,11 +633,18 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
                             }`}
                           >
                             <div className="flex items-center justify-between gap-1">
-                              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-bold ${
-                                isClosed ? "bg-purple-100 text-purple-900" : "bg-[#3D5249]/10 text-[#3D5249]"
-                              }`}>
-                                {task.tags?.[0] || (task.is_clickup ? "CLICKUP" : "TASK")}
-                              </span>
+                              <div className="flex items-center gap-1 min-w-0">
+                                {isAllClients && task.client && (
+                                  <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#FBF6F3] text-[#3D5249] border border-[#E8E2DD] shrink-0 font-bold truncate max-w-20">
+                                    {task.client.split(" ")[0]}
+                                  </span>
+                                )}
+                                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-bold ${
+                                  isClosed ? "bg-purple-100 text-purple-900" : "bg-[#3D5249]/10 text-[#3D5249]"
+                                }`}>
+                                  {task.tags?.[0] || (task.is_clickup ? "CLICKUP" : "TASK")}
+                                </span>
+                              </div>
                               {isClosed ? (
                                 <span className="inline-flex items-center gap-1 text-[10px] text-purple-700 font-bold bg-purple-100 px-1.5 py-0.5 rounded">
                                   <Check className="w-2.5 h-2.5" /> Done
@@ -603,28 +679,41 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
                               )}
                             </div>
 
-                            {/* One-Click Quick Move Status Bar */}
+                            {/* One-Click Quick Move Status Bar (or locked if not assignee/admin) */}
                             <div
                               className="pt-1.5 border-t border-[#E8E2DD]/70 flex items-center justify-between gap-1"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <span className="text-[9px] font-mono text-[#65746C] uppercase">Move:</span>
-                              <div className="flex items-center gap-1 flex-wrap">
-                                {(["To Do", "In Progress", "In Review", "Approved", "Closed"] as TaskItem["status"][]).map((st) => {
-                                  if (st.toLowerCase() === task.status.toLowerCase()) return null;
-                                  return (
-                                    <button
-                                      key={st}
-                                      type="button"
-                                      onClick={(e) => handleQuickStatusChange(task, st, e)}
-                                      title={`Move task to ${st}`}
-                                      className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#FBF6F3] border border-[#E8E2DD] hover:bg-[#518E6A] hover:text-white hover:border-[#518E6A] transition-colors"
-                                    >
-                                      {st === "In Progress" ? "Prog" : st === "In Review" ? "Rev" : st === "Closed" ? "Done" : st}
-                                    </button>
-                                  );
-                                })}
-                              </div>
+                              {canModifyTask(task) ? (
+                                <>
+                                  <span className="text-[9px] font-mono text-[#65746C] uppercase">Move:</span>
+                                  <div className="flex items-center gap-1 flex-wrap">
+                                    {(["To Do", "In Progress", "In Review", "Approved", "Closed"] as TaskItem["status"][]).map((st) => {
+                                      if (st.toLowerCase() === task.status.toLowerCase()) return null;
+                                      return (
+                                        <button
+                                          key={st}
+                                          type="button"
+                                          onClick={(e) => handleQuickStatusChange(task, st, e)}
+                                          title={`Move task to ${st}`}
+                                          className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#FBF6F3] border border-[#E8E2DD] hover:bg-[#518E6A] hover:text-white hover:border-[#518E6A] transition-colors"
+                                        >
+                                          {st === "In Progress" ? "Prog" : st === "In Review" ? "Rev" : st === "Closed" ? "Done" : st}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="w-full flex items-center justify-between text-[10px] text-[#65746C]">
+                                  <span className="flex items-center gap-1 text-amber-800/80 font-medium">
+                                    <Lock className="w-2.5 h-2.5 text-amber-700" /> {task.assignee_name?.split(" ")[0] || "Member"}
+                                  </span>
+                                  <span className="text-[9px] font-mono text-[#65746C]/60 bg-[#FBF6F3] px-1 py-0.2 rounded border border-[#E8E2DD]">
+                                    Locked
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
@@ -789,15 +878,20 @@ export function ClientPortfolioView({ onSelectTasks, clientScope = "all" }: Clie
         isOpen={!!selectedTaskForDetail}
         onClose={() => setSelectedTaskForDetail(null)}
         onTaskUpdated={fetchTasks}
+        currentUserName={currentUserName}
+        currentUserNickname={currentUserNickname}
+        isCoreAdmin={isCoreAdmin}
       />
 
       {/* Create Task Modal */}
       <CreateTaskModal
         isOpen={isCreateTaskOpen}
         onClose={() => setIsCreateTaskOpen(false)}
-        defaultClient={selectedClient.name}
+        defaultClient={selectedClient.name === "All Clients" ? "Little Treasures Company" : selectedClient.name}
         availableClients={accessibleClients.map((c) => c.name)}
         onTaskCreated={fetchTasks}
+        currentUserName={currentUserName}
+        currentUserRole={isCoreAdmin ? "Admin" : "Team Specialist"}
       />
 
       {/* Client Report Export Modal */}

@@ -72,7 +72,9 @@ export function ClientCalendarView({
   const daysInPrevMonth = new Date(year, month, 0).getDate();
 
   // Filter tasks for this client (or client matching)
+  const isAllClients = !clientName || clientName === "All Clients" || clientName.toLowerCase() === "all";
   const clientTasks = tasks.filter((t) => {
+    if (isAllClients) return true;
     if (!t.client) return false;
     return (
       t.client.toLowerCase().includes(clientName.toLowerCase()) ||
@@ -267,7 +269,14 @@ export function ClientCalendarView({
                         onClick={() => setSelectedTask(t)}
                         className={`px-1.5 py-1 rounded-md text-[10px] border truncate cursor-pointer hover:shadow-xs transition-shadow font-medium flex items-center justify-between gap-1 ${statusColor}`}
                       >
-                        <span className="truncate">{t.title}</span>
+                        <span className="truncate flex items-center gap-1">
+                          {isAllClients && t.client && (
+                            <span className="font-mono text-[8px] px-1 py-0.2 rounded bg-black/10 shrink-0">
+                              {t.client.split(" ")[0]}
+                            </span>
+                          )}
+                          <span className="truncate">{t.title}</span>
+                        </span>
                         {t.priority === "Urgent" && (
                           <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
                         )}

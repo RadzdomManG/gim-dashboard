@@ -14,6 +14,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { soundManager } from "@/lib/audio/sounds";
 
 interface CreateTaskModalProps {
   isOpen: boolean;
@@ -22,6 +23,8 @@ interface CreateTaskModalProps {
   defaultDate?: string;
   onTaskCreated?: () => void;
   availableClients?: string[];
+  currentUserName?: string;
+  currentUserRole?: string;
 }
 
 export function CreateTaskModal({
@@ -38,6 +41,8 @@ export function CreateTaskModal({
     "Aaron Ofosu Bootcamp",
     "Tch2Thrive",
   ],
+  currentUserName = "Radzdom Gallego",
+  currentUserRole = "Admin",
 }: CreateTaskModalProps) {
   const [title, setTitle] = useState("");
   const [client, setClient] = useState(defaultClient);
@@ -45,7 +50,7 @@ export function CreateTaskModal({
   const [status, setStatus] = useState<"To Do" | "In Progress" | "In Review" | "Approved">("To Do");
   const [priority, setPriority] = useState<"Low" | "Normal" | "High" | "Urgent">("Normal");
   const [dueDate, setDueDate] = useState(() => defaultDate || new Date().toISOString().split("T")[0]);
-  const [assigneeName, setAssigneeName] = useState("Radzdom Gallego");
+  const [assigneeName, setAssigneeName] = useState(currentUserName);
   const [tagInput, setTagInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -80,6 +85,7 @@ export function CreateTaskModal({
           due_date: dueDate ? new Date(dueDate).toISOString() : null,
           assignee_name: assigneeName,
           assignee_id: assigneeName.toLowerCase().replace(/\s+/g, "-"),
+          created_by: currentUserName,
           tags,
         }),
       });
@@ -89,6 +95,7 @@ export function CreateTaskModal({
         throw new Error(data.error || "Failed to create task.");
       }
 
+      soundManager.play("task");
       if (onTaskCreated) onTaskCreated();
       onClose();
     } catch (err: unknown) {

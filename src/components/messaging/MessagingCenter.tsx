@@ -33,6 +33,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
+import { soundManager } from "@/lib/audio/sounds";
 
 export interface Attachment {
   id: string;
@@ -348,8 +349,9 @@ export function MessagingCenter({
               };
             });
 
-            // If someone else sent a message, immediately acknowledge seen
+            // If someone else sent a message, play chime and acknowledge seen
             if (row.sender_id !== currentUserId) {
+              soundManager.play("message");
               channel.send({
                 type: "broadcast",
                 event: "seen",
@@ -469,6 +471,7 @@ export function MessagingCenter({
 
     setInputText("");
     setReplyingToMessage(null);
+    soundManager.play("message");
 
     // Dispatch to Supabase API with exact message ID for instant deduplication
     fetch("/api/messages", {
