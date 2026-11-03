@@ -104,7 +104,7 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     statusVariant: "active",
     retainer: "AUD $5,200 / month",
     progress: 85,
-    currentSprint: "21 n8n Automation Workflows & ClassReach Roster Sync",
+    currentSprint: "Sensory Operations & ClassReach Roster Sync",
     targetMilestone: "Franchise Waiver & Roster Sentinel",
     description:
       "Enterprise workflow automation for sensory gym franchises across Australia. Bridges ClassReach booking rosters with HubSpot CRM and automated parent waiver signature archiving via self-hosted n8n.",
@@ -626,7 +626,12 @@ export function ClientPortfolioView({
                 })
                 .filter(
                   (t) => t.status.toLowerCase() === col.status.toLowerCase()
-                );
+                )
+                .sort((a, b) => {
+                  const timeA = a.due_date ? new Date(a.due_date).getTime() : 0;
+                  const timeB = b.due_date ? new Date(b.due_date).getTime() : 0;
+                  return timeB - timeA; // Latest to oldest
+                });
 
               return (
                 <div key={col.status} className="bg-white rounded-2xl border border-[#3D5249]/15 shadow-sm overflow-hidden flex flex-col">

@@ -46,6 +46,12 @@ import {
   User,
   Plus,
   DollarSign,
+  Target,
+  UploadCloud,
+  Camera,
+  Globe,
+  Sparkles,
+  EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -60,6 +66,7 @@ import { ClientPortalView } from "@/components/client-portal/ClientPortalView";
 import { SopPlaybookLibrary } from "@/components/library/SopPlaybookLibrary";
 import { UserInvitationModal } from "@/components/invitations/UserInvitationModal";
 import { EditClientAccessModal, TeamMemberAccess } from "@/components/team/EditClientAccessModal";
+import { MembershipAccessManager } from "@/components/team/MembershipAccessManager";
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { TaskDetailModal, TaskItem } from "@/components/tasks/TaskDetailModal";
@@ -94,6 +101,7 @@ interface UserProfile {
   role: UserRole;
   isCoreAdmin: boolean;
   avatarColor: string;
+  avatarUrl?: string;
   title: string;
   clientScope: string;
 }
@@ -222,7 +230,7 @@ export default function GimDashboard() {
       role: "Admin",
       isCoreAdmin: true,
       avatarColor: "bg-[#518E6A]",
-      title: "Admin / AI & Automations Specialist",
+      title: "Chief Automation Architect & Platform Systems Lead",
       clientScope: "all",
     },
     ra: {
@@ -274,12 +282,28 @@ export default function GimDashboard() {
   const [currentUserKey, setCurrentUserKey] = useState<string>("radz");
   const currentUser = userProfiles[currentUserKey];
 
+  // Load custom avatars and profiles from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("gim_user_profiles");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setUserProfiles((prev) => ({ ...prev, ...parsed }));
+        }
+      } catch (err) {
+        console.error("Failed to load user profiles from localStorage:", err);
+      }
+    }
+  }, []);
+
   // Nickname & Profile Edit Modal State
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     name: currentUser.name,
     nickname: currentUser.nickname,
     title: currentUser.title,
+    avatarUrl: currentUser.avatarUrl || "",
   });
 
   const handleOpenEditProfile = () => {
@@ -287,21 +311,43 @@ export default function GimDashboard() {
       name: currentUser.name,
       nickname: currentUser.nickname,
       title: currentUser.title,
+      avatarUrl: currentUser.avatarUrl || "",
     });
     setIsEditProfileOpen(true);
   };
 
+  const handleAvatarFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      alert("Image size should be under 4MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setEditForm((prev) => ({ ...prev, avatarUrl: reader.result as string }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    setUserProfiles({
+    const updated = {
       ...userProfiles,
       [currentUserKey]: {
         ...currentUser,
         name: editForm.name,
         nickname: editForm.nickname,
         title: editForm.title,
+        avatarUrl: editForm.avatarUrl || undefined,
       },
-    });
+    };
+    setUserProfiles(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("gim_user_profiles", JSON.stringify(updated));
+    }
     setIsEditProfileOpen(false);
   };
 
@@ -475,11 +521,11 @@ export default function GimDashboard() {
       code: "WRTS-US",
       lead: userProfiles.radz.nickname,
       contact: "Operations Director",
-      currentSprint: "21 n8n Automations & Intake Sync",
+      currentSprint: "ClassReach Roster Sync & Intake Workflows",
       status: "Active Sprint",
       statusVariant: "active" as const,
       milestone: "Workflow Verification & Live Handover",
-      tasksCount: "21 workflows",
+      tasksCount: "Active Workflows",
       retainer: "USD $3,200 / mo",
       progress: 85,
     },
@@ -795,11 +841,19 @@ export default function GimDashboard() {
       <div className="p-3.5 border-t border-[#466B53]/40 bg-[#34463E] shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2.5 min-w-0">
-            <div
-              className={`w-8 h-8 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-xs shrink-0 ring-1 ring-white/20 shadow-xs`}
-            >
-              {currentUser.nickname.slice(0, 2).toUpperCase()}
-            </div>
+            {currentUser.avatarUrl ? (
+              <img
+                src={currentUser.avatarUrl}
+                alt={currentUser.name}
+                className="w-8 h-8 rounded-full object-cover ring-1 ring-white/20 shadow-xs shrink-0"
+              />
+            ) : (
+              <div
+                className={`w-8 h-8 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-xs shrink-0 ring-1 ring-white/20 shadow-xs`}
+              >
+                {currentUser.nickname.slice(0, 2).toUpperCase()}
+              </div>
+            )}
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold text-white truncate leading-tight flex items-center space-x-1">
                 <span>{currentUser.name}</span>
@@ -1004,11 +1058,19 @@ export default function GimDashboard() {
             {activeTab !== "settings" && (
               <div className="flex items-center space-x-2 px-2.5 py-1 bg-white border border-[#E8E2DD] rounded-xl text-xs shadow-xs">
                 <div className="relative">
-                  <div
-                    className={`w-5 h-5 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-[10px] shrink-0`}
-                  >
-                    {currentUser.nickname.slice(0, 2).toUpperCase()}
-                  </div>
+                  {currentUser.avatarUrl ? (
+                    <img
+                      src={currentUser.avatarUrl}
+                      alt={currentUser.name}
+                      className="w-5 h-5 rounded-full object-cover shrink-0 ring-1 ring-black/5"
+                    />
+                  ) : (
+                    <div
+                      className={`w-5 h-5 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-[10px] shrink-0`}
+                    >
+                      {currentUser.nickname.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 absolute -bottom-0.5 -right-0.5 ring-1 ring-white"></span>
                 </div>
                 <span className="font-semibold text-[#242E29] truncate max-w-[100px] sm:max-w-none">
@@ -1748,6 +1810,16 @@ export default function GimDashboard() {
                 </div>
               </Card>
 
+              {/* Dual Pillar Membership Governance (Client Details/Goals/Accounts & GIM Details/Goals/Accounts) */}
+              <MembershipAccessManager
+                currentUserName={currentUser.name}
+                currentUserRole={currentUser.role}
+                isCoreAdmin={hasAdminAccess}
+                currentUserNickname={currentUser.nickname}
+                onEditStaffScope={(member) => setEditAccessMember(member)}
+                onInviteUser={() => setIsInviteModalOpen(true)}
+              />
+
               {/* INVITATION & USER MANAGEMENT DIRECTORY */}
               <Card>
                 <CardHeader>
@@ -1977,19 +2049,47 @@ export default function GimDashboard() {
 
                 <CardContent className="p-6">
                   <form onSubmit={handleSaveProfile} className="space-y-4 max-w-lg">
-                    {/* Live Avatar Preview */}
+                    {/* Live Avatar Preview with Custom Photo Upload */}
                     <div className="flex items-center space-x-4 p-4 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/50">
-                      <div
-                        className={`w-14 h-14 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-lg shadow-xs shrink-0`}
-                      >
-                        {(editForm.nickname || currentUser.nickname).slice(0, 2).toUpperCase()}
-                      </div>
-                      <div>
+                      {editForm.avatarUrl ? (
+                        <img
+                          src={editForm.avatarUrl}
+                          alt="Avatar Preview"
+                          className="w-14 h-14 rounded-full object-cover ring-2 ring-[#518E6A] shadow-xs shrink-0"
+                        />
+                      ) : (
+                        <div
+                          className={`w-14 h-14 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-lg shadow-xs shrink-0`}
+                        >
+                          {(editForm.nickname || currentUser.nickname).slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="space-y-1">
                         <p className="font-bold text-sm text-[#242E29]">{currentUser.name}</p>
                         <p className="text-xs text-[#65746C]">
                           Display Nickname: <strong className="text-[#466B53]">({editForm.nickname || currentUser.nickname})</strong>
                         </p>
-                        <p className="text-[11px] text-[#65746C] mt-0.5">{currentUser.email}</p>
+                        <div className="flex items-center gap-2 pt-1">
+                          <label className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#3D5249]/20 hover:bg-[#518E6A]/10 text-xs font-semibold text-[#3D5249] shadow-2xs transition-colors">
+                            <Camera className="w-3.5 h-3.5 text-[#518E6A]" />
+                            <span>Change Photo</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleAvatarFileUpload}
+                              className="hidden"
+                            />
+                          </label>
+                          {editForm.avatarUrl && (
+                            <button
+                              type="button"
+                              onClick={() => setEditForm((prev) => ({ ...prev, avatarUrl: "" }))}
+                              className="text-[11px] text-rose-700 hover:underline font-semibold"
+                            >
+                              Reset Photo
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -2143,6 +2243,54 @@ export default function GimDashboard() {
             </div>
 
             <form onSubmit={handleSaveProfile} className="space-y-3.5">
+              {/* Profile Photo Upload & Live Preview */}
+              <div className="flex items-center gap-3.5 p-3 rounded-xl border border-[#3D5249]/15 bg-[#FBF6F3]/60">
+                <div className="relative shrink-0">
+                  {editForm.avatarUrl ? (
+                    <img
+                      src={editForm.avatarUrl}
+                      alt="Avatar Preview"
+                      className="w-14 h-14 rounded-full object-cover ring-2 ring-[#518E6A] shadow-xs"
+                    />
+                  ) : (
+                    <div
+                      className={`w-14 h-14 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-lg shadow-xs`}
+                    >
+                      {(editForm.nickname || currentUser.nickname).slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 absolute bottom-0 right-0 ring-2 ring-white" />
+                </div>
+
+                <div className="space-y-1.5 flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#3D5249]/20 hover:bg-[#518E6A]/10 text-xs font-semibold text-[#3D5249] shadow-2xs transition-colors">
+                      <Camera className="w-3.5 h-3.5 text-[#518E6A]" />
+                      <span>Upload Photo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {editForm.avatarUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setEditForm((prev) => ({ ...prev, avatarUrl: "" }))}
+                        className="text-[11px] text-rose-700 hover:underline font-semibold"
+                      >
+                        Reset Photo
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-[#65746C]">
+                    PNG, JPG or WebP. Persisted across GIM.
+                  </p>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-[#242E29] mb-1">
                   Full Name
@@ -2312,6 +2460,7 @@ export default function GimDashboard() {
         onClose={() => setShowOnboardingModal(false)}
         userName={currentUser.name}
         userRole={currentUser.role}
+        clientScope={currentUser.clientScope}
       />
     </div>
   );

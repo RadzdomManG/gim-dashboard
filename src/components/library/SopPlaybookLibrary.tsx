@@ -97,27 +97,27 @@ Project owner assembles a short packet:
 - **G18 (Dry Run):** Full purchase, course enrollment, refund audit, and summit-ready sign-off.`,
   },
   {
-    id: "sop-wrts-n8n",
-    title: "WRTS: 21 n8n Operational Automations & Webhook Architecture",
-    category: "Automation & Tech",
-    clientScope: "We Rock the Spectrum (WRTS)",
+    id: "sop-studio-nets-ops",
+    title: "Studio Nets: Design Ingestion Systems & Creative Ops Runbook",
+    category: "Client Delivery",
+    clientScope: "Studio Nets",
     updatedDate: "Oct 31, 2026",
-    author: "Radzdom Gallego (Radz)",
+    author: "Erwin Manaog",
     summary:
-      "Technical specifications for 21 active n8n nodes syncing parent waivers, ClassReach rosters, and gym floor capacity.",
-    content: `# We Rock the Spectrum — 21 n8n Workflows Specification
+      "Standard operating procedure for intake questionnaires, Figma design handoff pipelines, and asset revision tracking.",
+    content: `# Studio Nets — Design Ingestion & Handoff Runbook
 
 ## 1. System Overview
-- **Platform:** n8n Enterprise Self-Hosted + PostgreSQL
-- **CRM Integration:** ClassReach System API + HubSpot
-- **Primary Goal:** 100% automated gym check-ins, waiver archiving, and failed payment retry sequences.
+- **Platform:** Figma Enterprise + Supabase Asset Storage + ClickUp Delivery Boards
+- **Client Focus:** Studio Nets Design & Creative Systems
+- **Primary Goal:** Seamless brand asset intake, Figma file versioning, and client QA approvals.
 
-## 2. Core Workflow Breakdown
-1. **W01 - Parent Waiver Ingestion:** Webhook listener decrypts digital signature and writes record to Supabase.
-2. **W05 - ClassReach Roster Sync:** Hourly cron job synchronizes attendance rosters into HubSpot.
-3. **W12 - Failed Payment Retry:** 3-stage dunning cadence (Day 1 SMS, Day 3 Email, Day 5 Manager Alert).
-4. **W18 - Floor Capacity Sentinel:** Triggers push notifications to manager mobile when gym floor capacity exceeds 85%.
-5. **W21 - Revenue Reconciliation:** Automated daily settlement report dispatched at 11:30 PM AEST.`,
+## 2. Core Creative Pipeline
+1. **Intake & Questionnaire:** Automated receipt of client design brief and vector assets.
+2. **Figma Canvas Setup:** Grid systems, typography scale tokens, and responsive layout frames.
+3. **Internal Review:** Creative lead QA on component states, spacing, and accessibility tokens.
+4. **Client Presentation:** Interactive prototype shared with contextual comment pins.
+5. **Final Handoff:** Production SVG, PNG, and developer-ready code snippets archived in repository.`,
   },
   {
     id: "sop-auto-testing",

@@ -99,7 +99,7 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     id: "wrts-ops",
     name: "wrts-automations",
     type: "channel",
-    description: "21 n8n workflows, ClassReach CRM sync, and operational monitoring.",
+    description: "Sensory gym operations, ClassReach CRM sync, and operational monitoring.",
     isPrivate: false,
     membersCount: 3,
     memberIds: ["divine", "radz", "erwin"],
@@ -1145,7 +1145,7 @@ export function MessagingCenter({
 
                         {/* Read Receipts ("Seen by ...") on messages sent by current user */}
                         {isCurrentUser && (
-                          <div className="flex items-center space-x-1 text-[10px] pt-0.5">
+                          <div className="flex items-center space-x-1 text-[10px] -mt-0.5">
                             {Object.keys(seenUsers).length > 0 ? (
                               <div className="flex items-center space-x-1 text-[#466B53] font-medium">
                                 <CheckCheck className="w-3.5 h-3.5 text-[#518E6A]" />
@@ -1166,7 +1166,7 @@ export function MessagingCenter({
               )}
 
               {/* Bottom channel seen indicator if someone else is active in channel */}
-              {activeMessages.length > 0 && Object.keys(seenUsers).length > 0 && (
+              {false && (
                 <div className="flex items-center justify-end space-x-1 text-[10px] text-[#65746C] pr-1 pt-1 italic">
                   <CheckCheck className="w-3.5 h-3.5 text-[#518E6A]" />
                   <span>Seen by {Object.values(seenUsers).map((u) => u.name).join(", ")}</span>

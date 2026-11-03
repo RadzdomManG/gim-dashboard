@@ -491,7 +491,12 @@ export function ClientCalendarView({
       <TaskDetailModal
         task={selectedTask}
         isOpen={!!selectedTask}
-        onClose={() => setSelectedTask(null)}
+        onClose={() => {
+          setSelectedTask(null);
+          setSelectedDayData(null);
+        }}
+        onBack={selectedDayData ? () => setSelectedTask(null) : undefined}
+        backLabel="Back to Day Schedule"
         onTaskUpdated={() => {
           if (onTaskUpdated) onTaskUpdated();
         }}

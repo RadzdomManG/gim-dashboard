@@ -54,7 +54,7 @@ const INITIAL_INVOICES: InvoiceRecord[] = [
     id: "inv-002",
     invoiceNumber: "GIM-2026-089",
     clientName: "We Rock the Spectrum (WRTS)",
-    scopeTitle: "21 n8n Automation Nodes, ClassReach Webhooks & Database Maintenance",
+    scopeTitle: "Sensory Operations, ClassReach Webhooks & Database Maintenance",
     amountAud: 3800,
     issueDate: "2026-11-01",
     dueDate: "2026-11-15",
@@ -431,7 +431,7 @@ export function ClientInvoicingView({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Monthly Automation Retainer (21 Workflows)"
+                  placeholder="e.g. Monthly Sensory Operations Retainer"
                   value={newScope}
                   onChange={(e) => setNewScope(e.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-[#E8E2DD] bg-white text-[#242E29]"

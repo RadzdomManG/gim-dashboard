@@ -90,7 +90,7 @@ const INITIAL_MEMBERS: MemberAttendance[] = [
     assignedClient: "All Accounts",
     latestEos: {
       id: "eos-d1",
-      completedTasks: "Approved Little Treasures summit copy scope; reviewed WRTS n8n intake roadmap.",
+      completedTasks: "Approved Little Treasures summit copy scope; reviewed WRTS intake roadmap.",
       blockers: "None",
       prioritiesTomorrow: "Client retainer review with RA Malinao.",
       publishedAt: "Yesterday at 05:15 PM",
@@ -113,7 +113,7 @@ const INITIAL_MEMBERS: MemberAttendance[] = [
     hoursLoggedToday: 6.8,
     breakMinutesLogged: 20,
     breakLimitMinutes: 30,
-    currentTask: "Little Treasures GHL form tests & WRTS n8n webhook sync",
+    currentTask: "Little Treasures GHL form tests & WRTS CRM roster sync",
     assignedClient: "Little Treasures & WRTS",
     latestEos: null,
   },

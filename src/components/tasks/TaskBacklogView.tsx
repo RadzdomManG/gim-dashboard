@@ -213,6 +213,10 @@ export function TaskBacklogView({
       }
 
       return true;
+    }).sort((a, b) => {
+      const timeA = a.dueDate ? Number(a.dueDate) : 0;
+      const timeB = b.dueDate ? Number(b.dueDate) : 0;
+      return timeB - timeA; // Latest to oldest
     });
   }, [tasks, clientFilter, statusFilter, assigneeFilter, search]);
 

@@ -26,6 +26,8 @@ import {
   UploadCloud,
   Lock,
   Shield,
+  ArrowLeft,
+  Sparkles,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -66,18 +68,31 @@ interface TaskDetailModalProps {
   task: TaskItem | null;
   isOpen: boolean;
   onClose: () => void;
+  onBack?: () => void;
+  backLabel?: string;
   onTaskUpdated?: (updated: TaskItem) => void;
   currentUserName?: string;
   currentUserNickname?: string;
   isCoreAdmin?: boolean;
 }
 
-const QUICK_EMOJIS = ["👍", "❤️", "🙌", "🔥", "👀", "✅", "🚀"];
+const QUICK_EMOJIS = ["👍", "❤️", "🙌", "🔥", "👀", "✅", "🚀", "🎉", "💯", "👏", "💡", "⚡"];
+
+const REACTION_GIFS = [
+  { name: "Approved / LGTM", url: "https://media.giphy.com/media/111ebonMs90YLu/giphy.gif" },
+  { name: "On It / Working", url: "https://media.giphy.com/media/ule4akeXnY9fb4xFWU/giphy.gif" },
+  { name: "Celebrate / High Five", url: "https://media.giphy.com/media/artj92V8o75VPL7AeQ/giphy.gif" },
+  { name: "Reviewing / Inspecting", url: "https://media.giphy.com/media/26n6WywJyh39n1pBu/giphy.gif" },
+  { name: "Rocket / Shipped", url: "https://media.giphy.com/media/DnMMGxEvniha7CvAYq/giphy.gif" },
+  { name: "Thank You / Appreciate", url: "https://media.giphy.com/media/osjgQPWRx3cac/giphy.gif" },
+];
 
 export function TaskDetailModal({
   task,
   isOpen,
   onClose,
+  onBack,
+  backLabel = "Back to Day Schedule",
   onTaskUpdated,
   currentUserName = "Radzdom Gallego",
   currentUserNickname = "Radz",
@@ -91,6 +106,8 @@ export function TaskDetailModal({
   const [attachmentType, setAttachmentType] = useState<"image" | "video" | "document" | "link">("link");
   const [attachedFiles, setAttachedFiles] = useState<{ name: string; url: string; type: string; size?: string }[]>([]);
   const [replyingTo, setReplyingTo] = useState<{ author: string; text: string } | null>(null);
+  const [showComposerEmojiPicker, setShowComposerEmojiPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
   const [showEmojiPickerForComment, setShowEmojiPickerForComment] = useState<string | null>(null);
 
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -328,12 +345,27 @@ export function TaskDetailModal({
               </h2>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors shrink-0 ml-2"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold transition-colors border border-white/20 shadow-xs"
+                title={backLabel}
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{backLabel}</span>
+                <span className="sm:hidden">Back</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              title="Close Task"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Deadline Alert Banner */}
@@ -735,9 +767,79 @@ export function TaskDetailModal({
                 className="hidden"
               />
 
+              {/* Emoji Picker Popover for Composer */}
+              {showComposerEmojiPicker && (
+                <div className="p-2 bg-white rounded-xl border border-[#3D5249]/20 shadow-md flex items-center gap-1.5 flex-wrap animate-in fade-in">
+                  <span className="text-[10px] font-bold text-[#65746C] uppercase mr-1">Insert Emoji:</span>
+                  {QUICK_EMOJIS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => {
+                        setNewComment((prev) => prev ? `${prev} ${emoji}` : emoji);
+                      }}
+                      className="p-1 text-base hover:scale-125 transition-transform"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setShowComposerEmojiPicker(false)}
+                    className="ml-auto text-xs text-[#65746C] hover:text-[#242E29] p-1"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {/* GIF Selector Popover */}
+              {showGifPicker && (
+                <div className="p-3 bg-white rounded-xl border border-purple-200 shadow-lg space-y-2 animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-purple-900">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                      <span>Choose Reaction GIF</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowGifPicker(false)}
+                      className="text-[#65746C] hover:text-[#242E29] p-0.5"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {REACTION_GIFS.map((gif) => (
+                      <button
+                        key={gif.name}
+                        type="button"
+                        onClick={() => {
+                          setAttachedFiles((prev) => [
+                            ...prev,
+                            { name: `${gif.name}.gif`, url: gif.url, type: "image", size: "Reaction GIF" },
+                          ]);
+                          setShowGifPicker(false);
+                        }}
+                        className="group relative rounded-lg border border-[#3D5249]/15 overflow-hidden hover:border-purple-500 hover:ring-2 hover:ring-purple-400/30 transition-all text-left bg-black"
+                      >
+                        <img
+                          src={gif.url}
+                          alt={gif.name}
+                          className="w-full h-20 object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                        />
+                        <span className="absolute bottom-0 inset-x-0 bg-black/70 text-white text-[10px] font-semibold px-1.5 py-0.5 truncate">
+                          {gif.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Action Toolbar */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-1 text-xs">
+                <div className="flex items-center gap-1.5 text-xs flex-wrap">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
@@ -747,13 +849,45 @@ export function TaskDetailModal({
                     <span>Upload Picture/Video</span>
                   </button>
 
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowComposerEmojiPicker(!showComposerEmojiPicker);
+                      setShowGifPicker(false);
+                    }}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-colors ${
+                      showComposerEmojiPicker
+                        ? "bg-[#518E6A] text-white border-[#518E6A]"
+                        : "border-[#3D5249]/15 bg-white text-[#3D5249] hover:bg-[#518E6A]/10"
+                    }`}
+                  >
+                    <Smile className="w-3.5 h-3.5" />
+                    <span>Emoji</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowGifPicker(!showGifPicker);
+                      setShowComposerEmojiPicker(false);
+                    }}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-colors ${
+                      showGifPicker
+                        ? "bg-purple-800 text-white border-purple-800"
+                        : "border-purple-200 bg-purple-50 text-purple-800 hover:bg-purple-100"
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                    <span>GIF</span>
+                  </button>
+
                   <div className="flex items-center gap-1 pl-1">
                     <input
                       type="url"
                       placeholder="Or paste Drive / Loom URL..."
                       value={attachmentUrl}
                       onChange={(e) => setAttachmentUrl(e.target.value)}
-                      className="w-44 px-2 py-1 text-xs rounded-lg border border-[#3D5249]/15 bg-white text-[#242E29]"
+                      className="w-36 sm:w-44 px-2 py-1 text-xs rounded-lg border border-[#3D5249]/15 bg-white text-[#242E29]"
                     />
                     {attachmentUrl && (
                       <Button
@@ -793,9 +927,16 @@ export function TaskDetailModal({
           <span className="text-[11px] text-[#65746C]">
             ClickUp Read-Only &bull; Mutations & comments stored in Supabase
           </span>
-          <Button variant="secondary" size="sm" onClick={onClose}>
-            Close
-          </Button>
+          <div className="flex items-center gap-2">
+            {onBack && (
+              <Button variant="secondary" size="sm" onClick={onBack}>
+                ← {backLabel}
+              </Button>
+            )}
+            <Button variant="secondary" size="sm" onClick={onClose}>
+              Close
+            </Button>
+          </div>
         </div>
       </div>
     </div>

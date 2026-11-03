@@ -344,7 +344,7 @@ export function GlobalSearchModal({
                     <Building2 className="w-4 h-4 text-[#518E6A]" />
                     <span className="font-semibold text-[#242E29]">We Rock the Spectrum</span>
                   </div>
-                  <span className="text-[10px] text-[#65746C]">21 n8n nodes</span>
+                  <span className="text-[10px] text-[#65746C]">Sensory Gym Operations</span>
                 </button>
                 <button
                   onClick={() => setQuery("SOP Specification")}

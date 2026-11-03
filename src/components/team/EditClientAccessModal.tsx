@@ -24,7 +24,7 @@ export interface TeamMemberAccess {
 
 const AUTHENTIC_CLIENTS = [
   { id: "ltc", name: "Little Treasures Company", code: "LTC", description: "Paediatric Therapy & Education (AU)" },
-  { id: "wrts", name: "We Rock the Spectrum (WRTS)", code: "WRTS", description: "Sensory Gyms (21 n8n automations, AU)" },
+  { id: "wrts", name: "We Rock the Spectrum (WRTS)", code: "WRTS", description: "Sensory Gyms & Family Services (AU)" },
   { id: "sn", name: "Studio Nets", code: "SN", description: "Design & Creative Systems (AU)" },
   { id: "ivc", name: "InVogue Cleans", code: "IVC", description: "Premium Cleaning Services (AU)" },
   { id: "ao", name: "Aaron Ofosu Bootcamp", code: "AO", description: "Fitness & Training Platforms (AU)" },

@@ -26,6 +26,7 @@ interface WelcomeOnboardingModalProps {
   onClose: () => void;
   userName: string;
   userRole: string;
+  clientScope?: string;
 }
 
 export function WelcomeOnboardingModal({
@@ -33,6 +34,7 @@ export function WelcomeOnboardingModal({
   onClose,
   userName,
   userRole,
+  clientScope = "all",
 }: WelcomeOnboardingModalProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasAgreed, setHasAgreed] = useState(false);
@@ -206,10 +208,10 @@ export function WelcomeOnboardingModal({
                         </div>
                         <span className="font-bold text-xs text-[#242E29]">Radzdom Gallego (Radz)</span>
                       </div>
-                      <Badge variant="brand" className="text-[9px]">Core Admin</Badge>
+                      <Badge variant="brand" className="text-[9px]">Chief Automation Architect</Badge>
                     </div>
                     <p className="text-[10px] text-[#65746C] pl-9">
-                      Platform Architecture, n8n Automations, ClickUp Integration & Tech Lead
+                      Chief Automation Architect, Platform Systems & Workflow Engineering Lead
                     </p>
                   </div>
 
@@ -325,21 +327,9 @@ export function WelcomeOnboardingModal({
                     3
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-[#242E29]">ClickUp 100% Read-Only</h4>
-                    <p className="text-[11px] text-[#65746C] mt-0.5 leading-relaxed">
-                      ClickUp serves as a read-only mirror. Any task additions, comments, proofs, or status changes are handled directly through this dashboard.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-[#FBF6F3] border border-[#E8E2DD] flex items-start space-x-3">
-                  <div className="w-6 h-6 rounded-lg bg-[#518E6A]/15 text-[#518E6A] flex items-center justify-center font-bold shrink-0 mt-0.5 text-xs">
-                    4
-                  </div>
-                  <div>
                     <h4 className="text-xs font-bold text-[#242E29]">Communication in Designated Channels</h4>
                     <p className="text-[11px] text-[#65746C] mt-0.5 leading-relaxed">
-                      Discuss client-related topics in that client&apos;s channel (e.g. <code>#little-treasures-ops</code> or <code>#wrts-automations</code>). All files and discussions are permanent and backreadable.
+                      Discuss client-related topics in that client&apos;s channel (e.g. <code>#little-treasures-ops</code>). All files and discussions are permanent and backreadable.
                     </p>
                   </div>
                 </div>
@@ -358,50 +348,70 @@ export function WelcomeOnboardingModal({
                   <span>Q4 Active Client Deliverables & Targets</span>
                 </h3>
                 <p className="text-xs text-[#65746C]">
-                  Key commitments we are currently delivering across our 6 authentic client accounts:
+                  {clientScope && clientScope !== "all"
+                    ? `Key commitments and milestones for your assigned account (${clientScope}):`
+                    : "Key commitments we are currently delivering across our active client accounts:"}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                <div className="p-3 rounded-2xl bg-[#FBF6F3] border border-[#E8E2DD] space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#242E29]">Little Treasures Company</span>
-                    <Badge variant="brand" className="text-[9px]">Summit Launch</Badge>
-                  </div>
-                  <p className="text-[11px] text-[#65746C]">
-                    GHL Website, $99 Course Build, and payment verification for <strong>Fri 11 Dec 2026</strong> summit.
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-2xl bg-[#FBF6F3] border border-[#E8E2DD] space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#242E29]">We Rock the Spectrum (WRTS)</span>
-                    <Badge variant="active" className="text-[9px]">21 Workflows</Badge>
-                  </div>
-                  <p className="text-[11px] text-[#65746C]">
-                    Automated ClassReach CRM roster synchronization and parent waiver signature ingestion via self-hosted n8n.
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-2xl bg-[#FBF6F3] border border-[#E8E2DD] space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#242E29]">Studio Nets</span>
-                    <Badge variant="active" className="text-[9px]">Design Ops</Badge>
-                  </div>
-                  <p className="text-[11px] text-[#65746C]">
-                    Figma design review systems, client handoff checklists, and automated Fathom meeting summaries.
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-2xl bg-[#FBF6F3] border border-[#E8E2DD] space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#242E29]">InVogue Cleans & Aaron Ofosu</span>
-                    <Badge variant="upcoming" className="text-[9px]">Growth Sprints</Badge>
-                  </div>
-                  <p className="text-[11px] text-[#65746C]">
-                    Lead retention CRM, cleaner SMS alerts, and Stripe athlete subscription checkout portals.
-                  </p>
-                </div>
+                {[
+                  {
+                    name: "Little Treasures Company",
+                    scopeKey: "Little Treasures",
+                    badge: "Summit Launch",
+                    badgeVariant: "brand" as const,
+                    desc: "GHL Website, $99 Course Build, and payment verification for Fri 11 Dec 2026 summit.",
+                  },
+                  {
+                    name: "Studio Nets",
+                    scopeKey: "Studio Nets",
+                    badge: "Design Ops",
+                    badgeVariant: "active" as const,
+                    desc: "Figma design review systems, client handoff checklists, and sprint delivery.",
+                  },
+                  {
+                    name: "InVogue Cleans",
+                    scopeKey: "InVogue",
+                    badge: "Growth Engine",
+                    badgeVariant: "upcoming" as const,
+                    desc: "Lead retention CRM, cleaner SMS alerts, and subscription portals.",
+                  },
+                  {
+                    name: "Aaron Ofosu Bootcamp",
+                    scopeKey: "Aaron Ofosu",
+                    badge: "Athlete Funnel",
+                    badgeVariant: "upcoming" as const,
+                    desc: "Fitness pipeline automations, Stripe memberships, and onboarding sequences.",
+                  },
+                  {
+                    name: "Tch2Thrive",
+                    scopeKey: "Tch2Thrive",
+                    badge: "Portal Delivery",
+                    badgeVariant: "active" as const,
+                    desc: "Education portal hosting, client onboarding pipelines, and session management.",
+                  },
+                ]
+                  .filter((cg) => {
+                    if (!clientScope || clientScope === "all") return true;
+                    return clientScope.toLowerCase().includes(cg.scopeKey.toLowerCase());
+                  })
+                  .map((clientGoal) => (
+                    <div
+                      key={clientGoal.name}
+                      className="p-3.5 rounded-2xl bg-[#FBF6F3] border border-[#E8E2DD] space-y-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-[#242E29]">{clientGoal.name}</span>
+                        <Badge variant={clientGoal.badgeVariant} className="text-[9px]">
+                          {clientGoal.badge}
+                        </Badge>
+                      </div>
+                      <p className="text-[11px] text-[#65746C] leading-relaxed">
+                        {clientGoal.desc}
+                      </p>
+                    </div>
+                  ))}
               </div>
 
               {/* Agreement Checkbox */}

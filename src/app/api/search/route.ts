@@ -102,12 +102,12 @@ const STATIC_SOPS = [
     summary: 'Full delivery roadmap, GoHighLevel account configuration, AUD Stripe tax compliance, and Dec 11 summit timeline.',
   },
   {
-    id: 'sop-wrts-n8n',
-    title: 'WRTS: 21 n8n Operational Automations & Webhook Architecture',
-    category: 'Automation & Tech',
-    clientScope: 'We Rock the Spectrum (WRTS)',
-    author: 'Radzdom Gallego (Radz)',
-    summary: 'Technical specifications for 21 active n8n nodes syncing parent waivers, ClassReach rosters, and gym floor capacity.',
+    id: 'sop-studio-nets-ops',
+    title: 'Studio Nets: Design Ingestion Systems & Creative Ops Runbook',
+    category: 'Creative Operations',
+    clientScope: 'Studio Nets',
+    author: 'Erwin Manaog',
+    summary: 'Standard operating procedure for intake questionnaires, Figma design handoff pipelines, and asset revision tracking.',
   },
   {
     id: 'sop-cc-spec',

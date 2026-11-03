@@ -63,7 +63,7 @@ const TEAM_CAPACITY_DATA: TeamMemberCapacity[] = [
     capacityHours: 40,
     allocatedHours: 38,
     status: "At Capacity",
-    assignedClients: ["Little Treasures", "WRTS (21 Automations)", "Studio Nets"],
+    assignedClients: ["Little Treasures", "WRTS", "Studio Nets"],
     primaryFocus: "GIM Platform Systems, ClickUp Integration & Automation Architecture",
     activeSubtasksCount: 16,
   },
