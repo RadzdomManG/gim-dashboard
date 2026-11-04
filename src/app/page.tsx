@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Building2,
@@ -57,6 +58,7 @@ import {
   Palette,
   Volume2,
   VolumeX,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -319,8 +321,29 @@ export default function GimDashboard() {
     },
   });
 
-  const [currentUserKey, setCurrentUserKey] = useState<string>("radz");
-  const currentUser = userProfiles[currentUserKey] || userProfiles["radz"] || Object.values(userProfiles)[0];
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
+  const [currentUserKey, setCurrentUserKey] = useState<string>("");
+  const currentUser: UserProfile = userProfiles[currentUserKey] || {
+    id: "guest",
+    email: "member@graceinmotion.agency",
+    name: "Team Member",
+    nickname: "Member",
+    role: "Team Member",
+    title: "Operational Specialist",
+    isCoreAdmin: false,
+    avatarColor: "bg-[#466B53]",
+    avatarUrl: "",
+    clientScope: "all",
+  };
+
+  const handleSignOut = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("gim_auth_user");
+    }
+    router.replace("/login");
+  };
 
   // Load authenticated user, custom avatars, and profiles from localStorage
   useEffect(() => {
@@ -334,46 +357,48 @@ export default function GimDashboard() {
 
         // Check if there is an authenticated user from /login
         const authSaved = localStorage.getItem("gim_auth_user");
-        if (authSaved) {
-          const authUser = JSON.parse(authSaved);
-          const userKey = (authUser.id || authUser.username || authUser.nickname || "radz").toLowerCase();
-          
-          setUserProfiles((prev) => {
-            const existing = prev[userKey];
-            const updatedProfile = {
-              name: authUser.name || authUser.username || "Team Member",
-              nickname: authUser.nickname || authUser.name || authUser.username || "Member",
-              role: authUser.role || "Specialist",
-              title: authUser.title || authUser.role || "Operational Specialist",
-              isCoreAdmin: authUser.isCoreAdmin ?? (authUser.role === "Owner" || authUser.role === "Admin"),
-              avatarColor: authUser.avatarColor || existing?.avatarColor || "bg-[#466B53]",
-              avatarUrl: authUser.avatarUrl || existing?.avatarUrl || "",
-              clientScope: authUser.clientScope || "all",
-            };
-            return {
-              ...prev,
-              [userKey]: updatedProfile,
-            };
-          });
+        if (!authSaved) {
+          // NO USER LOGGED IN -> Immediately redirect to /login
+          router.replace("/login");
+          return;
+        }
 
-          setCurrentUserKey(userKey);
+        const authUser = JSON.parse(authSaved);
+        const userKey = (authUser.username || authUser.id || authUser.nickname || "user").toLowerCase();
+        
+        const activeProfile: UserProfile = {
+          id: authUser.id || `usr-${userKey}`,
+          email: authUser.email || `${userKey}@graceinmotion.agency`,
+          name: authUser.name || authUser.username || "Team Member",
+          nickname: authUser.nickname || authUser.name || authUser.username || "Member",
+          role: (authUser.role as UserRole) || "Team Member",
+          title: authUser.title || authUser.role || "Operational Specialist",
+          isCoreAdmin: authUser.isCoreAdmin ?? (authUser.role === "Owner" || authUser.role === "Admin"),
+          avatarColor: authUser.avatarColor || "bg-[#466B53]",
+          avatarUrl: authUser.avatarUrl || "",
+          clientScope: authUser.clientScope || "all",
+        };
 
-          // Check onboarding specifically for this authenticated user!
-          const userOnboarded = localStorage.getItem(`gim_onboarded_${userKey}`);
-          if (!userOnboarded) {
-            setShowOnboardingModal(true);
-          }
-        } else {
-          const generalOnboarded = localStorage.getItem("gim_onboarded_radz");
-          if (!generalOnboarded) {
-            setShowOnboardingModal(true);
-          }
+        setUserProfiles((prev) => ({
+          ...prev,
+          [userKey]: activeProfile,
+        }));
+
+        setCurrentUserKey(userKey);
+        setIsAuthenticated(true);
+        setIsAuthChecking(false);
+
+        // Check onboarding specifically for this authenticated user!
+        const userOnboarded = localStorage.getItem(`gim_onboarded_${userKey}`);
+        if (!userOnboarded) {
+          setShowOnboardingModal(true);
         }
       } catch (err) {
         console.error("Failed to load user profiles from localStorage:", err);
+        router.replace("/login");
       }
     }
-  }, []);
+  }, [router]);
 
   // Nickname & Profile Edit Modal State
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -425,6 +450,19 @@ export default function GimDashboard() {
     setUserProfiles(updated);
     if (typeof window !== "undefined") {
       localStorage.setItem("gim_user_profiles", JSON.stringify(updated));
+      const authSaved = localStorage.getItem("gim_auth_user");
+      if (authSaved) {
+        try {
+          const parsedAuth = JSON.parse(authSaved);
+          parsedAuth.name = editForm.name;
+          parsedAuth.nickname = editForm.nickname;
+          parsedAuth.title = editForm.title;
+          if (editForm.avatarUrl) parsedAuth.avatarUrl = editForm.avatarUrl;
+          localStorage.setItem("gim_auth_user", JSON.stringify(parsedAuth));
+        } catch {
+          // ignore
+        }
+      }
     }
     setIsEditProfileOpen(false);
   };
@@ -939,17 +977,46 @@ export default function GimDashboard() {
               </div>
             </div>
           </div>
-          <button
-            onClick={handleOpenEditProfile}
-            title="Edit Nickname & Profile"
-            className="p-1.5 text-[#FBF6F3]/70 hover:text-white hover:bg-white/10 rounded-md transition-colors"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex items-center space-x-0.5">
+            <button
+              onClick={handleOpenEditProfile}
+              title="Edit Nickname & Profile"
+              className="p-1.5 text-[#FBF6F3]/70 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={handleSignOut}
+              title="Sign Out"
+              className="p-1.5 text-rose-300/80 hover:text-rose-200 hover:bg-rose-500/20 rounded-md transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </>
   );
+
+  if (isAuthChecking || !isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#FBF6F3]">
+        <div className="w-14 h-14 relative flex items-center justify-center animate-pulse mb-3">
+          <Image
+            src="/gim-mark-green.png"
+            alt="GIM"
+            width={48}
+            height={48}
+            className="object-contain"
+            priority
+          />
+        </div>
+        <p className="text-xs font-semibold text-[#3D5249] tracking-wider uppercase">
+          Verifying GIM Authentication...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full bg-[#FBF6F3] text-[#242E29] overflow-hidden font-sans">
@@ -2520,22 +2587,32 @@ export default function GimDashboard() {
                 />
               </div>
 
-              <div className="flex items-center justify-end space-x-2.5 pt-3 border-t border-[#E8E2DD]">
-                <Button
-                  variant="ghost"
-                  size="sm"
+              <div className="flex items-center justify-between pt-3 border-t border-[#E8E2DD]">
+                <button
                   type="button"
-                  onClick={() => setIsEditProfileOpen(false)}
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg transition-colors"
                 >
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  type="submit"
-                >
-                  Save Nickname
-                </Button>
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out</span>
+                </button>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    onClick={() => setIsEditProfileOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    type="submit"
+                  >
+                    Save Nickname
+                  </Button>
+                </div>
               </div>
             </form>
           </div>

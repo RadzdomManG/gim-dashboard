@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -57,7 +57,7 @@ export const VERIFIED_ACCOUNTS: Record<
       role: "Admin",
       isCoreAdmin: true,
       avatarColor: "bg-[#466B53]",
-      title: "Core Admin & Automation Specialist / Tech Lead",
+      title: "Chief Automation Architect & Platform Systems Lead",
       clientScope: "all",
     },
   },
@@ -69,6 +69,21 @@ export const VERIFIED_ACCOUNTS: Record<
       name: "Ma. Rose Anne (RA) Malinao",
       nickname: "RA",
       email: "ra@graceinmotion.agency",
+      role: "Admin",
+      isCoreAdmin: true,
+      avatarColor: "bg-[#518E6A]",
+      title: "Core Admin & Commercial Operations / Invoicing",
+      clientScope: "all",
+    },
+  },
+  "aneweraa.ai@gmail.com": {
+    password: "Password123!",
+    user: {
+      id: "ra-002",
+      username: "aneweraa.ai@gmail.com",
+      name: "Ma. Rose Anne (RA) Malinao",
+      nickname: "RA",
+      email: "aneweraa.ai@gmail.com",
       role: "Admin",
       isCoreAdmin: true,
       avatarColor: "bg-[#518E6A]",
@@ -114,6 +129,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const authSaved = localStorage.getItem("gim_auth_user");
+      if (authSaved) {
+        router.replace("/");
+      }
+    }
+  }, [router]);
 
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
