@@ -175,22 +175,23 @@ export function UserInvitationModal({
 
       localStorage.setItem("gim_custom_logins", JSON.stringify(existing));
 
-      // Also persist to invitations API
-      try {
-        await fetch("/api/invitations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: cleanUsername,
-            full_name: fullName.trim(),
-            password: password.trim(),
-            role,
-            client_id: clientId || null,
-            assigned_clients: role === "admin" ? ["All Clients"] : selectedClients,
-          }),
-        });
-      } catch (err) {
-        // local-first fallback
+      // 2. Persist to cloud invitations & Supabase Auth API
+      const res = await fetch("/api/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: cleanUsername,
+          full_name: fullName.trim(),
+          password: password.trim(),
+          role,
+          client_id: clientId || null,
+          assigned_clients: role === "admin" ? ["All Clients"] : selectedClients,
+        }),
+      });
+
+      const invData = await res.json();
+      if (!res.ok) {
+        throw new Error(invData.error || "Failed to save account to database.");
       }
 
       setCreatedCredentials({

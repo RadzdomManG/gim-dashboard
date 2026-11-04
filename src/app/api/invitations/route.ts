@@ -72,54 +72,87 @@ export async function POST(req: NextRequest) {
 
     // 0. If a password is provided by the admin, create or update the user in Supabase Auth immediately
     if (password && password.trim()) {
-      try {
-        const cleanPassword = password.trim();
-        const { data: userList } = await supabase.auth.admin.listUsers();
-        const existingUser = userList?.users?.find(
-          (u) =>
-            u.email?.toLowerCase() === trimmedEmail.toLowerCase() ||
-            u.user_metadata?.username?.toLowerCase() === cleanUsername
-        );
+      const cleanPassword = password.trim();
+      const { data: userList } = await supabase.auth.admin.listUsers();
+      const existingUser = userList?.users?.find(
+        (u) =>
+          u.email?.toLowerCase() === trimmedEmail.toLowerCase() ||
+          u.user_metadata?.username?.toLowerCase() === cleanUsername
+      );
 
-        if (existingUser) {
-          await supabase.auth.admin.updateUserById(existingUser.id, {
-            password: cleanPassword,
-            email_confirm: true,
-            user_metadata: {
-              ...existingUser.user_metadata,
-              username: cleanUsername,
-              full_name: displayName,
-              nickname: displayName.split(' ')[0],
-              role: assignedRole,
-              title: body.title || assignedRole,
-              assigned_clients: clientList,
-              clientScope: assignedRole === 'admin' ? 'all' : (clientList[0] || 'Little Treasures Company'),
-              isCoreAdmin: assignedRole === 'admin',
-            },
-          });
-        } else {
-          await supabase.auth.admin.createUser({
-            email: trimmedEmail,
-            password: cleanPassword,
-            email_confirm: true,
-            user_metadata: {
-              username: cleanUsername,
-              full_name: displayName,
-              nickname: displayName.split(' ')[0],
-              role: assignedRole,
-              title: body.title || assignedRole,
-              assigned_clients: clientList,
-              clientScope: assignedRole === 'admin' ? 'all' : (clientList[0] || 'Little Treasures Company'),
-              isCoreAdmin: assignedRole === 'admin',
-            },
-          });
+      let authUserRecord: any = null;
+      if (existingUser) {
+        const updateRes = await supabase.auth.admin.updateUserById(existingUser.id, {
+          password: cleanPassword,
+          email_confirm: true,
+          user_metadata: {
+            ...existingUser.user_metadata,
+            username: cleanUsername,
+            full_name: displayName,
+            nickname: displayName.split(' ')[0],
+            role: assignedRole,
+            title: body.title || assignedRole,
+            assigned_clients: clientList,
+            clientScope: assignedRole === 'admin' ? 'all' : (clientList[0] || 'Little Treasures Company'),
+            isCoreAdmin: assignedRole === 'admin',
+          },
+        });
+        if (updateRes.error) {
+          throw new Error(`Failed to update credentials: ${updateRes.error.message}`);
         }
-      } catch (authErr) {
-        console.error('Direct user creation in Supabase Auth error:', authErr);
+        authUserRecord = updateRes.data.user;
+      } else {
+        const createRes = await supabase.auth.admin.createUser({
+          email: trimmedEmail,
+          password: cleanPassword,
+          email_confirm: true,
+          user_metadata: {
+            username: cleanUsername,
+            full_name: displayName,
+            nickname: displayName.split(' ')[0],
+            role: assignedRole,
+            title: body.title || assignedRole,
+            assigned_clients: clientList,
+            clientScope: assignedRole === 'admin' ? 'all' : (clientList[0] || 'Little Treasures Company'),
+            isCoreAdmin: assignedRole === 'admin',
+          },
+        });
+        if (createRes.error) {
+          throw new Error(`Failed to create cloud user: ${createRes.error.message}`);
+        }
+        authUserRecord = createRes.data.user;
       }
+
+      // Record in public.invitations for audit history
+      const uniqueToken = `gim_usr_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+
+      const { data: record, error: dbError } = await supabase
+        .from('invitations')
+        .insert({
+          email: trimmedEmail,
+          full_name: displayName,
+          role: assignedRole,
+          client_id: client_id || null,
+          assigned_clients: clientList,
+          token: uniqueToken,
+          expires_at: expiresAt.toISOString(),
+          accepted_at: new Date().toISOString(),
+          is_revoked: false,
+        })
+        .select()
+        .single();
+
+      return NextResponse.json({
+        success: true,
+        message: `Account for ${displayName} (@${cleanUsername}) successfully created and verified.`,
+        invitation: record,
+        user: authUserRecord,
+      });
     }
 
-    // 1. Generate invitation action link from Supabase Auth Admin
+    // 1. Generate invitation action link from Supabase Auth Admin (for password-less email invitations only)
     let actionLink: string | null = null;
     let authError: string | null = null;
     let emailSent = false;

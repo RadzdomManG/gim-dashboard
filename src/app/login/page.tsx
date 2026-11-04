@@ -226,15 +226,20 @@ export default function LoginPage() {
         router.push("/");
         return;
       }
+      if (data && data.error) {
+        setLoading(false);
+        setError(data.error);
+        return;
+      }
     } catch (err) {
       console.error("Cloud authentication lookup failed:", err);
     }
 
-    // 4. Authentication failure
+    // 4. Fallback Authentication failure
     setTimeout(() => {
       setLoading(false);
       setError("Invalid username or password. Only verified GIM personnel may access Mission Control.");
-    }, 400);
+    }, 300);
   };
 
   return (

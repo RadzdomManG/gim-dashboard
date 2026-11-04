@@ -111,15 +111,29 @@ export async function POST(req: NextRequest) {
 
     let matchedUser = userList?.users?.find((u) => {
       const meta = u.user_metadata || {};
+      const uEmail = (u.email || '').toLowerCase();
+      const prefix = uEmail.split('@')[0];
       return (
-        u.email?.toLowerCase() === targetEmail ||
-        u.email?.toLowerCase() === cleanUsername ||
-        meta.username?.toLowerCase() === cleanUsername
+        uEmail === targetEmail ||
+        uEmail === cleanUsername ||
+        prefix === cleanUsername ||
+        meta.username?.toLowerCase() === cleanUsername ||
+        meta.full_name?.toLowerCase() === cleanUsername ||
+        meta.name?.toLowerCase() === cleanUsername ||
+        meta.nickname?.toLowerCase() === cleanUsername
       );
     });
 
     if (matchedUser && matchedUser.email) {
       targetEmail = matchedUser.email;
+      // Ensure email is confirmed so Supabase Auth allows password sign in
+      if (!matchedUser.email_confirmed_at) {
+        try {
+          await supabaseAdmin.auth.admin.updateUserById(matchedUser.id, { email_confirm: true });
+        } catch {
+          // ignore
+        }
+      }
     }
 
     // Attempt sign-in with password against Supabase Auth
