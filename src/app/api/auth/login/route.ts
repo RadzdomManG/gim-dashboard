@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
       isCoreAdmin: meta.isCoreAdmin ?? (meta.role === 'admin' || meta.role === 'owner'),
       avatarColor: meta.avatarColor || 'bg-[#466B53]',
       avatarUrl: meta.avatarUrl || '',
-      clientScope: meta.clientScope || (roleDisplayName === 'Admin' ? 'all' : assignedClients[0]),
+      clientScope: meta.clientScope || (roleDisplayName === 'Admin' || roleDisplayName === 'Owner' ? 'all' : assignedClients.join(', ')),
       assigned_clients: assignedClients,
     };
 

@@ -151,18 +151,41 @@ export function TaskBacklogView({
       .finally(() => setLoadingComments(false));
   }, [selectedTask]);
 
-  // Compute distinct assignees for dropdown
+  // Compute distinct assignees for dropdown (ClickUp assignees + Team members)
+  const [teamMembersList, setTeamMembersList] = useState<{ full_name: string; nickname?: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/team")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.members && Array.isArray(data.members)) {
+          setTeamMembersList(data.members);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const uniqueAssignees = useMemo(() => {
     const map = new Map<string, string>();
+    // ClickUp assignees
     tasks.forEach((t) => {
       t.assignees.forEach((a) => {
-        if (!map.has(a.username)) {
+        if (a.username && !map.has(a.username)) {
           map.set(a.username, a.username);
         }
       });
     });
+    // Team directory & provisioned members
+    teamMembersList.forEach((m) => {
+      if (m.full_name && !map.has(m.full_name)) {
+        map.set(m.full_name, m.full_name);
+      }
+      if (m.nickname && !map.has(m.nickname)) {
+        map.set(m.nickname, m.nickname);
+      }
+    });
     return Array.from(map.values()).sort();
-  }, [tasks]);
+  }, [tasks, teamMembersList]);
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -180,7 +203,18 @@ export function TaskBacklogView({
             task.listName.toLowerCase().includes(s)
           );
         });
-        if (!hasAccess) return false;
+
+        // Also allow tasks specifically assigned to this user!
+        const isAssignedToUser = task.assignees.some((a) => {
+          const u = (a.username || "").toLowerCase();
+          const em = (a.email || "").toLowerCase();
+          return (
+            (currentUserNickname && (u.includes(currentUserNickname.toLowerCase()) || em.includes(currentUserNickname.toLowerCase()))) ||
+            (currentUserName && (u.includes(currentUserName.toLowerCase()) || em.includes(currentUserName.toLowerCase())))
+          );
+        });
+
+        if (!hasAccess && !isAssignedToUser) return false;
       }
 
       // Global client context filter from header

@@ -12,13 +12,21 @@ export async function GET(req: NextRequest) {
     // 1. Fetch Supabase tasks
     let query = supabase.from('client_tasks').select('*').order('due_date', { ascending: true });
 
-    if (clientParam && clientParam !== 'all') {
-      query = query.ilike('client', `%${clientParam}%`);
-    }
+    const allowedClientList = clientParam && clientParam !== 'all'
+      ? clientParam.split(',').map((s) => s.trim().toLowerCase())
+      : null;
 
     const { data: supaTasks, error } = await query;
     if (error) {
       console.error('Supabase tasks error:', error.message);
+    }
+
+    let supaList = supaTasks || [];
+    if (allowedClientList && allowedClientList.length > 0) {
+      supaList = supaList.filter((st: any) => {
+        const c = (st.client || '').toLowerCase();
+        return allowedClientList.some((allowed) => c.includes(allowed) || allowed.includes(c));
+      });
     }
 
     // 2. Fetch ClickUp tasks (Read-only live sync)
@@ -28,25 +36,27 @@ export async function GET(req: NextRequest) {
       if (clickupData && clickupData.tasks) {
         clickupTasks = clickupData.tasks
           .filter((t) => {
-            if (!clientParam || clientParam === 'all') return true;
-            const param = clientParam.toLowerCase();
+            if (!allowedClientList || allowedClientList.length === 0) return true;
             const clientName = t.client.toLowerCase();
             const listName = t.listName.toLowerCase();
+            const taskName = t.name.toLowerCase();
 
-            if (clientName.includes(param) || param.includes(clientName) || listName.includes(param)) {
-              return true;
-            }
+            return allowedClientList.some((param) => {
+              if (clientName.includes(param) || param.includes(clientName) || listName.includes(param)) {
+                return true;
+              }
 
-            // Keyword aliases
-            if (param.includes('little treasures') && (clientName.includes('little') || listName.includes('little'))) return true;
-            if (param.includes('spectrum') && (clientName.includes('spectrum') || t.name.toLowerCase().includes('spectrum') || t.name.toLowerCase().includes('wrts'))) return true;
-            if (param.includes('studio nets') && (clientName.includes('nets') || t.name.toLowerCase().includes('nets'))) return true;
-            if (param.includes('invogue') && (clientName.includes('invogue') || t.name.toLowerCase().includes('invogue'))) return true;
-            if (param.includes('ofosu') && (clientName.includes('ofosu') || t.name.toLowerCase().includes('ofosu'))) return true;
-            if (param.includes('thrive') && (clientName.includes('thrive') || t.name.toLowerCase().includes('thrive'))) return true;
-            if (param.includes('internal') && (clientName.includes('internal') || listName.includes('grace in motion'))) return true;
+              // Keyword aliases
+              if (param.includes('little treasures') && (clientName.includes('little') || listName.includes('little'))) return true;
+              if (param.includes('spectrum') && (clientName.includes('spectrum') || taskName.includes('spectrum') || taskName.includes('wrts'))) return true;
+              if (param.includes('studio nets') && (clientName.includes('nets') || taskName.includes('nets'))) return true;
+              if (param.includes('invogue') && (clientName.includes('invogue') || taskName.includes('invogue'))) return true;
+              if (param.includes('ofosu') && (clientName.includes('ofosu') || taskName.includes('ofosu'))) return true;
+              if (param.includes('thrive') && (clientName.includes('thrive') || taskName.includes('thrive'))) return true;
+              if (param.includes('internal') && (clientName.includes('internal') || listName.includes('grace in motion'))) return true;
 
-            return false;
+              return false;
+            });
           })
           .map((t) => {
             // Map ClickUp status to GIM pipeline
@@ -95,7 +105,6 @@ export async function GET(req: NextRequest) {
     }
 
     // 3. Merge: Supabase task status/edits take precedence if ID matches
-    const supaList = supaTasks || [];
     const supaIds = new Set(supaList.map((t: any) => t.id));
     const merged = [
       ...supaList,

@@ -70,6 +70,33 @@ export function CreateTaskModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Assignee options loaded dynamically from team & newly added members
+  const [assigneeOptions, setAssigneeOptions] = useState<{ name: string; nickname?: string }[]>([
+    { name: "Radzdom Gallego", nickname: "Radz" },
+    { name: "Divine Origines", nickname: "Divine" },
+    { name: "Ma. Rose Anne Malinao", nickname: "RA" },
+    { name: "Erwin Manaog", nickname: "Erwin" },
+    { name: "BJ Ricafrente", nickname: "BJ" },
+    { name: "Joy Fabular", nickname: "Joy" },
+    { name: "Camille Bautista", nickname: "Camille" },
+    { name: "Jedy Caillio", nickname: "Jedy" },
+  ]);
+
+  useEffect(() => {
+    fetch("/api/team")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.members && Array.isArray(data.members)) {
+          const list = data.members.map((m: any) => ({
+            name: m.full_name || m.name,
+            nickname: m.nickname || (m.full_name || m.name)?.split(" ")[0],
+          }));
+          setAssigneeOptions(list);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Attachments state
   const [attachments, setAttachments] = useState<MediaAttachment[]>([]);
   const [showLinkInput, setShowLinkInput] = useState(false);
@@ -306,14 +333,11 @@ export function CreateTaskModal({
                 onChange={(e) => setAssigneeName(e.target.value)}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-[#3D5249]/20 bg-white text-[#242E29]"
               >
-                <option value="Radzdom Gallego">Radzdom Gallego (Radz)</option>
-                <option value="Divine Origines">Divine Origines (Divine)</option>
-                <option value="Ma. Rose Anne Malinao">Ma. Rose Anne Malinao (RA)</option>
-                <option value="Erwin Manaog">Erwin Manaog (Erwin)</option>
-                <option value="BJ Ricafrente">BJ Ricafrente (BJ)</option>
-                <option value="Joy Fabular">Joy Fabular (Joy)</option>
-                <option value="Camille Bautista">Camille Bautista (Camille)</option>
-                <option value="Jedy Caillio">Jedy Caillio (Jedy)</option>
+                {assigneeOptions.map((opt, i) => (
+                  <option key={i} value={opt.name}>
+                    {opt.name} {opt.nickname ? `(${opt.nickname})` : ""}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
