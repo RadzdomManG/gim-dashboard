@@ -52,6 +52,12 @@ export interface Attachment {
   thumbnailUrl?: string;
 }
 
+export interface MessageReaction {
+  emoji: string;
+  count: number;
+  users: string[];
+}
+
 export interface ChatMessage {
   id: string;
   channelId: string;
@@ -64,7 +70,7 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
   attachments?: Attachment[];
-  reactions?: { emoji: string; count: number; users: string[] }[];
+  reactions?: MessageReaction[];
   reply_to?: { senderName: string; content: string } | null;
 }
 
@@ -348,6 +354,19 @@ export function MessagingCenter({
     });
     setContextMenuMsg(null);
 
+    // Broadcast instant delete across active channel
+    if (realtimeChannelRef.current) {
+      try {
+        realtimeChannelRef.current.send({
+          type: "broadcast",
+          event: "delete_message",
+          payload: { messageId: msgId, channelId: activeChannelId },
+        });
+      } catch (e) {
+        console.error("Broadcast delete error:", e);
+      }
+    }
+
     try {
       await fetch(`/api/messages?id=${msgId}`, { method: "DELETE" });
     } catch (err) {
@@ -381,6 +400,16 @@ export function MessagingCenter({
         [targetChannelId]: [...targetMsgs, newMsg],
       };
     });
+
+    if (realtimeChannelRef.current) {
+      try {
+        realtimeChannelRef.current.send({
+          type: "broadcast",
+          event: "new_message",
+          payload: newMsg,
+        });
+      } catch (e) {}
+    }
 
     fetch("/api/messages", {
       method: "POST",
@@ -443,6 +472,8 @@ export function MessagingCenter({
   };
 
   const toggleMessageReaction = (msgId: string, emoji: string) => {
+    let nextReactionsForBroadcast: MessageReaction[] = [];
+
     updateAndPersistMessages((prev) => {
       const channelMsgs = prev[activeChannelId] || [];
       const updated = channelMsgs.map((m) => {
@@ -470,6 +501,7 @@ export function MessagingCenter({
           nextReactions = [...currentReactions, { emoji, count: 1, users: [currentUserNickname] }];
         }
 
+        nextReactionsForBroadcast = nextReactions;
         return { ...m, reactions: nextReactions };
       });
 
@@ -479,6 +511,28 @@ export function MessagingCenter({
       };
     });
     setShowEmojiPickerForMsg(null);
+
+    // Broadcast reaction instantly
+    if (realtimeChannelRef.current) {
+      try {
+        realtimeChannelRef.current.send({
+          type: "broadcast",
+          event: "reaction",
+          payload: {
+            messageId: msgId,
+            reactions: nextReactionsForBroadcast,
+            channelId: activeChannelId,
+          },
+        });
+      } catch (e) {}
+    }
+
+    // Persist to Supabase
+    fetch("/api/messages", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: msgId, reactions: nextReactionsForBroadcast }),
+    }).catch((e) => console.error("Failed to update reactions:", e));
   };
 
   // Clean up expired typing indicators after 2.5 seconds
@@ -529,13 +583,17 @@ export function MessagingCenter({
   const [newChannelPrivate, setNewChannelPrivate] = useState(false);
   const [selectedChannelMembers, setSelectedChannelMembers] = useState<string[]>([currentUserId, "divine"]);
 
-  // Supabase Realtime Synchronization
+  // Supabase Realtime Synchronization + Instant Background Polling
   useEffect(() => {
-    // 1. Initial fetch from API
-    fetch(`/api/messages?channelId=${activeChannelId}`)
-      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((data) => {
-        if (data.messages && data.messages.length > 0) {
+    let isMounted = true;
+
+    // Helper to fetch and merge messages from API
+    const syncChannelMessages = async () => {
+      try {
+        const res = await fetch(`/api/messages?channelId=${activeChannelId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (isMounted && data.messages && Array.isArray(data.messages)) {
           const mapped: ChatMessage[] = data.messages.map((row: any) => ({
             id: row.id,
             channelId: row.channel_id,
@@ -551,18 +609,49 @@ export function MessagingCenter({
             reactions: row.reactions || [],
           }));
 
-          setMessages((prev) => ({
-            ...prev,
-            [activeChannelId]: mapped,
-          }));
+          setMessages((prev) => {
+            const current = prev[activeChannelId] || [];
+            // Check if there are any new messages or reaction updates
+            if (current.length === mapped.length) {
+              const hasDiff = current.some((c, idx) => {
+                const m = mapped[idx];
+                return !m || c.id !== m.id || JSON.stringify(c.reactions) !== JSON.stringify(m.reactions);
+              });
+              if (!hasDiff) return prev;
+            }
+            return {
+              ...prev,
+              [activeChannelId]: mapped,
+            };
+          });
         }
-      })
-      .catch((err) => console.log("Realtime fetch fallback:", err));
+      } catch (err) {
+        // Silent background fallback
+      }
+    };
 
-    // 2. Supabase Realtime Channel (Database Inserts + Broadcast Typing + Broadcast Seen)
+    // 1. Initial fetch
+    syncChannelMessages();
+
+    // 2. High-speed 2-second background sync interval
+    const pollInterval = setInterval(() => {
+      syncChannelMessages();
+    }, 2000);
+
+    // 3. Tab visibility and focus sync
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === "visible") {
+        syncChannelMessages();
+      }
+    };
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+
+    // 4. Supabase Realtime Channel (Instant WebSockets Broadcast + Postgres Changes)
+    let channel: any = null;
     try {
       const supabase = createClient();
-      const channel = supabase
+      channel = supabase
         .channel(`realtime-channel-${activeChannelId}`)
         .on(
           "postgres_changes",
@@ -600,10 +689,9 @@ export function MessagingCenter({
               };
             });
 
-            // If someone else sent a message, play chime and acknowledge seen
             if (row.sender_id !== currentUserId) {
               soundManager.play("message");
-              channel.send({
+              channel?.send({
                 type: "broadcast",
                 event: "seen",
                 payload: {
@@ -616,6 +704,57 @@ export function MessagingCenter({
             }
           }
         )
+        // Instant Realtime Peer Broadcast for new messages (<50ms delivery)
+        .on("broadcast", { event: "new_message" }, (payload) => {
+          const newMsg = payload.payload as ChatMessage;
+          if (!newMsg || newMsg.channelId !== activeChannelId) return;
+
+          setMessages((prev) => {
+            const current = prev[newMsg.channelId] || [];
+            if (current.some((m) => m.id === newMsg.id)) return prev;
+            return {
+              ...prev,
+              [newMsg.channelId]: [...current, newMsg],
+            };
+          });
+
+          if (newMsg.senderId !== currentUserId) {
+            soundManager.play("message");
+            channel?.send({
+              type: "broadcast",
+              event: "seen",
+              payload: {
+                channelId: activeChannelId,
+                userId: currentUserId,
+                userName: currentUserNickname || currentUserName,
+                seenAt: Date.now(),
+              },
+            });
+          }
+        })
+        // Instant Realtime Peer Broadcast for message deletion
+        .on("broadcast", { event: "delete_message" }, (payload) => {
+          const { messageId, channelId } = payload.payload || {};
+          if (!messageId) return;
+          const target = channelId || activeChannelId;
+          setMessages((prev) => ({
+            ...prev,
+            [target]: (prev[target] || []).filter((m) => m.id !== messageId),
+          }));
+        })
+        // Instant Realtime Peer Broadcast for reactions
+        .on("broadcast", { event: "reaction" }, (payload) => {
+          const { messageId, reactions, channelId } = payload.payload || {};
+          if (!messageId || !reactions) return;
+          const target = channelId || activeChannelId;
+          setMessages((prev) => {
+            const list = prev[target] || [];
+            return {
+              ...prev,
+              [target]: list.map((m) => (m.id === messageId ? { ...m, reactions } : m)),
+            };
+          });
+        })
         .on("broadcast", { event: "typing" }, (payload) => {
           const { userId, userName } = payload.payload || {};
           if (userId && userId !== currentUserId) {
@@ -636,8 +775,7 @@ export function MessagingCenter({
         })
         .subscribe((status) => {
           if (status === "SUBSCRIBED") {
-            // Broadcast initial presence/seen
-            channel.send({
+            channel?.send({
               type: "broadcast",
               event: "seen",
               payload: {
@@ -651,14 +789,23 @@ export function MessagingCenter({
         });
 
       realtimeChannelRef.current = channel;
-
-      return () => {
-        supabase.removeChannel(channel);
-        realtimeChannelRef.current = null;
-      };
     } catch (e) {
       console.log("Supabase realtime subscription bypassed:", e);
     }
+
+    return () => {
+      isMounted = false;
+      clearInterval(pollInterval);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+      if (channel) {
+        try {
+          const supabase = createClient();
+          supabase.removeChannel(channel);
+        } catch (e) {}
+      }
+      realtimeChannelRef.current = null;
+    };
   }, [activeChannelId, currentUserId, currentUserName, currentUserNickname]);
 
   // Throttled typing broadcast
@@ -731,6 +878,19 @@ export function MessagingCenter({
     setReplyingToMessage(null);
     soundManager.play("message");
 
+    // Peer Broadcast over WebSockets for zero-latency delivery (<50ms)
+    if (realtimeChannelRef.current) {
+      try {
+        realtimeChannelRef.current.send({
+          type: "broadcast",
+          event: "new_message",
+          payload: newMessage,
+        });
+      } catch (e) {
+        console.error("Broadcast send error:", e);
+      }
+    }
+
     // Dispatch to Supabase API with exact message ID for instant deduplication
     fetch("/api/messages", {
       method: "POST",
@@ -780,6 +940,19 @@ export function MessagingCenter({
       ...prev,
       [activeChannelId]: [...(prev[activeChannelId] || []), newMessage],
     }));
+
+    // Peer Broadcast over WebSockets for zero-latency delivery (<50ms)
+    if (realtimeChannelRef.current) {
+      try {
+        realtimeChannelRef.current.send({
+          type: "broadcast",
+          event: "new_message",
+          payload: newMessage,
+        });
+      } catch (e) {
+        console.error("Broadcast attachment error:", e);
+      }
+    }
 
     // Persist attachment to Supabase API
     fetch("/api/messages", {
@@ -1220,12 +1393,235 @@ export function MessagingCenter({
                 </div>
               ) : (
                 displayedMessages.map((msg) => {
-                  const isCurrentUser =
-                    msg.senderId === currentUserId ||
-                    msg.senderNickname === currentUserNickname ||
-                    msg.senderName === currentUserName;
+                  const isCurrentUser = Boolean(
+                    (currentUserId && (msg.senderId === currentUserId || msg.senderId?.toLowerCase() === currentUserId?.toLowerCase())) ||
+                    (currentUserNickname && msg.senderNickname?.toLowerCase() === currentUserNickname?.toLowerCase()) ||
+                    (currentUserName && msg.senderName?.toLowerCase() === currentUserName?.toLowerCase())
+                  );
                   const isPinned = channelPinnedIds.includes(msg.id);
 
+                  // Helper renderer for attachments
+                  const renderAttachmentList = (alignRight: boolean) => (
+                    <div className={`space-y-2 pt-1.5 max-w-sm sm:max-w-md ${alignRight ? "flex flex-col items-end" : "flex flex-col items-start"}`}>
+                      {msg.attachments?.map((att) => (
+                        <div key={att.id} className="w-full">
+                          {att.type === "image" && (
+                            <div className="rounded-xl border border-[#E8E2DD] overflow-hidden bg-white p-2 space-y-1.5 shadow-xs">
+                              <div className="h-40 bg-[#3D5249]/10 rounded-lg flex items-center justify-center overflow-hidden">
+                                <img
+                                  src={att.url}
+                                  alt={att.name}
+                                  className="h-full object-contain"
+                                />
+                              </div>
+                              <div className="flex items-center justify-between text-[11px] px-1">
+                                <span className="font-semibold text-[#242E29] truncate">{att.name}</span>
+                                <span className="text-[#65746C]">{att.size}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {att.type === "video" && (
+                            <div className="rounded-xl border border-[#E8E2DD] overflow-hidden bg-black p-1 space-y-1 shadow-xs">
+                              <video
+                                src={att.url}
+                                controls
+                                className="w-full rounded max-h-48"
+                              />
+                              <div className="flex items-center justify-between text-[11px] text-white px-2 py-1">
+                                <span className="font-semibold truncate">{att.name}</span>
+                                <span className="text-white/70">{att.size}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {att.type === "document" && (
+                            <div className="flex items-center space-x-3 p-2.5 rounded-xl border border-[#E8E2DD] bg-white shadow-xs hover:border-[#518E6A]/50 transition-colors">
+                              <div className="p-2 rounded-lg bg-[#466B53]/15 text-[#3D5249]">
+                                <FileText className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1 min-w-0 text-left">
+                                <p className="font-semibold text-xs text-[#242E29] truncate">{att.name}</p>
+                                <p className="text-[10px] text-[#65746C]">{att.size || "File"}</p>
+                              </div>
+                              <a
+                                href={att.url}
+                                download={att.name}
+                                className="p-1.5 rounded-md text-[#466B53] hover:bg-[#466B53]/10"
+                                title="Download File"
+                              >
+                                <Download className="w-4 h-4" />
+                              </a>
+                            </div>
+                          )}
+
+                          {att.type === "link" && (
+                            <div className="flex items-center space-x-2.5 p-2.5 rounded-xl border border-[#518E6A]/30 bg-[#EDFDF5] shadow-xs">
+                              <Link2 className="w-4 h-4 text-[#38A169] shrink-0" />
+                              <div className="flex-1 min-w-0 text-left">
+                                <p className="font-semibold text-xs text-[#276749] truncate">{att.name}</p>
+                                <p className="text-[10px] text-[#276749]/70 truncate">{att.url}</p>
+                              </div>
+                              <a
+                                href={att.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1 rounded text-[#276749] hover:bg-[#C6F6D5]"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+
+                  // Helper renderer for reactions
+                  const renderReactionList = (alignRight: boolean) => (
+                    msg.reactions && msg.reactions.length > 0 && (
+                      <div className={`flex items-center gap-1 flex-wrap pt-1 ${alignRight ? "justify-end" : "justify-start"}`}>
+                        {msg.reactions.map((r, rIdx) => (
+                          <button
+                            key={rIdx}
+                            type="button"
+                            onClick={() => toggleMessageReaction(msg.id, r.emoji)}
+                            className="px-2 py-0.5 rounded-full bg-white border border-[#E8E2DD] text-[11px] flex items-center gap-1 hover:border-[#518E6A] shadow-2xs transition-transform active:scale-95"
+                            title={`Reacted by ${r.users.join(", ")}`}
+                          >
+                            <span>{r.emoji}</span>
+                            <span className="font-bold text-[#3D5249]">{r.count}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )
+                  );
+
+                  // =========================================================================
+                  // CURRENT USER BUBBLE (RIGHT-ALIGNED, GIM BRAND GREEN #466B53, WHITE TEXT)
+                  // =========================================================================
+                  if (isCurrentUser) {
+                    return (
+                      <div
+                        key={msg.id}
+                        onContextMenu={(e) => handleMessageContextMenu(msg, e)}
+                        onTouchStart={(e) => handleMessageTouchStart(msg, e)}
+                        onTouchEnd={handleMessageTouchEnd}
+                        onTouchMove={handleMessageTouchEnd}
+                        className={`group relative flex justify-end w-full py-1 px-1 sm:px-2 select-none ${
+                          isPinned ? "bg-amber-50/50 rounded-2xl" : ""
+                        }`}
+                      >
+                        <div className="flex flex-col items-end max-w-[85%] sm:max-w-[70%]">
+                          {/* Header: You • Timestamp • Pinned */}
+                          <div className="flex items-center space-x-1.5 text-[10px] text-[#65746C] mb-1 pr-1">
+                            <span className="font-semibold text-[#466B53]">You</span>
+                            <span>•</span>
+                            <span>{msg.timestamp}</span>
+                            {isPinned && (
+                              <span className="inline-flex items-center gap-0.5 text-[9px] text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded font-semibold ml-1">
+                                <Pin className="w-2.5 h-2.5 fill-amber-700" /> Pinned
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Replying quote if any */}
+                          {msg.reply_to && (
+                            <div className="p-2 mb-1.5 bg-[#466B53]/15 border-r-2 border-[#518E6A] rounded-lg text-[11px] text-[#3D5249] max-w-full text-right shadow-2xs">
+                              <span className="font-semibold">@{msg.reply_to.senderName}:</span>{" "}
+                              <span className="italic line-clamp-1">&ldquo;{msg.reply_to.content}&rdquo;</span>
+                            </div>
+                          )}
+
+                          {/* Message Bubble + Floating Toolbar on LEFT */}
+                          <div className="relative group/bubble inline-block">
+                            <div className="text-[13px] sm:text-xs leading-relaxed whitespace-pre-wrap break-words bg-[#466B53] text-white px-4 py-2.5 rounded-2xl rounded-br-xs shadow-sm select-text font-normal">
+                              {msg.content}
+                            </div>
+
+                            {/* Floating Toolbar on Left */}
+                            <div className="absolute -top-3.5 left-1 opacity-0 group-hover:opacity-100 group-hover/bubble:opacity-100 transition-opacity flex items-center bg-white border border-[#E8E2DD] shadow-md rounded-full px-1.5 py-0.5 gap-0.5 z-20">
+                              <button
+                                type="button"
+                                onClick={() => setShowEmojiPickerForMsg(showEmojiPickerForMsg === msg.id ? null : msg.id)}
+                                className="p-1 rounded-full text-[#65746C] hover:text-[#242E29] hover:bg-black/5 transition-colors"
+                                title="React with emoji"
+                              >
+                                <Smile className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setReplyingToMessage({
+                                    senderName: msg.senderNickname || msg.senderName,
+                                    content: msg.content,
+                                  })
+                                }
+                                className="p-1 rounded-full text-[#65746C] hover:text-[#518E6A] hover:bg-black/5 transition-colors"
+                                title="Reply in thread"
+                              >
+                                <CornerUpLeft className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => togglePinMessage(msg.id)}
+                                className={`p-1 rounded-full hover:bg-black/5 transition-colors ${
+                                  isPinned ? "text-amber-600" : "text-[#65746C] hover:text-amber-600"
+                                }`}
+                                title={isPinned ? "Unpin message" : "Pin message"}
+                              >
+                                <Pin className={`w-3.5 h-3.5 ${isPinned ? "fill-amber-600" : ""}`} />
+                              </button>
+                            </div>
+
+                            {/* Emoji Picker Popup */}
+                            {showEmojiPickerForMsg === msg.id && (
+                              <div className="absolute -top-11 right-0 flex items-center gap-1 bg-white border border-[#E8E2DD] rounded-xl p-1 shadow-lg z-30 animate-in fade-in">
+                                {["👍", "❤️", "🙌", "🔥", "👀", "✅", "🚀", "🎉"].map((emoji) => (
+                                  <button
+                                    key={emoji}
+                                    type="button"
+                                    onClick={() => {
+                                      toggleMessageReaction(msg.id, emoji);
+                                      setShowEmojiPickerForMsg(null);
+                                    }}
+                                    className="p-1 text-sm hover:scale-125 transition-transform"
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Attachments if any */}
+                          {renderAttachmentList(true)}
+
+                          {/* Reactions if any */}
+                          {renderReactionList(true)}
+
+                          {/* Delivery / Seen Receipts */}
+                          <div className="flex items-center justify-end space-x-1 text-[10px] text-[#65746C] mt-1 mr-1">
+                            {Object.keys(seenUsers).length > 0 ? (
+                              <span className="inline-flex items-center space-x-1 text-[#466B53] font-medium">
+                                <CheckCheck className="w-3 h-3 text-[#518E6A]" />
+                                <span>Seen</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center space-x-1 text-[#65746C]">
+                                <CheckCircle2 className="w-3 h-3 text-[#518E6A]" />
+                                <span>Sent</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // =========================================================================
+                  // OTHER USER / PERSON A BUBBLE (LEFT-ALIGNED, PURE WHITE, DARK CHARCOAL TEXT)
+                  // =========================================================================
                   return (
                     <div
                       key={msg.id}
@@ -1233,67 +1629,46 @@ export function MessagingCenter({
                       onTouchStart={(e) => handleMessageTouchStart(msg, e)}
                       onTouchEnd={handleMessageTouchEnd}
                       onTouchMove={handleMessageTouchEnd}
-                      className={`group relative flex items-start space-x-3 text-xs p-1.5 rounded-xl transition-colors select-none ${
-                        isPinned ? "bg-amber-50/60 border-l-2 border-amber-500 pl-2" : "hover:bg-black/[0.015]"
+                      className={`group relative flex justify-start items-start space-x-2.5 w-full py-1 px-1 sm:px-2 select-none ${
+                        isPinned ? "bg-amber-50/50 rounded-2xl" : ""
                       }`}
                     >
-                      {/* Avatar */}
-                      <div className={`w-8 h-8 rounded-full ${msg.senderAvatar || "bg-[#3D5249]"} text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs mt-0.5`}>
+                      {/* Avatar on Left */}
+                      <div className={`w-8 h-8 rounded-full ${msg.senderAvatar || "bg-[#3D5249]"} text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs mt-1`}>
                         {msg.senderNickname.slice(0, 2).toUpperCase()}
                       </div>
 
-                      <div className="flex-1 min-w-0">
-                        {/* Header Row: Sender, Nickname, Role, Timestamp, and Sent/Seen on ONE single line */}
-                        <div className="flex items-center space-x-2 flex-wrap text-xs leading-none mb-1">
+                      <div className="flex flex-col items-start max-w-[85%] sm:max-w-[70%] min-w-0">
+                        {/* Header: Sender Name, Nickname, Role, Timestamp */}
+                        <div className="flex items-center space-x-2 flex-wrap text-xs leading-none mb-1 ml-1">
                           <span className="font-bold text-[#242E29]">{msg.senderName}</span>
                           <span className="text-[#466B53] font-semibold text-[11px]">({msg.senderNickname})</span>
                           {msg.isCoreAdmin && <Badge variant="dark">Core Admin</Badge>}
                           {msg.senderRole === "Owner" && <Badge variant="brand">Owner</Badge>}
                           <span className="text-[10px] text-[#65746C]">{msg.timestamp}</span>
-
-                          {/* Delivery & Read Receipts inline next to timestamp! */}
-                          {isCurrentUser && (
-                            <span className="inline-flex items-center space-x-1 text-[10px]">
-                              <span className="text-[#65746C]">•</span>
-                              {Object.keys(seenUsers).length > 0 ? (
-                                <span className="inline-flex items-center space-x-1 text-[#466B53] font-medium">
-                                  <CheckCheck className="w-3 h-3 text-[#518E6A]" />
-                                  <span>Seen</span>
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center space-x-1 text-[#65746C]">
-                                  <CheckCircle2 className="w-3 h-3 text-[#518E6A]" />
-                                  <span>Sent</span>
-                                </span>
-                              )}
-                            </span>
-                          )}
-
                           {isPinned && (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded font-semibold ml-1">
+                            <span className="inline-flex items-center gap-0.5 text-[9px] text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded font-semibold ml-1">
                               <Pin className="w-2.5 h-2.5 fill-amber-700" /> Pinned
                             </span>
                           )}
                         </div>
 
-                        {/* Replying To Quote Banner if any */}
+                        {/* Replying quote if any */}
                         {msg.reply_to && (
-                          <div className="p-1.5 mb-1.5 bg-black/5 border-l-2 border-[#518E6A] rounded text-[10px] text-[#65746C] max-w-2xl">
+                          <div className="p-2 mb-1.5 bg-[#FBF6F3] border-l-2 border-[#518E6A] rounded-lg text-[11px] text-[#65746C] max-w-full text-left shadow-2xs">
                             <span className="font-semibold text-[#3D5249]">@{msg.reply_to.senderName}:</span>{" "}
                             <span className="italic line-clamp-1">&ldquo;{msg.reply_to.content}&rdquo;</span>
                           </div>
                         )}
 
-                        {/* Bubble & Hover Actions Row */}
-                        <div className="relative inline-block max-w-2xl group/bubble">
-                          {/* Message Text Bubble */}
-                          <div className="text-xs text-[#242E29] leading-relaxed whitespace-pre-wrap bg-[#FBF6F3]/80 px-3.5 py-2 rounded-2xl rounded-tl-xs border border-[#E8E2DD]/80 shadow-2xs break-words">
+                        {/* Message Bubble + Floating Toolbar on RIGHT */}
+                        <div className="relative group/bubble inline-block">
+                          <div className="text-[13px] sm:text-xs leading-relaxed whitespace-pre-wrap break-words bg-white text-[#242E29] border border-[#E8E2DD] px-4 py-2.5 rounded-2xl rounded-tl-xs shadow-xs select-text font-normal">
                             {msg.content}
                           </div>
 
-                          {/* Floating Hover Toolbar (Slack style) */}
-                          <div className="absolute -top-3 right-1 opacity-0 group-hover:opacity-100 group-hover/bubble:opacity-100 transition-opacity flex items-center bg-white border border-[#E8E2DD] shadow-md rounded-full px-1.5 py-0.5 gap-0.5 z-20">
-                            {/* Quick Emoji Reaction */}
+                          {/* Floating Toolbar on Right */}
+                          <div className="absolute -top-3.5 right-1 opacity-0 group-hover:opacity-100 group-hover/bubble:opacity-100 transition-opacity flex items-center bg-white border border-[#E8E2DD] shadow-md rounded-full px-1.5 py-0.5 gap-0.5 z-20">
                             <button
                               type="button"
                               onClick={() => setShowEmojiPickerForMsg(showEmojiPickerForMsg === msg.id ? null : msg.id)}
@@ -1302,8 +1677,6 @@ export function MessagingCenter({
                             >
                               <Smile className="w-3.5 h-3.5" />
                             </button>
-
-                            {/* Reply Button */}
                             <button
                               type="button"
                               onClick={() =>
@@ -1317,8 +1690,6 @@ export function MessagingCenter({
                             >
                               <CornerUpLeft className="w-3.5 h-3.5" />
                             </button>
-
-                            {/* Pin / Unpin Button */}
                             <button
                               type="button"
                               onClick={() => togglePinMessage(msg.id)}
@@ -1333,7 +1704,7 @@ export function MessagingCenter({
 
                           {/* Emoji Picker Popup */}
                           {showEmojiPickerForMsg === msg.id && (
-                            <div className="absolute -top-10 left-0 flex items-center gap-1 bg-white border border-[#E8E2DD] rounded-xl p-1 shadow-lg z-30 animate-in fade-in">
+                            <div className="absolute -top-11 left-0 flex items-center gap-1 bg-white border border-[#E8E2DD] rounded-xl p-1 shadow-lg z-30 animate-in fade-in">
                               {["👍", "❤️", "🙌", "🔥", "👀", "✅", "🚀", "🎉"].map((emoji) => (
                                 <button
                                   key={emoji}
@@ -1351,100 +1722,11 @@ export function MessagingCenter({
                           )}
                         </div>
 
-                        {/* Attachments Section */}
-                        {msg.attachments && msg.attachments.length > 0 && (
-                          <div className="space-y-2 pt-1.5 max-w-md">
-                            {msg.attachments.map((att) => (
-                              <div key={att.id}>
-                                {att.type === "image" && (
-                                  <div className="max-w-sm rounded-xl border border-[#E8E2DD] overflow-hidden bg-[#FBF6F3] p-2 space-y-1.5">
-                                    <div className="h-40 bg-[#3D5249]/10 rounded-lg flex items-center justify-center overflow-hidden">
-                                      <img
-                                        src={att.url}
-                                        alt={att.name}
-                                        className="h-full object-contain"
-                                      />
-                                    </div>
-                                    <div className="flex items-center justify-between text-[11px] px-1">
-                                      <span className="font-semibold text-[#242E29] truncate">{att.name}</span>
-                                      <span className="text-[#65746C]">{att.size}</span>
-                                    </div>
-                                  </div>
-                                )}
+                        {/* Attachments if any */}
+                        {renderAttachmentList(false)}
 
-                                {att.type === "video" && (
-                                  <div className="max-w-md rounded-xl border border-[#E8E2DD] overflow-hidden bg-black p-1 space-y-1">
-                                    <video
-                                      src={att.url}
-                                      controls
-                                      className="w-full rounded max-h-48"
-                                    />
-                                    <div className="flex items-center justify-between text-[11px] text-white px-2 py-1">
-                                      <span className="font-semibold truncate">{att.name}</span>
-                                      <span className="text-white/70">{att.size}</span>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {att.type === "document" && (
-                                  <div className="flex items-center space-x-3 p-2.5 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/80 max-w-md hover:border-[#518E6A]/50 transition-colors">
-                                    <div className="p-2 rounded-lg bg-[#466B53]/15 text-[#3D5249]">
-                                      <FileText className="w-5 h-5" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="font-semibold text-xs text-[#242E29] truncate">{att.name}</p>
-                                      <p className="text-[10px] text-[#65746C]">{att.size || "File"}</p>
-                                    </div>
-                                    <a
-                                      href={att.url}
-                                      download={att.name}
-                                      className="p-1.5 rounded-md text-[#466B53] hover:bg-[#466B53]/10"
-                                      title="Download File"
-                                    >
-                                      <Download className="w-4 h-4" />
-                                    </a>
-                                  </div>
-                                )}
-
-                                {att.type === "link" && (
-                                  <div className="flex items-center space-x-2.5 p-2.5 rounded-xl border border-[#518E6A]/30 bg-[#EDFDF5]/60 max-w-md">
-                                    <Link2 className="w-4 h-4 text-[#38A169] shrink-0" />
-                                    <div className="flex-1 min-w-0">
-                                      <p className="font-semibold text-xs text-[#276749] truncate">{att.name}</p>
-                                      <p className="text-[10px] text-[#276749]/70 truncate">{att.url}</p>
-                                    </div>
-                                    <a
-                                      href={att.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="p-1 rounded text-[#276749] hover:bg-[#C6F6D5]"
-                                    >
-                                      <ExternalLink className="w-3.5 h-3.5" />
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Reaction Chips (ONLY shown if reactions exist) */}
-                        {msg.reactions && msg.reactions.length > 0 && (
-                          <div className="flex items-center gap-1 flex-wrap pt-1">
-                            {msg.reactions.map((r, rIdx) => (
-                              <button
-                                key={rIdx}
-                                type="button"
-                                onClick={() => toggleMessageReaction(msg.id, r.emoji)}
-                                className="px-2 py-0.5 rounded-full bg-white border border-[#E8E2DD] text-[11px] flex items-center gap-1 hover:border-[#518E6A] shadow-2xs"
-                                title={`Reacted by ${r.users.join(", ")}`}
-                              >
-                                <span>{r.emoji}</span>
-                                <span className="font-bold text-[#3D5249]">{r.count}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                        {/* Reactions if any */}
+                        {renderReactionList(false)}
                       </div>
                     </div>
                   );
