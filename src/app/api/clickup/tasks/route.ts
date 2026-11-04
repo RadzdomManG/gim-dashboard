@@ -18,10 +18,22 @@ export async function GET(request: NextRequest) {
     const data = await fetchClickUpTasks();
     let tasks = data.tasks;
 
-    if (clientFilter === 'little-treasures') {
-      tasks = tasks.filter((t) => t.listName.toLowerCase().includes('little treasures'));
-    } else if (clientFilter === 'gim-internal') {
-      tasks = tasks.filter((t) => t.listName.toLowerCase().includes('grace in motion'));
+    if (clientFilter && clientFilter !== 'all') {
+      const clientKeyMap: Record<string, string> = {
+        'little-treasures': 'little treasures',
+        'we-rock-the-spectrum': 'spectrum',
+        'wrts': 'spectrum',
+        'studio-nets': 'studio nets',
+        'invogue-cleans': 'invogue',
+        'aaron-ofosu': 'aaron ofosu',
+        'tch2thrive': 'tch2thrive',
+        'gim-internal': 'grace in motion',
+      };
+      const queryKey = clientKeyMap[clientFilter] || clientFilter.toLowerCase();
+      tasks = tasks.filter((t) =>
+        t.client.toLowerCase().includes(queryKey) ||
+        t.listName.toLowerCase().includes(queryKey)
+      );
     }
 
     if (statusFilter && statusFilter !== 'all') {

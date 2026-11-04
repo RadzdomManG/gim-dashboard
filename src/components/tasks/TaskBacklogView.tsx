@@ -56,8 +56,28 @@ export function TaskBacklogView({
   // Filters
   const [search, setSearch] = useState(initialSearch);
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
-  const [clientFilter, setClientFilter] = useState<"all" | "little-treasures" | "gim-internal">("all");
+  const [clientFilter, setClientFilter] = useState<string>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+
+  // Sync client filter with prop selectedClientId
+  useEffect(() => {
+    if (selectedClientId && selectedClientId !== "all") {
+      setClientFilter(selectedClientId);
+    }
+  }, [selectedClientId]);
+
+  // Sync initial search and status filter props
+  useEffect(() => {
+    if (initialSearch !== undefined) {
+      setSearch(initialSearch);
+    }
+  }, [initialSearch]);
+
+  useEffect(() => {
+    if (initialStatusFilter !== undefined) {
+      setStatusFilter(initialStatusFilter);
+    }
+  }, [initialStatusFilter]);
 
   // Selected Task Modal
   const [selectedTask, setSelectedTask] = useState<ClickUpTask | null>(null);
@@ -149,12 +169,17 @@ export function TaskBacklogView({
     return tasks.filter((task) => {
       // Scoped client check for non-admin users
       if (clientScope && clientScope !== "all") {
-        const allowed = Array.isArray(clientScope) ? clientScope : [clientScope];
-        const hasAccess = allowed.some((scope) =>
-          task.client.toLowerCase().includes(scope.toLowerCase()) ||
-          scope.toLowerCase().includes(task.client.toLowerCase()) ||
-          task.listName.toLowerCase().includes(scope.toLowerCase())
-        );
+        const allowed = Array.isArray(clientScope)
+          ? clientScope
+          : clientScope.split(",").map((s) => s.trim());
+        const hasAccess = allowed.some((scope) => {
+          const s = scope.toLowerCase();
+          return (
+            task.client.toLowerCase().includes(s) ||
+            s.includes(task.client.toLowerCase()) ||
+            task.listName.toLowerCase().includes(s)
+          );
+        });
         if (!hasAccess) return false;
       }
 
@@ -162,10 +187,12 @@ export function TaskBacklogView({
       if (selectedClientId && selectedClientId !== "all") {
         const clientKeyMap: Record<string, string> = {
           "little-treasures": "little treasures",
+          "we-rock-the-spectrum": "spectrum",
           "studio-nets": "studio nets",
           "invogue-cleans": "invogue",
           "aaron-ofosu": "aaron ofosu",
           "tch2thrive": "tch2thrive",
+          "gim-internal": "grace in motion",
         };
         const targetPattern = clientKeyMap[selectedClientId];
         if (targetPattern) {
@@ -177,16 +204,31 @@ export function TaskBacklogView({
       }
 
       // Client filter
-      if (clientFilter === "little-treasures" && !task.listName.toLowerCase().includes("little treasures")) {
-        return false;
-      }
-      if (clientFilter === "gim-internal" && !task.listName.toLowerCase().includes("grace in motion")) {
-        return false;
+      if (clientFilter !== "all") {
+        const clientKeyMap: Record<string, string> = {
+          "little-treasures": "little treasures",
+          "we-rock-the-spectrum": "spectrum",
+          "wrts": "spectrum",
+          "studio-nets": "studio nets",
+          "invogue-cleans": "invogue",
+          "aaron-ofosu": "aaron ofosu",
+          "tch2thrive": "tch2thrive",
+          "gim-internal": "grace in motion",
+        };
+        const targetPattern = clientKeyMap[clientFilter] || clientFilter.toLowerCase();
+        const matches =
+          task.client.toLowerCase().includes(targetPattern) ||
+          task.listName.toLowerCase().includes(targetPattern);
+        if (!matches) return false;
       }
 
       // Status filter
       if (statusFilter !== "all") {
-        if (task.status.toLowerCase() !== statusFilter.toLowerCase()) {
+        const s = task.status.toLowerCase();
+        const sf = statusFilter.toLowerCase();
+        if (sf === "for review" || sf === "in review") {
+          if (s !== "for review" && s !== "in review") return false;
+        } else if (s !== sf) {
           return false;
         }
       }
@@ -194,7 +236,8 @@ export function TaskBacklogView({
       // Assignee filter
       if (assigneeFilter !== "all") {
         const hasAssignee = task.assignees.some((a) =>
-          a.username.toLowerCase() === assigneeFilter.toLowerCase()
+          a.username.toLowerCase() === assigneeFilter.toLowerCase() ||
+          a.username.toLowerCase().includes(assigneeFilter.toLowerCase())
         );
         if (!hasAssignee) return false;
       }
@@ -206,7 +249,8 @@ export function TaskBacklogView({
         const matchesId = task.id.toLowerCase().includes(q);
         const matchesGate = task.gateCode?.toLowerCase().includes(q);
         const matchesAssignee = task.assignees.some((a) => a.username.toLowerCase().includes(q));
-        if (!matchesName && !matchesId && !matchesGate && !matchesAssignee) {
+        const matchesClient = task.client.toLowerCase().includes(q);
+        if (!matchesName && !matchesId && !matchesGate && !matchesAssignee && !matchesClient) {
           return false;
         }
       }
@@ -217,7 +261,7 @@ export function TaskBacklogView({
       const timeB = b.dueDate ? Number(b.dueDate) : 0;
       return timeB - timeA; // Latest to oldest
     });
-  }, [tasks, clientFilter, statusFilter, assigneeFilter, search]);
+  }, [tasks, clientFilter, statusFilter, assigneeFilter, search, clientScope, selectedClientId]);
 
   // Paginated tasks
   const totalPages = Math.ceil(filteredTasks.length / pageSize) || 1;
@@ -428,11 +472,16 @@ export function TaskBacklogView({
               {/* Client Workspace Filter */}
               <select
                 value={clientFilter}
-                onChange={(e) => setClientFilter(e.target.value as any)}
+                onChange={(e) => setClientFilter(e.target.value)}
                 className="px-3 py-2 bg-white border border-[#E8E2DD] rounded-lg text-xs font-medium text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
               >
-                <option value="all">All Sources (Little Treasures + GIM)</option>
+                <option value="all">All Clients ({tasks.length} ClickUp Tasks)</option>
                 <option value="little-treasures">Little Treasures Company</option>
+                <option value="we-rock-the-spectrum">We Rock the Spectrum (WRTS)</option>
+                <option value="studio-nets">Studio Nets</option>
+                <option value="invogue-cleans">InVogue Cleans</option>
+                <option value="aaron-ofosu">Aaron Ofosu Bootcamp</option>
+                <option value="tch2thrive">Tch2Thrive</option>
                 <option value="gim-internal">Grace In Motion (Internal)</option>
               </select>
 
@@ -442,7 +491,7 @@ export function TaskBacklogView({
                 onChange={(e) => setAssigneeFilter(e.target.value)}
                 className="px-3 py-2 bg-white border border-[#E8E2DD] rounded-lg text-xs font-medium text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
               >
-                <option value="all">All Assignees</option>
+                <option value="all">All Members ({uniqueAssignees.length} Assignees)</option>
                 {uniqueAssignees.map((assignee) => (
                   <option key={assignee} value={assignee}>
                     {assignee}

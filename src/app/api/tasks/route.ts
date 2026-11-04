@@ -29,10 +29,24 @@ export async function GET(req: NextRequest) {
         clickupTasks = clickupData.tasks
           .filter((t) => {
             if (!clientParam || clientParam === 'all') return true;
-            return (
-              t.client.toLowerCase().includes(clientParam.toLowerCase()) ||
-              clientParam.toLowerCase().includes(t.client.toLowerCase())
-            );
+            const param = clientParam.toLowerCase();
+            const clientName = t.client.toLowerCase();
+            const listName = t.listName.toLowerCase();
+
+            if (clientName.includes(param) || param.includes(clientName) || listName.includes(param)) {
+              return true;
+            }
+
+            // Keyword aliases
+            if (param.includes('little treasures') && (clientName.includes('little') || listName.includes('little'))) return true;
+            if (param.includes('spectrum') && (clientName.includes('spectrum') || t.name.toLowerCase().includes('spectrum') || t.name.toLowerCase().includes('wrts'))) return true;
+            if (param.includes('studio nets') && (clientName.includes('nets') || t.name.toLowerCase().includes('nets'))) return true;
+            if (param.includes('invogue') && (clientName.includes('invogue') || t.name.toLowerCase().includes('invogue'))) return true;
+            if (param.includes('ofosu') && (clientName.includes('ofosu') || t.name.toLowerCase().includes('ofosu'))) return true;
+            if (param.includes('thrive') && (clientName.includes('thrive') || t.name.toLowerCase().includes('thrive'))) return true;
+            if (param.includes('internal') && (clientName.includes('internal') || listName.includes('grace in motion'))) return true;
+
+            return false;
           })
           .map((t) => {
             // Map ClickUp status to GIM pipeline
