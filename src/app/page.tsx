@@ -692,7 +692,8 @@ export default function GimDashboard() {
   // Filter clients based on user scope
   const visibleClients = clientsData.filter((client) => {
     if (currentUser.clientScope === "all") return true;
-    return client.name === currentUser.clientScope;
+    const allowed = currentUser.clientScope.split(",").map((s) => s.trim().toLowerCase());
+    return allowed.some((s) => client.name.toLowerCase().includes(s) || s.includes(client.name.toLowerCase()));
   });
 
   // Critical delivery checkpoints

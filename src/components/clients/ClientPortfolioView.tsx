@@ -230,7 +230,9 @@ export function ClientPortfolioView({
   // Filter clients based on logged-in member's access scope
   const accessibleClients = CLIENT_PORTFOLIO.filter((c) => {
     if (clientScope && clientScope !== "all") {
-      const allowed = Array.isArray(clientScope) ? clientScope : [clientScope];
+      const allowed = Array.isArray(clientScope)
+        ? clientScope
+        : clientScope.split(",").map((s) => s.trim());
       return allowed.some(
         (scope) =>
           c.name.toLowerCase().includes(scope.toLowerCase()) ||
@@ -545,9 +547,33 @@ export function ClientPortfolioView({
               </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
+              {/* Quick My Tasks Toggle Pill */}
+              <button
+                type="button"
+                onClick={() => {
+                  const myVal = currentUserNickname || currentUserName;
+                  if (boardAssigneeFilter.toLowerCase() === myVal.toLowerCase()) {
+                    setBoardAssigneeFilter("All");
+                  } else {
+                    setBoardAssigneeFilter(myVal);
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold transition-all border ${
+                  boardAssigneeFilter !== "All" &&
+                  (boardAssigneeFilter.toLowerCase() === (currentUserNickname || "").toLowerCase() ||
+                    boardAssigneeFilter.toLowerCase() === (currentUserName || "").toLowerCase())
+                    ? "bg-[#466B53] text-white border-[#466B53] shadow-xs"
+                    : "bg-[#FBF6F3] text-[#3D5249] border-[#E8E2DD] hover:border-[#466B53]/50"
+                }`}
+                title="View deliverables assigned to you"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>My Deliverables</span>
+              </button>
+
               {/* Assignee Filter */}
               <div className="flex items-center gap-1.5 bg-[#FBF6F3] border border-[#E8E2DD] px-2.5 py-1 rounded-xl text-xs">
-                <User className="w-3.5 h-3.5 text-[#65746C]" />
+                <Filter className="w-3.5 h-3.5 text-[#65746C]" />
                 <select
                   value={boardAssigneeFilter}
                   onChange={(e) => setBoardAssigneeFilter(e.target.value)}
@@ -633,7 +659,11 @@ export function ClientPortfolioView({
               .map((col) => {
               const colTasks = tasks
                 .filter((t) => {
-                  if (boardAssigneeFilter !== "All" && (t.assignee_name || "Unassigned") !== boardAssigneeFilter) return false;
+                  if (boardAssigneeFilter !== "All") {
+                    const target = boardAssigneeFilter.toLowerCase();
+                    const aName = (t.assignee_name || "Unassigned").toLowerCase();
+                    if (aName !== target && !aName.includes(target) && !target.includes(aName)) return false;
+                  }
                   if (boardPriorityFilter !== "All" && t.priority !== boardPriorityFilter) return false;
                   return true;
                 })

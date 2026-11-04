@@ -58,6 +58,7 @@ export function TaskBacklogView({
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+  const [myTasksOnly, setMyTasksOnly] = useState(false);
 
   // Sync client filter with prop selectedClientId
   useEffect(() => {
@@ -187,9 +188,40 @@ export function TaskBacklogView({
     return Array.from(map.values()).sort();
   }, [tasks, teamMembersList]);
 
+  // Count tasks assigned to current user
+  const myTasksCount = useMemo(() => {
+    const nick = (currentUserNickname || "").toLowerCase();
+    const name = (currentUserName || "").toLowerCase();
+    if (!nick && !name) return 0;
+    return tasks.filter((task) => {
+      return task.assignees.some((a) => {
+        const u = (a.username || "").toLowerCase();
+        const em = (a.email || "").toLowerCase();
+        return (
+          (nick && (u.includes(nick) || nick.includes(u) || em.includes(nick))) ||
+          (name && (u.includes(name) || name.includes(u) || em.includes(name)))
+        );
+      });
+    }).length;
+  }, [tasks, currentUserNickname, currentUserName]);
+
   // Filter tasks
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
+      // My Tasks toggle
+      if (myTasksOnly) {
+        const nick = (currentUserNickname || "").toLowerCase();
+        const name = (currentUserName || "").toLowerCase();
+        const isAssigned = task.assignees.some((a) => {
+          const u = (a.username || "").toLowerCase();
+          const em = (a.email || "").toLowerCase();
+          return (
+            (nick && (u.includes(nick) || nick.includes(u) || em.includes(nick))) ||
+            (name && (u.includes(name) || name.includes(u) || em.includes(name)))
+          );
+        });
+        if (!isAssigned) return false;
+      }
       // Scoped client check for non-admin users
       if (clientScope && clientScope !== "all") {
         const allowed = Array.isArray(clientScope)
@@ -269,10 +301,12 @@ export function TaskBacklogView({
 
       // Assignee filter
       if (assigneeFilter !== "all") {
-        const hasAssignee = task.assignees.some((a) =>
-          a.username.toLowerCase() === assigneeFilter.toLowerCase() ||
-          a.username.toLowerCase().includes(assigneeFilter.toLowerCase())
-        );
+        const af = assigneeFilter.toLowerCase();
+        const hasAssignee = task.assignees.some((a) => {
+          const u = (a.username || "").toLowerCase();
+          const em = (a.email || "").toLowerCase();
+          return u === af || u.includes(af) || af.includes(u) || (em && em.includes(af));
+        });
         if (!hasAssignee) return false;
       }
 
@@ -295,7 +329,7 @@ export function TaskBacklogView({
       const timeB = b.dueDate ? Number(b.dueDate) : 0;
       return timeB - timeA; // Latest to oldest
     });
-  }, [tasks, clientFilter, statusFilter, assigneeFilter, search, clientScope, selectedClientId]);
+  }, [tasks, clientFilter, statusFilter, assigneeFilter, search, clientScope, selectedClientId, myTasksOnly, currentUserNickname, currentUserName]);
 
   // Paginated tasks
   const totalPages = Math.ceil(filteredTasks.length / pageSize) || 1;
@@ -503,6 +537,28 @@ export function TaskBacklogView({
 
             {/* Filter Dropdowns */}
             <div className="flex flex-wrap items-center gap-2">
+              {/* Quick "My Tasks" Toggle Pill */}
+              <button
+                type="button"
+                onClick={() => setMyTasksOnly(!myTasksOnly)}
+                className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all border ${
+                  myTasksOnly
+                    ? "bg-[#466B53] text-white border-[#466B53] shadow-xs ring-2 ring-[#466B53]/20"
+                    : "bg-[#FBF6F3] text-[#3D5249] border-[#E8E2DD] hover:border-[#466B53]/50"
+                }`}
+                title="Filter tasks assigned to you"
+              >
+                <User className={`w-3.5 h-3.5 ${myTasksOnly ? "text-white" : "text-[#466B53]"}`} />
+                <span>My Tasks</span>
+                <span
+                  className={`px-1.5 py-0.2 text-[10px] rounded-full font-bold ${
+                    myTasksOnly ? "bg-white text-[#466B53]" : "bg-[#466B53]/15 text-[#3D5249]"
+                  }`}
+                >
+                  {myTasksCount}
+                </span>
+              </button>
+
               {/* Client Workspace Filter */}
               <select
                 value={clientFilter}
@@ -534,7 +590,7 @@ export function TaskBacklogView({
               </select>
 
               {/* Reset Filters */}
-              {(search || statusFilter !== "all" || clientFilter !== "all" || assigneeFilter !== "all") && (
+              {(search || statusFilter !== "all" || clientFilter !== "all" || assigneeFilter !== "all" || myTasksOnly) && (
                 <Button
                   variant="secondary"
                   size="sm"
@@ -543,6 +599,7 @@ export function TaskBacklogView({
                     setStatusFilter("all");
                     setClientFilter("all");
                     setAssigneeFilter("all");
+                    setMyTasksOnly(false);
                   }}
                   className="text-xs text-[#65746C]"
                 >
