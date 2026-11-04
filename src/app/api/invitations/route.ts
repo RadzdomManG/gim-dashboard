@@ -70,6 +70,55 @@ export async function POST(req: NextRequest) {
 
     const supabase = createAdminClient();
 
+    // 0. If a password is provided by the admin, create or update the user in Supabase Auth immediately
+    if (password && password.trim()) {
+      try {
+        const cleanPassword = password.trim();
+        const { data: userList } = await supabase.auth.admin.listUsers();
+        const existingUser = userList?.users?.find(
+          (u) =>
+            u.email?.toLowerCase() === trimmedEmail.toLowerCase() ||
+            u.user_metadata?.username?.toLowerCase() === cleanUsername
+        );
+
+        if (existingUser) {
+          await supabase.auth.admin.updateUserById(existingUser.id, {
+            password: cleanPassword,
+            email_confirm: true,
+            user_metadata: {
+              ...existingUser.user_metadata,
+              username: cleanUsername,
+              full_name: displayName,
+              nickname: displayName.split(' ')[0],
+              role: assignedRole,
+              title: body.title || assignedRole,
+              assigned_clients: clientList,
+              clientScope: assignedRole === 'admin' ? 'all' : (clientList[0] || 'Little Treasures Company'),
+              isCoreAdmin: assignedRole === 'admin',
+            },
+          });
+        } else {
+          await supabase.auth.admin.createUser({
+            email: trimmedEmail,
+            password: cleanPassword,
+            email_confirm: true,
+            user_metadata: {
+              username: cleanUsername,
+              full_name: displayName,
+              nickname: displayName.split(' ')[0],
+              role: assignedRole,
+              title: body.title || assignedRole,
+              assigned_clients: clientList,
+              clientScope: assignedRole === 'admin' ? 'all' : (clientList[0] || 'Little Treasures Company'),
+              isCoreAdmin: assignedRole === 'admin',
+            },
+          });
+        }
+      } catch (authErr) {
+        console.error('Direct user creation in Supabase Auth error:', authErr);
+      }
+    }
+
     // 1. Generate invitation action link from Supabase Auth Admin
     let actionLink: string | null = null;
     let authError: string | null = null;

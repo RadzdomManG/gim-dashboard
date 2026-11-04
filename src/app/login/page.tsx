@@ -139,14 +139,14 @@ export default function LoginPage() {
     }
   }, [router]);
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     const cleanUsername = username.trim().toLowerCase();
 
-    // 1. Check built-in verified accounts
+    // 1. Check built-in verified accounts (instant local verification)
     const account = VERIFIED_ACCOUNTS[cleanUsername];
     if (account && account.password === password) {
       if (typeof window !== "undefined") {
@@ -155,11 +155,11 @@ export default function LoginPage() {
       setTimeout(() => {
         setLoading(false);
         router.push("/");
-      }, 500);
+      }, 400);
       return;
     }
 
-    // 2. Check dynamic invited accounts stored in localStorage (gim_custom_logins and gim_invited_users)
+    // 2. Check dynamic accounts in local storage (same browser fast lookup)
     if (typeof window !== "undefined") {
       try {
         const storedCustomLogins = localStorage.getItem("gim_custom_logins");
@@ -171,7 +171,7 @@ export default function LoginPage() {
             setTimeout(() => {
               setLoading(false);
               router.push("/");
-            }, 500);
+            }, 400);
             return;
           }
         }
@@ -201,7 +201,7 @@ export default function LoginPage() {
             setTimeout(() => {
               setLoading(false);
               router.push("/");
-            }, 500);
+            }, 400);
             return;
           }
         }
@@ -210,7 +210,27 @@ export default function LoginPage() {
       }
     }
 
-    // Authentication failure
+    // 3. Query Cloud Database (/api/auth/login) for cross-browser, multi-device authentication
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: cleanUsername, password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.user) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("gim_auth_user", JSON.stringify(data.user));
+        }
+        setLoading(false);
+        router.push("/");
+        return;
+      }
+    } catch (err) {
+      console.error("Cloud authentication lookup failed:", err);
+    }
+
+    // 4. Authentication failure
     setTimeout(() => {
       setLoading(false);
       setError("Invalid username or password. Only verified GIM personnel may access Mission Control.");
