@@ -1150,9 +1150,13 @@ export default function GimDashboard() {
                 >
                   <option value="all">All Clients (Unified)</option>
                   <option value="little-treasures">Little Treasures (AU)</option>
+                  <option value="we-rock-the-spectrum">We Rock the Spectrum (US)</option>
+                  <option value="juvibolt-cybertech">Juvibolt Cybertech (US)</option>
+                  <option value="risewise">Risewise (Global)</option>
+                  <option value="noirlab">NoirLab (Global)</option>
                   <option value="studio-nets">Studio Nets (AU)</option>
                   <option value="invogue-cleans">InVogue Cleans (AU)</option>
-                  <option value="aaron-ofosu">Aaron Ofosu Bootcamp</option>
+                  <option value="gim-internal">Grace In Motion (Internal)</option>
                   <option value="tch2thrive">Tch2Thrive (US)</option>
                 </select>
               </div>
@@ -2790,12 +2794,20 @@ export default function GimDashboard() {
         defaultClient={
           selectedPortfolioClientId === "little-treasures"
             ? "Little Treasures Company"
+            : selectedPortfolioClientId === "we-rock-the-spectrum"
+            ? "We Rock the Spectrum (WRTS)"
+            : selectedPortfolioClientId === "juvibolt-cybertech" || selectedPortfolioClientId === "aaron-ofosu"
+            ? "Juvibolt Cybertech"
+            : selectedPortfolioClientId === "risewise"
+            ? "Risewise"
+            : selectedPortfolioClientId === "noirlab"
+            ? "NoirLab"
             : selectedPortfolioClientId === "studio-nets"
             ? "Studio Nets"
             : selectedPortfolioClientId === "invogue-cleans"
             ? "InVogue Cleans"
-            : selectedPortfolioClientId === "aaron-ofosu"
-            ? "Aaron Ofosu Bootcamp"
+            : selectedPortfolioClientId === "gim-internal"
+            ? "Grace In Motion (Internal)"
             : selectedPortfolioClientId === "tch2thrive"
             ? "Tch2Thrive"
             : "Little Treasures Company"

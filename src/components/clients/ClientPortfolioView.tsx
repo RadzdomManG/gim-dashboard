@@ -808,7 +808,7 @@ export function ClientPortfolioView({
                       colTasks.map((task) => {
                         const dueDateObj = task.due_date ? new Date(task.due_date) : null;
                         const isClosed = task.status.toLowerCase() === "closed";
-                        const isOverdue = !isClosed && dueDateObj && dueDateObj.getTime() < new Date(2026, 10, 3).getTime();
+                        const isOverdue = !isClosed && dueDateObj && dueDateObj.getTime() < Date.now();
 
                         return (
                           <div
