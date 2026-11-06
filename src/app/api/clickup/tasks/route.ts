@@ -104,11 +104,14 @@ export async function GET(request: NextRequest) {
     if (clientFilter && clientFilter !== 'all') {
       const clientKeyMap: Record<string, string> = {
         'little-treasures': 'little treasures',
-        'we-rock-the-spectrum': 'spectrum',
-        'wrts': 'spectrum',
+        'we-rock-the-spectrum': 'we rock the spectrum',
+        'wrts': 'we rock the spectrum',
+        'juvibolt-cybertech': 'juvibolt',
+        'aaron-ofosu': 'juvibolt',
+        'risewise': 'risewise',
+        'noirlab': 'noirlab',
         'studio-nets': 'studio nets',
-        'invogue-cleans': 'invogue',
-        'aaron-ofosu': 'aaron ofosu',
+        'invogue-cleans': 'invogue cleans',
         'tch2thrive': 'tch2thrive',
         'gim-internal': 'grace in motion',
       };

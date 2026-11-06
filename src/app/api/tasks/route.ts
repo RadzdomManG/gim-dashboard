@@ -42,17 +42,20 @@ export async function GET(req: NextRequest) {
             const taskName = t.name.toLowerCase();
 
             return allowedClientList.some((param) => {
+              if (clientName === param || listName === param) return true;
               if (clientName.includes(param) || param.includes(clientName) || listName.includes(param)) {
                 return true;
               }
 
-              // Keyword aliases
-              if (param.includes('little treasures') && (clientName.includes('little') || listName.includes('little'))) return true;
-              if (param.includes('spectrum') && (clientName.includes('spectrum') || taskName.includes('spectrum') || taskName.includes('wrts'))) return true;
-              if (param.includes('studio nets') && (clientName.includes('nets') || taskName.includes('nets'))) return true;
-              if (param.includes('invogue') && (clientName.includes('invogue') || taskName.includes('invogue'))) return true;
-              if (param.includes('ofosu') && (clientName.includes('ofosu') || taskName.includes('ofosu'))) return true;
-              if (param.includes('thrive') && (clientName.includes('thrive') || taskName.includes('thrive'))) return true;
+              // Exact Client Aliases
+              if (param.includes('little treasures') && (clientName.includes('little treasures') || listName.includes('little treasures'))) return true;
+              if (param.includes('spectrum') && (clientName.includes('spectrum') || listName.includes('spectrum'))) return true;
+              if (param.includes('juvibolt') && (clientName.includes('juvibolt') || listName.includes('juvibolt'))) return true;
+              if (param.includes('ofosu') && (clientName.includes('juvibolt') || listName.includes('juvibolt') || clientName.includes('ofosu'))) return true;
+              if (param.includes('risewise') && (clientName.includes('risewise') || listName.includes('risewise'))) return true;
+              if (param.includes('noirlab') && (clientName.includes('noirlab') || listName.includes('noirlab'))) return true;
+              if (param.includes('studio nets') && (clientName.includes('studio nets') || listName.includes('studio nets'))) return true;
+              if (param.includes('invogue') && (clientName.includes('invogue') || listName.includes('invogue'))) return true;
               if (param.includes('internal') && (clientName.includes('internal') || listName.includes('grace in motion'))) return true;
 
               return false;

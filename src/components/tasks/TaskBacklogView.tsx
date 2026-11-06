@@ -253,31 +253,35 @@ export function TaskBacklogView({
       if (selectedClientId && selectedClientId !== "all") {
         const clientKeyMap: Record<string, string> = {
           "little-treasures": "little treasures",
-          "we-rock-the-spectrum": "spectrum",
+          "we-rock-the-spectrum": "we rock the spectrum",
+          "juvibolt-cybertech": "juvibolt",
+          "aaron-ofosu": "juvibolt",
+          "risewise": "risewise",
+          "noirlab": "noirlab",
           "studio-nets": "studio nets",
-          "invogue-cleans": "invogue",
-          "aaron-ofosu": "aaron ofosu",
+          "invogue-cleans": "invogue cleans",
           "tch2thrive": "tch2thrive",
           "gim-internal": "grace in motion",
         };
-        const targetPattern = clientKeyMap[selectedClientId];
-        if (targetPattern) {
-          const matches =
-            task.client.toLowerCase().includes(targetPattern) ||
-            task.listName.toLowerCase().includes(targetPattern);
-          if (!matches) return false;
-        }
+        const targetPattern = clientKeyMap[selectedClientId] || selectedClientId.toLowerCase();
+        const matches =
+          task.client.toLowerCase().includes(targetPattern) ||
+          task.listName.toLowerCase().includes(targetPattern);
+        if (!matches) return false;
       }
 
       // Client filter
       if (clientFilter !== "all") {
         const clientKeyMap: Record<string, string> = {
           "little-treasures": "little treasures",
-          "we-rock-the-spectrum": "spectrum",
-          "wrts": "spectrum",
+          "we-rock-the-spectrum": "we rock the spectrum",
+          "wrts": "we rock the spectrum",
+          "juvibolt-cybertech": "juvibolt",
+          "aaron-ofosu": "juvibolt",
+          "risewise": "risewise",
+          "noirlab": "noirlab",
           "studio-nets": "studio nets",
-          "invogue-cleans": "invogue",
-          "aaron-ofosu": "aaron ofosu",
+          "invogue-cleans": "invogue cleans",
           "tch2thrive": "tch2thrive",
           "gim-internal": "grace in motion",
         };
@@ -568,10 +572,11 @@ export function TaskBacklogView({
                 <option value="all">All Clients ({tasks.length} ClickUp Tasks)</option>
                 <option value="little-treasures">Little Treasures Company</option>
                 <option value="we-rock-the-spectrum">We Rock the Spectrum (WRTS)</option>
+                <option value="juvibolt-cybertech">Juvibolt Cybertech</option>
+                <option value="risewise">Risewise</option>
+                <option value="noirlab">NoirLab</option>
                 <option value="studio-nets">Studio Nets</option>
                 <option value="invogue-cleans">InVogue Cleans</option>
-                <option value="aaron-ofosu">Aaron Ofosu Bootcamp</option>
-                <option value="tch2thrive">Tch2Thrive</option>
                 <option value="gim-internal">Grace In Motion (Internal)</option>
               </select>
 

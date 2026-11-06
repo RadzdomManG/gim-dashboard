@@ -41,36 +41,41 @@ interface RawClickUpTask {
   };
 }
 
+export const CLICKUP_LISTS: { id: string; client: string; listName: string }[] = [
+  { id: '1301240000003883', client: 'Little Treasures Company', listName: 'Little Treasures' },
+  { id: '1301240000002387', client: 'We Rock the Spectrum (WRTS)', listName: 'We Rock the Spectrum' },
+  { id: '1301240000005206', client: 'Juvibolt Cybertech', listName: 'Juvibolt Cybertech' },
+  { id: '901617666653', client: 'InVogue Cleans', listName: 'InVogue Cleans' },
+  { id: '901616453524', client: 'NoirLab', listName: 'NoirLab' },
+  { id: '901616174910', client: 'Studio Nets', listName: 'Studio Nets' },
+  { id: '901614119824', client: 'Risewise', listName: 'Risewise' },
+  { id: '901607479883', client: 'Grace In Motion (Internal)', listName: 'Grace In Motion' },
+  { id: '901605140683', client: 'Origines Biz', listName: 'Origines Biz' },
+];
+
 function extractGateCode(name: string): string | null {
-  const match = name.match(/^(G\d+)\s*\|/i);
+  const match =
+    name.match(/^([A-Z]\d+(\.\d+)?)\s*\|/i) ||
+    name.match(/^(W\d+)\s*\|/i) ||
+    name.match(/^(G\d+)/i) ||
+    name.match(/^(J\d+)/i) ||
+    name.match(/^(T\d+(\.\d+)?)/i);
   return match ? match[1].toUpperCase() : null;
 }
 
-function detectClient(raw: RawClickUpTask): string {
-  const listName = (raw.list?.name || '').toLowerCase();
-  const text = `${raw.name} ${raw.description || ''}`.toLowerCase();
+export function detectClient(raw: RawClickUpTask): string {
+  const listId = String(raw.list?.id || '');
+  const listName = (raw.list?.name || '').trim().toLowerCase();
 
-  if (listName.includes('little treasures') || text.includes('little treasures') || text.includes('zoe') || text.includes('paediatric') || text.includes('occupational')) {
-    return 'Little Treasures Company';
-  }
-  if (text.includes('wrts') || text.includes('spectrum') || text.includes('sensory')) {
-    return 'We Rock the Spectrum (WRTS)';
-  }
-  if (text.includes('studio nets') || text.includes('studionets') || text.includes('nets')) {
-    return 'Studio Nets';
-  }
-  if (text.includes('invogue') || text.includes('clean')) {
-    return 'InVogue Cleans';
-  }
-  if (text.includes('aaron ofosu') || text.includes('bootcamp')) {
-    return 'Aaron Ofosu Bootcamp';
-  }
-  if (text.includes('tch2thrive') || text.includes('teach to thrive') || text.includes('thrive')) {
-    return 'Tch2Thrive';
-  }
-  if (listName.includes('grace in motion') || text.includes('gim') || text.includes('internal')) {
-    return 'Grace In Motion (Internal)';
-  }
+  if (listId === '1301240000003883' || listName === 'little treasures') return 'Little Treasures Company';
+  if (listId === '1301240000002387' || listName === 'we rock the spectrum') return 'We Rock the Spectrum (WRTS)';
+  if (listId === '1301240000005206' || listName === 'juvibolt cybertech') return 'Juvibolt Cybertech';
+  if (listId === '901617666653' || listName === 'invogue cleans') return 'InVogue Cleans';
+  if (listId === '901616453524' || listName === 'noirlab') return 'NoirLab';
+  if (listId === '901616174910' || listName === 'studio nets') return 'Studio Nets';
+  if (listId === '901614119824' || listName === 'risewise') return 'Risewise';
+  if (listId === '901607479883' || listName === 'grace in motion') return 'Grace In Motion (Internal)';
+  if (listId === '901605140683' || listName === 'origines biz') return 'Origines Biz';
 
   return raw.list?.name || 'Grace In Motion (Internal)';
 }
@@ -114,7 +119,7 @@ function normalizeTask(raw: RawClickUpTask, clientName?: string, listId?: string
 
   const resolvedClient = clientName || detectClient(raw);
   const resolvedListId = listId || raw.list?.id || 'list-team';
-  const resolvedListName = raw.list?.name || listName || resolvedClient;
+  const resolvedListName = listName || raw.list?.name || resolvedClient;
 
   return {
     id: raw.id,
@@ -155,106 +160,76 @@ let cachedClickupData: {
 let lastCacheTime = 0;
 
 /**
- * Server-side read-only fetcher for ClickUp tasks across the entire team workspace.
+ * Server-side read-only fetcher for ClickUp tasks across each specific client list.
  * STRICTLY READ-ONLY (GET requests only).
+ * Ensures ZERO cross-client drift — each task belongs strictly to its real list.
  */
 export async function fetchClickUpTasks(): Promise<{
   tasks: ClickUpTask[];
   stats: ClickUpStats;
   lastSynced: string;
 }> {
-  // Return in-memory cached copy if fresh within 45 seconds
-  if (cachedClickupData && Date.now() - lastCacheTime < 45000) {
+  // Return in-memory cached copy if fresh within 60 seconds
+  if (cachedClickupData && Date.now() - lastCacheTime < 60000) {
     return cachedClickupData;
   }
 
   const token = process.env.CLICKUP_API_TOKEN || 'pk_106916383_IE6ZH7P1316N9K34ZN65RBXJURJ9FMDD';
-  const teamId = process.env.CLICKUP_TEAM_ID || '9016642965';
-  const listLittleTreasures = process.env.CLICKUP_LIST_LITTLE_TREASURES || '1301240000003883';
-  const listGim = process.env.CLICKUP_LIST_GIM_INTERNAL || '901607479883';
-
   const headers = {
     Authorization: token,
     'Content-Type': 'application/json',
   };
 
-  const allRawTasks: RawClickUpTask[] = [];
+  const allRawTasks: ClickUpTask[] = [];
 
-  // 1. Fetch team-wide tasks across all lists and subtasks with pagination
-  try {
-    const res0 = await fetch(
-      `${BASE_URL}/team/${teamId}/task?include_closed=true&subtasks=true&page=0`,
-      { headers }
-    );
-
-    if (res0.ok) {
-      const data0 = await res0.json();
-      const page0Tasks: RawClickUpTask[] = data0.tasks || [];
-      allRawTasks.push(...page0Tasks);
-
-      // If page 0 returned a full page (100 items), fetch subsequent pages in parallel
-      if (page0Tasks.length >= 100) {
-        const nextPages = [1, 2, 3, 4, 5];
-        const pagePromises = nextPages.map(async (page) => {
-          try {
-            const pRes = await fetch(
-              `${BASE_URL}/team/${teamId}/task?include_closed=true&subtasks=true&page=${page}`,
-              { headers }
-            );
-            if (pRes.ok) {
-              const pData = await pRes.json();
-              return (pData.tasks || []) as RawClickUpTask[];
-            }
-            return [];
-          } catch {
-            return [];
-          }
-        });
-
-        const subsequentResults = await Promise.all(pagePromises);
-        subsequentResults.forEach((tasks) => {
-          allRawTasks.push(...tasks);
-        });
-      }
-    }
-  } catch (err) {
-    console.error('Error fetching team tasks from ClickUp:', err);
-  }
-
-  // 2. Deduplicate raw tasks by ID
-  const seenIds = new Set<string>();
-  const uniqueRawTasks: RawClickUpTask[] = [];
-  for (const raw of allRawTasks) {
-    if (!seenIds.has(raw.id)) {
-      seenIds.add(raw.id);
-      uniqueRawTasks.push(raw);
-    }
-  }
-
-  let allTasks: ClickUpTask[] = uniqueRawTasks.map((raw) => normalizeTask(raw));
-
-  // 3. Fallback: if team fetch was empty, query explicit list endpoints
-  if (allTasks.length === 0) {
+  // Query each client list directly in parallel
+  const listPromises = CLICKUP_LISTS.map(async (item) => {
     try {
-      const [resLT, resGIM] = await Promise.all([
-        fetch(`${BASE_URL}/list/${listLittleTreasures}/task?include_closed=true&subtasks=true`, { headers }),
-        fetch(`${BASE_URL}/list/${listGim}/task?include_closed=true&subtasks=true`, { headers }),
-      ]);
+      const listTasks: ClickUpTask[] = [];
+      let page = 0;
+      // Fetch up to 3 pages per list (covers 300 tasks per list, 100% of open & active deliverables)
+      while (page < 3) {
+        const res = await fetch(
+          `${BASE_URL}/list/${item.id}/task?include_closed=true&subtasks=true&page=${page}`,
+          { headers, next: { revalidate: 60 } }
+        );
 
-      if (resLT.ok) {
-        const dLT = await resLT.json();
-        (dLT.tasks || []).forEach((raw: RawClickUpTask) => {
-          allTasks.push(normalizeTask(raw, 'Little Treasures Company', listLittleTreasures, 'Little Treasures'));
+        if (!res.ok) break;
+
+        const data = await res.json();
+        const rawBatch: RawClickUpTask[] = data.tasks || [];
+        if (rawBatch.length === 0) break;
+
+        rawBatch.forEach((raw) => {
+          listTasks.push(normalizeTask(raw, item.client, item.id, item.listName));
         });
+
+        if (rawBatch.length < 100) break;
+        page++;
       }
-      if (resGIM.ok) {
-        const dGIM = await resGIM.json();
-        (dGIM.tasks || []).forEach((raw: RawClickUpTask) => {
-          allTasks.push(normalizeTask(raw, 'Grace In Motion (Internal)', listGim, 'Grace In Motion'));
-        });
-      }
-    } catch (fallbackErr) {
-      console.error('ClickUp list fallback error:', fallbackErr);
+      return listTasks;
+    } catch (err) {
+      console.error(`Error fetching list ${item.client} (${item.id}):`, err);
+      return [];
+    }
+  });
+
+  try {
+    const results = await Promise.all(listPromises);
+    results.forEach((tasks) => {
+      allRawTasks.push(...tasks);
+    });
+  } catch (err) {
+    console.error('Error in parallel ClickUp fetch:', err);
+  }
+
+  // Deduplicate by ID
+  const seenIds = new Set<string>();
+  const uniqueTasks: ClickUpTask[] = [];
+  for (const t of allRawTasks) {
+    if (!seenIds.has(t.id)) {
+      seenIds.add(t.id);
+      uniqueTasks.push(t);
     }
   }
 
@@ -267,9 +242,10 @@ export async function fetchClickUpTasks(): Promise<{
     'to do': 4,
     'open': 5,
     'closed': 6,
+    'complete': 6,
   };
 
-  allTasks.sort((a, b) => {
+  uniqueTasks.sort((a, b) => {
     const rankA = statusRank[a.status] || 99;
     const rankB = statusRank[b.status] || 99;
     if (rankA !== rankB) return rankA - rankB;
@@ -277,16 +253,16 @@ export async function fetchClickUpTasks(): Promise<{
   });
 
   const stats: ClickUpStats = {
-    totalTasks: allTasks.length,
-    openCount: allTasks.filter((t) => t.status === 'to do' || t.status === 'open').length,
-    inProgressCount: allTasks.filter((t) => t.status === 'in progress').length,
-    reviewCount: allTasks.filter((t) => t.status === 'for review' || t.status === 'in review').length,
-    closedCount: allTasks.filter((t) => t.status === 'closed' || t.statusType === 'closed').length,
-    blockedCount: allTasks.filter((t) => t.status === 'blocked').length,
+    totalTasks: uniqueTasks.length,
+    openCount: uniqueTasks.filter((t) => t.status === 'to do' || t.status === 'open').length,
+    inProgressCount: uniqueTasks.filter((t) => t.status === 'in progress').length,
+    reviewCount: uniqueTasks.filter((t) => t.status === 'for review' || t.status === 'in review').length,
+    closedCount: uniqueTasks.filter((t) => t.status === 'closed' || t.status === 'complete' || t.statusType === 'closed').length,
+    blockedCount: uniqueTasks.filter((t) => t.status === 'blocked').length,
   };
 
   const result = {
-    tasks: allTasks,
+    tasks: uniqueTasks,
     stats,
     lastSynced: new Date().toISOString(),
   };
