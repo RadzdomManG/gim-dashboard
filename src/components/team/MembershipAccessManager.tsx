@@ -450,16 +450,30 @@ export function MembershipAccessManager({
                       {
                         key: "zoe",
                         name: "Zoe Horner",
-                        email: "zoe@littletreasurescompany.com.au",
+                        email: "zoe@littletreasures.com.au",
                         client: "Little Treasures Company",
                         role: "Client Principal / Founder",
                       },
                       {
-                        key: "studio_lead",
-                        name: "Samantha Lee",
-                        email: "samantha@studionets.com",
+                        key: "aaron",
+                        name: "Aaron Ofosu",
+                        email: "aaron@juviboltcybertech.com",
+                        client: "Juvibolt Cybertech",
+                        role: "Founder / Client Lead",
+                      },
+                      {
+                        key: "nathan",
+                        name: "Nathan Blake",
+                        email: "nathan@studionets.com.au",
                         client: "Studio Nets",
-                        role: "Creative Director",
+                        role: "Creative Director / Founder",
+                      },
+                      {
+                        key: "matthew",
+                        name: "Matthew Robbins",
+                        email: "matthew@invoguecleans.com",
+                        client: "InVogue Cleans",
+                        role: "Commercial Director / Founder",
                       },
                     ].map((account) => {
                       const limits = clientPortalLimits[account.key] || { deliverablesOnly: false, isRevoked: false };
@@ -702,10 +716,17 @@ export function MembershipAccessManager({
                   <tbody className="divide-y divide-[#E8E2DD]/70">
                     {[
                       { key: "erwin", name: "Erwin Manaog", nickname: "Erwin", email: "erwin@graceinmotion.agency", role: "Project Owner", scope: "Little Treasures & Studio Nets" },
-                      { key: "smm", name: "Camille Bautista", nickname: "Camille", email: "camille.smm@graceinmotion.agency", role: "SMM Specialist", scope: "Little Treasures" },
-                      { key: "bj", name: "BJ Ricafrente", nickname: "BJ", email: "bj@graceinmotion.agency", role: "Operations Specialist", scope: "Little Treasures & Aaron Ofosu" },
-                      { key: "joy", name: "Joy Fabular", nickname: "Joy", email: "joy@graceinmotion.agency", role: "Operations Assistant", scope: "InVogue Cleans & Internal GIM" },
-                      { key: "jedy", name: "Jedy Caillo", nickname: "Jedy", email: "jedy@graceinmotion.agency", role: "Creative Assistant", scope: "Studio Nets" },
+                      { key: "smm", name: "Camille Bautista", nickname: "Camille", email: "camille.smm@graceinmotion.agency", role: "Social Media Specialist", scope: "Little Treasures Company" },
+                      { key: "bj", name: "BJ Ricafrente", nickname: "BJ", email: "bj@graceinmotion.agency", role: "Operations Specialist", scope: "We Rock the Spectrum & GIM Internal" },
+                      { key: "jerold", name: "Jerold Recaplaza", nickname: "Jerold", email: "jerold@graceinmotion.agency", role: "Operations Specialist", scope: "Risewise" },
+                      { key: "jane", name: "Jane Caillio", nickname: "Jane", email: "jane@graceinmotion.agency", role: "Project Lead", scope: "NoirLab" },
+                      { key: "jedy", name: "Jedy Caillio", nickname: "Jedy", email: "jedy@graceinmotion.agency", role: "Operations Specialist", scope: "InVogue Cleans" },
+                      { key: "ellyka", name: "Ellyka Claire Pama", nickname: "Ellyka", email: "ellyka@graceinmotion.agency", role: "Operations Assistant", scope: "InVogue Cleans & Studio Nets" },
+                      { key: "joyce", name: "Joyce Roble", nickname: "Joyce", email: "joyce@graceinmotion.agency", role: "Project Specialist", scope: "Studio Nets" },
+                      { key: "joy", name: "Joy Fabular", nickname: "Joy", email: "joy@graceinmotion.agency", role: "Operations Assistant", scope: "InVogue Cleans" },
+                      { key: "aldwin", name: "Aldwin", nickname: "Aldwin", email: "aldwin@graceinmotion.agency", role: "Operations Assistant", scope: "We Rock the Spectrum (WRTS)" },
+                      { key: "hashim", name: "Hashim Saudi", nickname: "Hashim", email: "hashim@graceinmotion.agency", role: "Tech Specialist", scope: "Studio Nets" },
+                      { key: "kimberly", name: "Kimberly Besa", nickname: "Kimberly", email: "kimberly@graceinmotion.agency", role: "Operations Assistant", scope: "Grace In Motion (Internal)" },
                     ].map((staff) => {
                       const limits = staffLimits[staff.key] || { limitGoals: false, limitFinancials: true, limitUnassignedClients: false, isSuspended: false };
                       return (

@@ -24,17 +24,27 @@ export async function GET() {
 
     const membersMap = new Map<string, any>();
 
-    // Base verified GIM leadership & specialists
+    // Base verified GIM leadership, specialists & client founders
     const baseMembers = [
-      { id: 'usr-divine', email: 'divine.origines', full_name: 'Divine Origines', nickname: 'Divine', role: 'Owner', is_core_admin: false, assigned_clients: ['All Accounts'], is_active: true, title: 'Owner & Strategy Lead', avatar_color: '#3D5249' },
+      { id: 'usr-divine', email: 'divine.origines', full_name: 'Divine Origines', nickname: 'Divine', role: 'Owner', is_core_admin: true, assigned_clients: ['All Accounts'], is_active: true, title: 'Owner & Strategy Lead', avatar_color: '#3D5249' },
       { id: 'usr-radz', email: 'rdzgllgo', full_name: 'Radzdom Gallego', nickname: 'Radz', role: 'Admin', is_core_admin: true, assigned_clients: ['All Accounts'], is_active: true, title: 'Chief Automation Architect & Tech Lead', avatar_color: '#466B53' },
-      { id: 'usr-ra', email: 'aneweraa.ai@gmail.com', full_name: 'Ma. Rose Anne (RA) Malinao', nickname: 'RA', role: 'Admin', is_core_admin: true, assigned_clients: ['All Accounts'], is_active: true, title: 'Commercial Operations & Billing Lead', avatar_color: '#518E6A' },
-      { id: 'usr-erwin', email: 'erwin@gim.com', full_name: 'Erwin Manaog', nickname: 'Erwin', role: 'Specialist', is_core_admin: false, assigned_clients: ['Little Treasures Company', 'Studio Nets'], is_active: true, title: 'Project Owner & Delivery Specialist', avatar_color: '#65746C' },
-      { id: 'usr-bj', email: 'bj@gim.com', full_name: 'BJ Ricafrente', nickname: 'BJ', role: 'Specialist', is_core_admin: false, assigned_clients: ['Little Treasures Company', 'Aaron Ofosu Bootcamp'], is_active: true, title: 'Operations Specialist', avatar_color: '#3D5249' },
+      { id: 'usr-ra', email: 'aneweraa.ai@gmail.com', full_name: 'Ma. Rose Anne (RA) Malinao', nickname: 'RA', role: 'Admin', is_core_admin: true, assigned_clients: ['All Accounts'], is_active: true, title: 'Head of Operations & Billing Lead', avatar_color: '#518E6A' },
+      { id: 'usr-erwin', email: 'erwin@gim.com', full_name: 'Erwin Manaog', nickname: 'Erwin', role: 'Specialist', is_core_admin: false, assigned_clients: ['Little Treasures Company', 'We Rock the Spectrum (WRTS)'], is_active: true, title: 'Project Owner & Delivery Specialist', avatar_color: '#65746C' },
+      { id: 'usr-bj', email: 'bj@gim.com', full_name: 'BJ Ricafrente', nickname: 'BJ', role: 'Specialist', is_core_admin: false, assigned_clients: ['We Rock the Spectrum (WRTS)', 'Grace In Motion (Internal)'], is_active: true, title: 'Operations Specialist', avatar_color: '#3D5249' },
+      { id: 'usr-jerold', email: 'jerold@gim.com', full_name: 'Jerold Recaplaza', nickname: 'Jerold', role: 'Specialist', is_core_admin: false, assigned_clients: ['Risewise'], is_active: true, title: 'Operations Specialist', avatar_color: '#466B53' },
+      { id: 'usr-jane', email: 'jane@gim.com', full_name: 'Jane Caillio', nickname: 'Jane', role: 'Specialist', is_core_admin: false, assigned_clients: ['NoirLab'], is_active: true, title: 'Project Lead', avatar_color: '#518E6A' },
+      { id: 'usr-jedy', email: 'jedy@gim.com', full_name: 'Jedy Caillio', nickname: 'Jedy', role: 'Specialist', is_core_admin: false, assigned_clients: ['InVogue Cleans'], is_active: true, title: 'Operations Specialist', avatar_color: '#466B53' },
+      { id: 'usr-ellyka', email: 'ellyka@gim.com', full_name: 'Ellyka Claire Pama', nickname: 'Ellyka', role: 'Specialist', is_core_admin: false, assigned_clients: ['InVogue Cleans', 'Studio Nets'], is_active: true, title: 'Operations Assistant', avatar_color: '#65746C' },
+      { id: 'usr-joyce', email: 'joyce@gim.com', full_name: 'Joyce Roble', nickname: 'Joyce', role: 'Specialist', is_core_admin: false, assigned_clients: ['Studio Nets'], is_active: true, title: 'Project Specialist', avatar_color: '#3D5249' },
       { id: 'usr-joy', email: 'joy@gim.com', full_name: 'Joy Fabular', nickname: 'Joy', role: 'Specialist', is_core_admin: false, assigned_clients: ['InVogue Cleans'], is_active: true, title: 'Operations Assistant', avatar_color: '#518E6A' },
+      { id: 'usr-aldwin', email: 'aldwin@gim.com', full_name: 'Aldwin', nickname: 'Aldwin', role: 'Specialist', is_core_admin: false, assigned_clients: ['We Rock the Spectrum (WRTS)'], is_active: true, title: 'Operations Assistant', avatar_color: '#65746C' },
       { id: 'usr-camille', email: 'camille@gim.com', full_name: 'Camille Bautista', nickname: 'Camille', role: 'Social Media Specialist', is_core_admin: false, assigned_clients: ['Little Treasures Company'], is_active: true, title: 'Social Media Manager', avatar_color: '#518E6A' },
-      { id: 'usr-jedy', email: 'jedy@gim.com', full_name: 'Jedy Caillio', nickname: 'Jedy', role: 'Specialist', is_core_admin: false, assigned_clients: ['Studio Nets'], is_active: true, title: 'Creative Assistant', avatar_color: '#466B53' },
+      { id: 'usr-hashim', email: 'hashim@gim.com', full_name: 'Hashim Saudi', nickname: 'Hashim', role: 'Specialist', is_core_admin: false, assigned_clients: ['Studio Nets'], is_active: true, title: 'Tech Specialist', avatar_color: '#466B53' },
+      { id: 'usr-kimberly', email: 'kimberly@gim.com', full_name: 'Kimberly Besa', nickname: 'Kimberly', role: 'Specialist', is_core_admin: false, assigned_clients: ['Grace In Motion (Internal)'], is_active: true, title: 'Operations Assistant', avatar_color: '#3D5249' },
       { id: 'usr-zoe', email: 'zoe@littletreasures.com.au', full_name: 'Zoe Horner', nickname: 'Zoe', role: 'Client User', is_core_admin: false, assigned_clients: ['Little Treasures Company'], is_active: true, title: 'Founder, Little Treasures', avatar_color: '#518E6A' },
+      { id: 'usr-aaron', email: 'aaron@juviboltcybertech.com', full_name: 'Aaron Ofosu', nickname: 'Aaron', role: 'Client User', is_core_admin: false, assigned_clients: ['Juvibolt Cybertech'], is_active: true, title: 'Founder, Juvibolt Cybertech', avatar_color: '#466B53' },
+      { id: 'usr-matthew', email: 'matthew@invoguecleans.com', full_name: 'Matthew Robbins', nickname: 'Matthew', role: 'Client User', is_core_admin: false, assigned_clients: ['InVogue Cleans'], is_active: true, title: 'Founder, InVogue Cleans', avatar_color: '#3D5249' },
+      { id: 'usr-nathan', email: 'nathan@studionets.com.au', full_name: 'Nathan Blake', nickname: 'Nathan', role: 'Client User', is_core_admin: false, assigned_clients: ['Studio Nets'], is_active: true, title: 'Creative Director, Studio Nets', avatar_color: '#65746C' },
     ];
 
     baseMembers.forEach((m) => membersMap.set((m.email || '').toLowerCase(), m));

@@ -481,13 +481,12 @@ export function ClientPortfolioView({
     }
   }, [selectedClientId, selectedClient.name]);
 
-  // Status board grouping (including Closed deliverables)
-  const boardColumns: { status: TaskItem["status"]; title: string; color: string }[] = [
+  // Status board grouping: 4 clean, focused pipeline columns
+  const boardColumns: { status: "To Do" | "In Progress" | "In Review" | "Approved"; title: string; color: string }[] = [
     { status: "To Do", title: "To Do", color: "border-slate-300 bg-slate-50 text-slate-800" },
     { status: "In Progress", title: "In Progress", color: "border-[#518E6A] bg-[#518E6A]/10 text-[#3D5249]" },
-    { status: "In Review", title: "In Review", color: "border-amber-400 bg-amber-50 text-amber-900" },
-    { status: "Approved", title: "Approved / Done", color: "border-emerald-500 bg-emerald-50 text-emerald-900" },
-    { status: "Closed", title: "Closed / Completed", color: "border-purple-400 bg-purple-50 text-purple-950" },
+    { status: "In Review", title: "QA Review", color: "border-amber-400 bg-amber-50 text-amber-900" },
+    { status: "Approved", title: "Approved & Completed", color: "border-emerald-500 bg-emerald-50 text-emerald-900" },
   ];
 
   return (
@@ -762,7 +761,7 @@ export function ClientPortfolioView({
             })}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
             {boardColumns
               .filter((col) => {
                 if (mobileBoardColumnFilter === "all") return true;
@@ -779,9 +778,19 @@ export function ClientPortfolioView({
                   if (boardPriorityFilter !== "All" && t.priority !== boardPriorityFilter) return false;
                   return true;
                 })
-                .filter(
-                  (t) => t.status.toLowerCase() === col.status.toLowerCase()
-                )
+                .filter((t) => {
+                  const s = (t.status || "").toLowerCase();
+                  if (col.status === "Approved") {
+                    return s === "approved" || s === "closed" || s === "done" || s === "complete";
+                  }
+                  if (col.status === "In Review") {
+                    return s === "in review" || s === "for review";
+                  }
+                  if (col.status === "In Progress") {
+                    return s === "in progress";
+                  }
+                  return s === "to do" || s === "open";
+                })
                 .sort((a, b) => {
                   const timeA = a.due_date ? new Date(a.due_date).getTime() : 0;
                   const timeB = b.due_date ? new Date(b.due_date).getTime() : 0;

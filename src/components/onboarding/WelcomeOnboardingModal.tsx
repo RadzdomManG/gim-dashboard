@@ -354,7 +354,7 @@ export function WelcomeOnboardingModal({
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs max-h-[280px] overflow-y-auto pr-1">
                 {[
                   {
                     name: "Little Treasures Company",
@@ -362,6 +362,34 @@ export function WelcomeOnboardingModal({
                     badge: "Summit Launch",
                     badgeVariant: "brand" as const,
                     desc: "GHL Website, $99 Course Build, and payment verification for Fri 11 Dec 2026 summit.",
+                  },
+                  {
+                    name: "We Rock the Spectrum (WRTS)",
+                    scopeKey: "We Rock the Spectrum",
+                    badge: "21 Automations",
+                    badgeVariant: "brand" as const,
+                    desc: "Sensory gym franchise workflows, GHL funnel triggers, n8n webhook sync, and SMS routing.",
+                  },
+                  {
+                    name: "Juvibolt Cybertech",
+                    scopeKey: "Juvibolt",
+                    badge: "GHL Sub-Account",
+                    badgeVariant: "brand" as const,
+                    desc: "Sub-account mg57RFEKUm6nvnSadv2D setup, WordPress LMS integration, and student onboarding.",
+                  },
+                  {
+                    name: "Risewise",
+                    scopeKey: "Risewise",
+                    badge: "Client Ops",
+                    badgeVariant: "active" as const,
+                    desc: "Multi-channel funnel automation, appointment routing, and executive pipeline tracking.",
+                  },
+                  {
+                    name: "NoirLab",
+                    scopeKey: "NoirLab",
+                    badge: "Digital Growth",
+                    badgeVariant: "active" as const,
+                    desc: "Brand digital strategy, web asset builds, and client acquisition workflow setup.",
                   },
                   {
                     name: "Studio Nets",

@@ -38,7 +38,7 @@ interface TaskBacklogViewProps {
 }
 
 export function TaskBacklogView({
-  initialStatusFilter = "all",
+  initialStatusFilter = "active",
   initialSearch = "",
   currentUserNickname = "Radz",
   currentUserName = "Radzdom Gallego",
@@ -293,11 +293,16 @@ export function TaskBacklogView({
       }
 
       // Status filter
-      if (statusFilter !== "all") {
+      if (statusFilter === "active") {
+        const s = task.status.toLowerCase();
+        if (s === "closed" || s === "complete") return false;
+      } else if (statusFilter !== "all") {
         const s = task.status.toLowerCase();
         const sf = statusFilter.toLowerCase();
         if (sf === "for review" || sf === "in review") {
           if (s !== "for review" && s !== "in review") return false;
+        } else if (sf === "closed" || sf === "complete") {
+          if (s !== "closed" && s !== "complete") return false;
         } else if (s !== sf) {
           return false;
         }
@@ -427,17 +432,19 @@ export function TaskBacklogView({
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <div
-            onClick={() => setStatusFilter("all")}
+            onClick={() => setStatusFilter("active")}
             className={`p-3 rounded-xl border transition-all cursor-pointer ${
-              statusFilter === "all"
+              statusFilter === "active"
                 ? "bg-[#3D5249] text-white border-[#3D5249] shadow-xs"
                 : "bg-white text-[#242E29] border-[#E8E2DD] hover:border-[#466B53]/40"
             }`}
           >
-            <p className={`text-[10px] font-semibold uppercase tracking-wider ${statusFilter === "all" ? "text-white/70" : "text-[#65746C]"}`}>
-              Total Tasks
+            <p className={`text-[10px] font-semibold uppercase tracking-wider ${statusFilter === "active" ? "text-white/70" : "text-[#466B53]"}`}>
+              Active Tasks
             </p>
-            <p className="text-lg font-bold mt-0.5">{stats.totalTasks}</p>
+            <p className="text-lg font-bold mt-0.5">
+              {stats.openCount + stats.inProgressCount + stats.reviewCount}
+            </p>
           </div>
 
           <div
@@ -494,23 +501,23 @@ export function TaskBacklogView({
             }`}
           >
             <p className={`text-[10px] font-semibold uppercase tracking-wider ${statusFilter === "closed" ? "text-white/80" : "text-emerald-700"}`}>
-              Closed
+              Completed
             </p>
             <p className="text-lg font-bold mt-0.5">{stats.closedCount}</p>
           </div>
 
           <div
-            onClick={() => setStatusFilter("blocked")}
+            onClick={() => setStatusFilter("all")}
             className={`p-3 rounded-xl border transition-all cursor-pointer ${
-              statusFilter === "blocked"
-                ? "bg-rose-700 text-white border-rose-700 shadow-xs"
-                : "bg-white text-[#242E29] border-[#E8E2DD] hover:border-rose-400"
+              statusFilter === "all"
+                ? "bg-[#242E29] text-white border-[#242E29] shadow-xs"
+                : "bg-white text-[#242E29] border-[#E8E2DD] hover:border-[#242E29]/40"
             }`}
           >
-            <p className={`text-[10px] font-semibold uppercase tracking-wider ${statusFilter === "blocked" ? "text-white/80" : "text-rose-700"}`}>
-              Blocked
+            <p className={`text-[10px] font-semibold uppercase tracking-wider ${statusFilter === "all" ? "text-white/80" : "text-[#65746C]"}`}>
+              All History
             </p>
-            <p className="text-lg font-bold mt-0.5">{stats.blockedCount}</p>
+            <p className="text-lg font-bold mt-0.5">{stats.totalTasks}</p>
           </div>
         </div>
       )}
