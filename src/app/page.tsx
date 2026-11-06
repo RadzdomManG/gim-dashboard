@@ -2115,6 +2115,7 @@ export default function GimDashboard() {
               isCoreAdmin={currentUser.isCoreAdmin}
               avatarColor={currentUser.avatarColor}
               selectedClientId={selectedPortfolioClientId}
+              clientScope={currentUser.clientScope}
             />
           )}
 
@@ -2978,8 +2979,11 @@ export default function GimDashboard() {
       <CreateTaskModal
         isOpen={isGlobalCreateTaskOpen}
         onClose={() => setIsGlobalCreateTaskOpen(false)}
+        clientScope={currentUser.clientScope}
         defaultClient={
-          selectedPortfolioClientId === "little-treasures"
+          currentUser.clientScope && currentUser.clientScope !== "all"
+            ? currentUser.clientScope.split(",")[0].trim()
+            : selectedPortfolioClientId === "little-treasures"
             ? "Little Treasures Company"
             : selectedPortfolioClientId === "we-rock-the-spectrum"
             ? "We Rock the Spectrum (WRTS)"

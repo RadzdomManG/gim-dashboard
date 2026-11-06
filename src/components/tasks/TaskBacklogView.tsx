@@ -20,6 +20,8 @@ import {
   ArrowUpRight,
   Info,
   MessageSquare,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -59,6 +61,7 @@ export function TaskBacklogView({
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [myTasksOnly, setMyTasksOnly] = useState(false);
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
 
   // Sync client filter with prop selectedClientId
   useEffect(() => {
@@ -632,8 +635,39 @@ export function TaskBacklogView({
               Showing {paginatedTasks.length} of {filteredTasks.length} tasks
             </Badge>
           </div>
-          <div className="text-xs text-[#65746C] hidden sm:block">
-            Page {currentPage} of {totalPages}
+          <div className="flex items-center space-x-2">
+            {/* View Mode Toggle (Table vs Grid) */}
+            <div className="flex items-center space-x-0.5 bg-[#FBF6F3] p-0.5 rounded-xl border border-[#E8E2DD]">
+              <button
+                type="button"
+                onClick={() => setViewMode("table")}
+                className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1 transition-colors ${
+                  viewMode === "table"
+                    ? "bg-[#3D5249] text-white shadow-xs"
+                    : "text-[#65746C] hover:text-[#242E29]"
+                }`}
+                title="Table View"
+              >
+                <List className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[10px]">Table</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1 transition-colors ${
+                  viewMode === "grid"
+                    ? "bg-[#3D5249] text-white shadow-xs"
+                    : "text-[#65746C] hover:text-[#242E29]"
+                }`}
+                title="Card Grid View"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[10px]">Grid</span>
+              </button>
+            </div>
+            <div className="text-xs text-[#65746C] hidden sm:block">
+              Page {currentPage} of {totalPages}
+            </div>
           </div>
         </CardHeader>
 
@@ -724,8 +758,57 @@ export function TaskBacklogView({
               ))}
             </div>
 
-            {/* Desktop Full Data Table (>= 768px) */}
-            <div className="hidden md:block overflow-x-auto">
+            {/* Desktop View (>= 768px): Choice of Card Grid View or Dense Data Table */}
+            {viewMode === "grid" ? (
+              <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4 bg-[#FBF6F3]/30">
+                {paginatedTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    onClick={() => setSelectedTask(task)}
+                    className="p-4 rounded-2xl bg-white border border-[#3D5249]/15 hover:border-[#518E6A] hover:shadow-md transition-all cursor-pointer space-y-2.5 flex flex-col justify-between"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <div className="flex items-center gap-1 min-w-0">
+                          {task.gateCode && (
+                            <span className="font-bold text-[#3D5249] text-[10px] bg-[#466B53]/15 px-1.5 py-0.2 rounded border border-[#466B53]/25 shrink-0">
+                              {task.gateCode}
+                            </span>
+                          )}
+                          <span className="text-[10px] font-semibold text-[#3D5249] bg-[#FBF6F3] px-2 py-0.5 rounded border border-[#E8E2DD] truncate max-w-[140px]">
+                            {task.client}
+                          </span>
+                        </div>
+                        {renderStatusBadge(task.status)}
+                      </div>
+
+                      <h4 className="font-bold text-xs text-[#242E29] line-clamp-2 leading-snug">
+                        {task.name}
+                      </h4>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#E8E2DD] flex items-center justify-between text-[11px] text-[#65746C]">
+                      <div className="flex items-center space-x-1 truncate max-w-[140px]">
+                        <User className="w-3 h-3 text-[#518E6A]" />
+                        <span className="font-medium text-[#242E29] truncate">
+                          {task.assignees && task.assignees.length > 0 ? task.assignees[0].username.split(" ")[0] : "Unassigned"}
+                        </span>
+                      </div>
+                      {task.dueDateFormatted ? (
+                        <span className="flex items-center gap-1 font-medium text-[10px]">
+                          <Clock className="w-3 h-3 text-[#518E6A]" />
+                          {task.dueDateFormatted}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-mono text-[#65746C]">#{task.id}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* Desktop Full Data Table (>= 768px) */
+              <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-[#E8E2DD] bg-[#FBF6F3] text-[#65746C]">
@@ -830,6 +913,7 @@ export function TaskBacklogView({
               </tbody>
             </table>
           </div>
+            )}
         </>
       )}
 

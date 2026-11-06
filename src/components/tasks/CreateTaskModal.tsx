@@ -41,6 +41,7 @@ interface CreateTaskModalProps {
   availableClients?: string[];
   currentUserName?: string;
   currentUserRole?: string;
+  clientScope?: string;
 }
 
 export function CreateTaskModal({
@@ -49,7 +50,12 @@ export function CreateTaskModal({
   defaultClient = "Little Treasures Company",
   defaultDate,
   onTaskCreated,
-  availableClients = [
+  availableClients,
+  currentUserName = "Radzdom Gallego",
+  currentUserRole = "Admin",
+  clientScope = "all",
+}: CreateTaskModalProps) {
+  const allStandardClients = [
     "Little Treasures Company",
     "We Rock the Spectrum (WRTS)",
     "Juvibolt Cybertech",
@@ -59,10 +65,20 @@ export function CreateTaskModal({
     "InVogue Cleans",
     "Grace In Motion (Internal)",
     "Tch2Thrive",
-  ],
-  currentUserName = "Radzdom Gallego",
-  currentUserRole = "Admin",
-}: CreateTaskModalProps) {
+  ];
+
+  const clientList = React.useMemo(() => {
+    if (availableClients && availableClients.length > 0) return availableClients;
+    if (clientScope && clientScope !== "all") {
+      const scopes = clientScope.split(",").map((s) => s.trim().toLowerCase());
+      const filtered = allStandardClients.filter((c) =>
+        scopes.some((sc) => c.toLowerCase().includes(sc) || sc.includes(c.toLowerCase()))
+      );
+      if (filtered.length > 0) return filtered;
+    }
+    return allStandardClients;
+  }, [availableClients, clientScope]);
+
   const [title, setTitle] = useState("");
   const [client, setClient] = useState(defaultClient);
   const [description, setDescription] = useState("");
@@ -73,6 +89,17 @@ export function CreateTaskModal({
   const [tagInput, setTagInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (isOpen) {
+      if (defaultClient) {
+        setClient(defaultClient);
+      } else if (clientList.length > 0) {
+        setClient(clientList[0]);
+      }
+      if (currentUserName) setAssigneeName(currentUserName);
+    }
+  }, [isOpen, defaultClient, currentUserName, clientList]);
 
   // Assignee options loaded dynamically from team & newly added members
   const [assigneeOptions, setAssigneeOptions] = useState<{ name: string; nickname?: string }[]>([
@@ -320,7 +347,7 @@ export function CreateTaskModal({
                 onChange={(e) => setClient(e.target.value)}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-[#3D5249]/20 bg-white text-[#242E29]"
               >
-                {availableClients.map((c, i) => (
+                {clientList.map((c, i) => (
                   <option key={i} value={c}>
                     {c}
                   </option>

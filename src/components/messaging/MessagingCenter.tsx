@@ -94,7 +94,7 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     type: "channel",
     description: "Company-wide operational announcements and team discussions.",
     isPrivate: false,
-    membersCount: 7,
+    membersCount: 19,
     memberIds: [], // Open to all team members
   },
   {
@@ -103,8 +103,44 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     type: "channel",
     description: "Daily sprint updates, GHL funnels, and Dec 11 summit build.",
     isPrivate: false,
+    membersCount: 5,
+    memberIds: ["divine", "radz", "erwin", "bj", "camille", "zoe"],
+  },
+  {
+    id: "wrts-ops",
+    name: "wrts-automations",
+    type: "channel",
+    description: "Sensory gym franchise, 21 n8n automations, GHL funnels, and webhooks.",
+    isPrivate: false,
+    membersCount: 5,
+    memberIds: ["divine", "radz", "bj", "aldwin", "erwin"],
+  },
+  {
+    id: "juvibolt-ops",
+    name: "juvibolt-cybertech",
+    type: "channel",
+    description: "GHL Sub-Account mg57RFEKUm6nvnSadv2D, LMS course sync, and WooCommerce.",
+    isPrivate: false,
     membersCount: 4,
-    memberIds: ["divine", "radz", "erwin", "bj"],
+    memberIds: ["divine", "radz", "aaron"],
+  },
+  {
+    id: "risewise-ops",
+    name: "risewise-growth",
+    type: "channel",
+    description: "Multi-channel funnel automation, appointment routing & sprint tracking.",
+    isPrivate: false,
+    membersCount: 4,
+    memberIds: ["divine", "radz", "jerold"],
+  },
+  {
+    id: "noirlab-ops",
+    name: "noirlab-digital",
+    type: "channel",
+    description: "Brand digital strategy, web asset builds, and client acquisition workflows.",
+    isPrivate: false,
+    membersCount: 4,
+    memberIds: ["divine", "radz", "jane"],
   },
   {
     id: "studio-nets-ops",
@@ -112,26 +148,17 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     type: "channel",
     description: "Creative design systems, Figma handoffs, and Fathom AI SOP summaries.",
     isPrivate: false,
-    membersCount: 4,
-    memberIds: ["divine", "erwin", "bj", "jedy"],
+    membersCount: 6,
+    memberIds: ["divine", "erwin", "bj", "jedy", "joyce", "hashim", "ellyka", "nathan"],
   },
   {
     id: "invogue-ops",
     name: "invogue-growth",
     type: "channel",
-    description: "Lead generation, SMS reminders, and cleaner dispatch system.",
+    description: "Lead generation, SMS reminders, cleaner dispatch system, and billing reconciliations.",
     isPrivate: false,
-    membersCount: 3,
-    memberIds: ["ra", "joy", "radz"],
-  },
-  {
-    id: "aaron-ofosu-ops",
-    name: "aaron-ofosu-bootcamp",
-    type: "channel",
-    description: "Athlete onboarding funnels, Stripe checkout, and coach schedules.",
-    isPrivate: false,
-    membersCount: 3,
-    memberIds: ["divine", "radz", "bj"],
+    membersCount: 6,
+    memberIds: ["ra", "joy", "radz", "jedy", "ellyka", "matthew"],
   },
   {
     id: "tch2thrive-ops",
@@ -139,8 +166,8 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     type: "channel",
     description: "Teacher development resources, district pipelines, and SOP library.",
     isPrivate: false,
-    membersCount: 3,
-    memberIds: ["divine", "radz", "ra"],
+    membersCount: 4,
+    memberIds: ["divine", "radz", "ra", "bj"],
   },
   {
     id: "leadership",
@@ -198,6 +225,7 @@ interface MessagingCenterProps {
   isCoreAdmin: boolean;
   avatarColor: string;
   selectedClientId?: string;
+  clientScope?: string;
 }
 
 export function MessagingCenter({
@@ -208,6 +236,7 @@ export function MessagingCenter({
   isCoreAdmin,
   avatarColor,
   selectedClientId,
+  clientScope = "all",
 }: MessagingCenterProps) {
   const [channels, setChannels] = useState<ChatChannel[]>(INITIAL_CHANNELS);
   const [activeChannelId, setActiveChannelId] = useState<string>("general");
@@ -1022,9 +1051,33 @@ export function MessagingCenter({
       return true;
     }
 
-    // 3. Group chats and private channels: ONLY members who are in memberIds can access
+    // 3. Client Scope Access: If channel belongs to member's assigned client
+    if (clientScope && clientScope !== "all") {
+      const scopeList = clientScope.split(",").map((s) => s.trim().toLowerCase());
+      const channelName = c.name.toLowerCase();
+      const channelId = c.id.toLowerCase();
+      const isClientChannel = scopeList.some((sc) => {
+        if (sc.includes("little treasure") && (channelName.includes("little-treasure") || channelId.includes("little-treasure"))) return true;
+        if (sc.includes("spectrum") && (channelName.includes("wrts") || channelName.includes("spectrum") || channelId.includes("wrts"))) return true;
+        if (sc.includes("juvibolt") && (channelName.includes("juvibolt") || channelName.includes("ofosu") || channelId.includes("juvibolt"))) return true;
+        if (sc.includes("risewise") && (channelName.includes("risewise") || channelId.includes("risewise"))) return true;
+        if (sc.includes("noirlab") && (channelName.includes("noirlab") || channelId.includes("noirlab"))) return true;
+        if (sc.includes("studio net") && (channelName.includes("studio-net") || channelId.includes("studio-net"))) return true;
+        if (sc.includes("invogue") && (channelName.includes("invogue") || channelId.includes("invogue"))) return true;
+        if (sc.includes("tch2thrive") && (channelName.includes("tch2thrive") || channelId.includes("tch2thrive"))) return true;
+        return false;
+      });
+      if (isClientChannel) return true;
+    }
+
+    // 4. Member ID / Nickname check
     if (c.memberIds && c.memberIds.length > 0) {
-      return c.memberIds.includes(currentUserId);
+      const myKeys = [
+        currentUserId.toLowerCase(),
+        currentUserNickname.toLowerCase(),
+        currentUserName.toLowerCase().split(" ")[0],
+      ];
+      return c.memberIds.some((mId) => myKeys.includes(mId.toLowerCase()));
     }
 
     return !c.isPrivate;
