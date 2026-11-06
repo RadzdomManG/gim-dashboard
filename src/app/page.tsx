@@ -78,6 +78,7 @@ import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { TaskDetailModal, TaskItem } from "@/components/tasks/TaskDetailModal";
 import { CreateTaskModal } from "@/components/tasks/CreateTaskModal";
+import { GimCopilotDrawer } from "@/components/copilot/GimCopilotDrawer";
 import { soundManager } from "@/lib/audio/sounds";
 
 type NavTab =
@@ -3021,6 +3022,13 @@ export default function GimDashboard() {
         userRole={currentUser.role}
         clientScope={currentUser.clientScope}
       />
+
+      {/* ========================================================================= */}
+      {/* 11. PERSONALIZED INTERNAL GIM AI CO-PILOT AGENT */}
+      {/* ========================================================================= */}
+      {isAuthenticated && (
+        <GimCopilotDrawer currentUser={currentUser} />
+      )}
     </div>
   );
 }
