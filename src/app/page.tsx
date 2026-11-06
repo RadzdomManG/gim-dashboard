@@ -79,6 +79,7 @@ import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { TaskDetailModal, TaskItem } from "@/components/tasks/TaskDetailModal";
 import { CreateTaskModal } from "@/components/tasks/CreateTaskModal";
 import { GimCopilotDrawer } from "@/components/copilot/GimCopilotDrawer";
+import { SystemUpgradesModal } from "@/components/upgrades/SystemUpgradesModal";
 import { soundManager } from "@/lib/audio/sounds";
 
 type NavTab =
@@ -600,6 +601,7 @@ export default function GimDashboard() {
 
   // Invitation Modal State
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isUpgradesModalOpen, setIsUpgradesModalOpen] = useState(false);
   const [editAccessMember, setEditAccessMember] = useState<TeamMemberAccess | null>(null);
   const [inviteForm, setInviteForm] = useState({
     name: "",
@@ -1493,6 +1495,17 @@ export default function GimDashboard() {
 
           {/* Right Header Controls */}
           <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
+            {/* Top 10 Upgrades Release Notes Pill */}
+            <button
+              type="button"
+              onClick={() => setIsUpgradesModalOpen(true)}
+              className="p-1.5 h-8 px-2.5 rounded-xl bg-[#518E6A]/15 text-[#3D5249] hover:bg-[#518E6A]/25 border border-[#518E6A]/30 flex items-center space-x-1.5 text-xs font-bold transition-all shadow-2xs shrink-0"
+              title="View Top 10 High-Impact Upgrades"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#518E6A]" />
+              <span className="hidden sm:inline">Top 10 Upgrades</span>
+            </button>
+
             {/* Quick Create Task Trigger (+ New Task) */}
             <Button
               variant="primary"
@@ -3033,6 +3046,18 @@ export default function GimDashboard() {
       {isAuthenticated && (
         <GimCopilotDrawer currentUser={currentUser} />
       )}
+
+      {/* ========================================================================= */}
+      {/* 12. TOP 10 SYSTEM UPGRADES & RELEASE NOTES MODAL */}
+      {/* ========================================================================= */}
+      <SystemUpgradesModal
+        isOpen={isUpgradesModalOpen}
+        onClose={() => setIsUpgradesModalOpen(false)}
+        onNavigateTab={(tab) => {
+          setActiveTab(tab as NavTab);
+          setIsUpgradesModalOpen(false);
+        }}
+      />
     </div>
   );
 }
