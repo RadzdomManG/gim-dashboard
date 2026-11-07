@@ -38,11 +38,20 @@ export function ClientCalendarView({
   currentUserName,
   currentUserNickname,
 }: ClientCalendarViewProps) {
-  // Calendar navigation state (Year 2026, Month Nov = index 10)
-  const [currentDate, setCurrentDate] = useState(() => new Date(2026, 10, 1));
+  // Calendar navigation state (defaults dynamically to current month and year)
+  const [currentDate, setCurrentDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
   const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createTaskDate, setCreateTaskDate] = useState<string>("");
+
+  // Dynamic Real-Time Today State
+  const realNow = new Date();
+  const todayDayNum = realNow.getDate();
+  const todayMonthName = realNow.toLocaleString("en-US", { month: "short" });
+  const todayLabel = `Today (${todayMonthName} ${String(todayDayNum).padStart(2, "0")})`;
 
   // Day Tasks Pop-up Modal State
   const [selectedDayData, setSelectedDayData] = useState<{
@@ -113,11 +122,16 @@ export function ClientCalendarView({
   });
 
   const goToToday = () => {
-    setCurrentDate(new Date(2026, 10, 1));
-    const todayTasks = tasksByDay[3] || [];
+    const now = new Date();
+    setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
+    const dNum = now.getDate();
+    const todayTasks = tasksByDay[dNum] || [];
+    const yStr = now.getFullYear();
+    const mStr = String(now.getMonth() + 1).padStart(2, "0");
+    const dayStr = String(dNum).padStart(2, "0");
     setSelectedDayData({
-      dayNum: 3,
-      dateString: "2026-11-03",
+      dayNum: dNum,
+      dateString: `${yStr}-${mStr}-${dayStr}`,
       tasks: todayTasks,
     });
   };
@@ -179,7 +193,7 @@ export function ClientCalendarView({
             className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#518E6A]/10 text-[#3D5249] hover:bg-[#518E6A]/20 transition-colors"
             title="Jump to today and view today's tasks"
           >
-            Today (Nov 03)
+            {todayLabel}
           </button>
 
           {/* Filter options */}
@@ -261,7 +275,11 @@ export function ClientCalendarView({
           {Array.from({ length: daysInMonth }).map((_, i) => {
             const dayNum = i + 1;
             const dayTasks = tasksByDay[dayNum] || [];
-            const isToday = dayNum === 3 && month === 10 && year === 2026;
+            const now = new Date();
+            const isToday =
+              dayNum === now.getDate() &&
+              month === now.getMonth() &&
+              year === now.getFullYear();
 
             const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
 

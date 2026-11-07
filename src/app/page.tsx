@@ -82,6 +82,23 @@ import { GimCopilotDrawer } from "@/components/copilot/GimCopilotDrawer";
 import { SystemUpgradesModal } from "@/components/upgrades/SystemUpgradesModal";
 import { soundManager } from "@/lib/audio/sounds";
 
+function getMemberInitials(name?: string, nickname?: string): string {
+  if (nickname) {
+    const nick = nickname.trim().toLowerCase();
+    if (nick === "radz" || nick === "radzdom") return "RG"; // Radzdom Gallego
+    if (nick === "ra") return "RA"; // Rose Anne
+  }
+  if (name) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  if (nickname) return nickname.trim().slice(0, 2).toUpperCase();
+  return "U";
+}
+
 type NavTab =
   | "overview"
   | "clients"
@@ -228,14 +245,11 @@ export default function GimDashboard() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const savedTheme = (localStorage.getItem("gim_ui_theme") as any) || "classic";
-      setUiTheme(savedTheme);
-      if (savedTheme === "dark") {
-        document.documentElement.className = "dark";
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-      document.documentElement.setAttribute("data-theme", savedTheme);
+      const savedTheme = localStorage.getItem("gim_ui_theme") as any;
+      const activeTheme = savedTheme === "classic" || savedTheme === "emerald" ? savedTheme : "classic";
+      setUiTheme(activeTheme);
+      document.documentElement.classList.remove("dark");
+      document.documentElement.setAttribute("data-theme", activeTheme);
       setSoundSettings(soundManager.getSettings());
     }
   }, []);
@@ -1336,7 +1350,7 @@ export default function GimDashboard() {
               <div
                 className={`w-8 h-8 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-xs shrink-0 ring-1 ring-white/20 shadow-xs`}
               >
-                {currentUser.nickname.slice(0, 2).toUpperCase()}
+                {getMemberInitials(currentUser.name, currentUser.nickname)}
               </div>
             )}
             <div className="min-w-0 flex-1">
@@ -1532,7 +1546,7 @@ export default function GimDashboard() {
                     <div
                       className={`w-5 h-5 rounded-full ${currentUser.avatarColor || "bg-[#466B53]"} text-white flex items-center justify-center font-bold text-[9px] shrink-0`}
                     >
-                      {(currentUser.nickname || currentUser.name || "U").slice(0, 2).toUpperCase()}
+                      {getMemberInitials(currentUser.name, currentUser.nickname)}
                     </div>
                   )}
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 absolute -bottom-0.5 -right-0.5 ring-1 ring-white"></span>
@@ -2454,7 +2468,7 @@ export default function GimDashboard() {
                         <div
                           className={`w-14 h-14 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-lg shadow-xs shrink-0`}
                         >
-                          {(editForm.nickname || currentUser.nickname).slice(0, 2).toUpperCase()}
+                          {getMemberInitials(currentUser.name, editForm.nickname || currentUser.nickname)}
                         </div>
                       )}
                       <div className="space-y-1">
@@ -2791,7 +2805,7 @@ export default function GimDashboard() {
                     <div
                       className={`w-14 h-14 rounded-full ${currentUser.avatarColor} text-white flex items-center justify-center font-bold text-lg shadow-xs`}
                     >
-                      {(editForm.nickname || currentUser.nickname).slice(0, 2).toUpperCase()}
+                      {getMemberInitials(currentUser.name, editForm.nickname || currentUser.nickname)}
                     </div>
                   )}
                   <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 absolute bottom-0 right-0 ring-2 ring-white" />

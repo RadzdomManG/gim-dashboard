@@ -53,6 +53,23 @@ interface ChatMessage {
   suggestedActions?: string[];
 }
 
+function getMemberInitials(name?: string, nickname?: string): string {
+  if (nickname) {
+    const nick = nickname.trim().toLowerCase();
+    if (nick === "radz" || nick === "radzdom") return "RG"; // Radzdom Gallego
+    if (nick === "ra") return "RA"; // Rose Anne
+  }
+  if (name) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  if (nickname) return nickname.trim().slice(0, 2).toUpperCase();
+  return "U";
+}
+
 export function GimCopilotDrawer({
   currentUser,
   tasks = [],
@@ -90,15 +107,21 @@ export function GimCopilotDrawer({
     const initialGreeting: ChatMessage = {
       id: "msg-welcome",
       sender: "copilot",
-      content: `Hello **${userNick}**! I am your personalized **GIM AI Co-Pilot**, isolated strictly to your authorized operational scope (**${
-        clientScope === "all" ? "Universal Agency HQ" : clientScope
-      }**).\n\nI can help you review your active deliverables, update task progress, draft your daily End of Shift (EOS) note, or check agency SOPs. How can I support your shift today?`,
+      content: `Hey **${userNick}**! 👋 Ready to support your shift today.
+
+Here's what I can do for you:
+• 📋 Review your active deliverables & tasks
+• 🚀 Move or update any task status
+• 📝 Draft your End of Shift (EOS) note in 1 click
+• 🎯 Check client sprint goals & milestones
+
+What would you like to work on right now?`,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       suggestedActions: [
-        "What are my active deliverables?",
-        "Draft today's End of Shift (EOS) note",
-        "Check client sprint milestones",
-        "Explain communication channels SOP",
+        "What are my active deliverables? 📋",
+        "Draft today's End of Shift note 📝",
+        "Check client sprint milestones 🎯",
+        "Explain communication SOP 📘",
       ],
     };
 
@@ -356,7 +379,7 @@ export function GimCopilotDrawer({
 
                     {msg.sender === "user" && (
                       <div className="w-6 h-6 rounded-lg bg-[#518E6A] text-white flex items-center justify-center shrink-0 mt-0.5 font-bold text-[10px]">
-                        {userNick.slice(0, 2).toUpperCase()}
+                        {getMemberInitials(currentUser.name, userNick)}
                       </div>
                     )}
                   </div>

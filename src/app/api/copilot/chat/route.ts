@@ -26,12 +26,63 @@ export async function POST(req: NextRequest) {
     const userNick = user?.nickname || userName.split(" ")[0] || "Member";
     const isCoreAdmin = user?.isCoreAdmin || userRole === "Owner" || userRole === "Admin";
     const clientScope: string = user?.clientScope || "all";
-    const assignedClients: string[] = user?.assigned_clients || (clientScope === "all" ? ["All Accounts"] : clientScope.split(",").map((s: string) => s.trim()));
+    const assignedClients: string[] =
+      user?.assigned_clients ||
+      (clientScope === "all"
+        ? ["All Accounts"]
+        : clientScope.split(",").map((s: string) => s.trim()));
 
     const cleanMsg = message.trim().toLowerCase();
 
-    // 1. STRICT CLIENT ISOLATION CHECK
-    // If a non-admin user asks about a client outside their assigned scope, reject with security boundary notice!
+    // =========================================================================
+    // GUARDRAIL 1: STRICT OFF-TOPIC & GENERAL QUERY SHIELD
+    // If user asks general non-agency questions (weather, prompt leak, jokes, trivia, etc.)
+    // Politely avoid answering and redirect back to GIM agency deliverables.
+    // =========================================================================
+    const offTopicKeywords = [
+      "weather",
+      "temperature",
+      "forecast",
+      "rain",
+      "what is your prompt",
+      "whats your prompt",
+      "system prompt",
+      "reveal prompt",
+      "tell me your instructions",
+      "ignore previous instructions",
+      "who made you",
+      "tell me a joke",
+      "write a poem",
+      "sing a song",
+      "recipe",
+      "bitcoin",
+      "crypto",
+      "who won the",
+      "movie recommendation",
+      "politics",
+      "president",
+      "how are babies made",
+      "play a game",
+    ];
+
+    const isOffTopic = offTopicKeywords.some((kw) => cleanMsg.includes(kw));
+    if (isOffTopic) {
+      return NextResponse.json({
+        reply: `Hey ${userNick}! 😊 I'm your dedicated GIM Co-Pilot, so I'm set up strictly to help you with our agency work, client deliverables, and shift reports. 
+
+I avoid answering general or off-topic questions like that, but I'm ready to help with your tasks, client sprint targets, or daily EOS note! What are we working on right now? 💼✨`,
+        suggestedActions: [
+          "Show my active deliverables 📋",
+          "Draft today's EOS note 📝",
+          "Check client sprint goals 🎯",
+        ],
+      });
+    }
+
+    // =========================================================================
+    // GUARDRAIL 2: STRICT MULTI-TENANT CLIENT ISOLATION
+    // Non-admin specialists asking about unassigned clients are blocked.
+    // =========================================================================
     const clientKeywords: Record<string, string> = {
       "little treasure": "Little Treasures Company",
       "spectrum": "We Rock the Spectrum (WRTS)",
@@ -52,11 +103,13 @@ export async function POST(req: NextRequest) {
           );
           if (!hasAccess) {
             return NextResponse.json({
-              reply: `🔒 **Security Boundary Notice:** You are currently logged in as **${userName}** with access restricted to **${assignedClients.join(", ")}**. Information regarding **${cName}** is protected by Grace in Motion's strict multi-tenant isolation policy. Let's focus on your authorized account objectives!`,
+              reply: `🔒 Hey ${userNick}! Just a quick heads-up: your account is scoped strictly to **${assignedClients.join(", ")}**. Information regarding **${cName}** is protected by GIM's client privacy rules. 
+
+Let's stick to your assigned client goals — how can I help with **${assignedClients[0]}** today? 🚀`,
               suggestedActions: [
-                `Show my ${assignedClients[0]} deliverables`,
-                "Draft an End of Shift (EOS) note",
-                "View communication channels SOP",
+                `Show my ${assignedClients[0]} deliverables 📋`,
+                "Draft an End of Shift (EOS) note 📝",
+                "View communication channels SOP 📘",
               ],
             });
           }
@@ -64,7 +117,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 2. FILTER USER'S ACCESSIBLE TASKS
+    // =========================================================================
+    // 3. FILTER ACCESSIBLE TASKS FOR THIS USER
+    // =========================================================================
     const accessibleTasks: TaskItem[] = tasks.filter((t: TaskItem) => {
       if (isCoreAdmin) return true;
       const tClient = (t.client || "").toLowerCase();
@@ -94,131 +149,269 @@ export async function POST(req: NextRequest) {
       });
     });
 
-    // 3. TASK STATUS UPDATE ACTION COMMAND (e.g. "move task #123 to in progress", "mark task ... done")
-    const moveMatch = cleanMsg.match(/(?:move|change|set|mark)\s+(?:task\s+)?#?([a-zA-Z0-9_-]+)\s+(?:to\s+|as\s+)?(in progress|review|for review|done|closed|approved|to do)/i);
+    // =========================================================================
+    // 4. NATURAL HUMAN GREETINGS ("hi", "hello", "hey", "good morning", "yo")
+    // =========================================================================
+    const greetingWords = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "yo", "sup", "kumusta", "howdy"];
+    const isPureGreeting = greetingWords.some((g) => cleanMsg === g || cleanMsg === `${g}!` || cleanMsg.startsWith(`${g} `));
+
+    if (isPureGreeting) {
+      return NextResponse.json({
+        reply: `Hey ${userNick}! 👋 Good to see you. How's your shift going? 
+
+I'm ready whenever you need me — want to check your active tasks for today, move a ticket to In Progress, or get your EOS report ready? Let me know! 🚀✨`,
+        suggestedActions: [
+          "What are my tasks for today? 📋",
+          "Draft today's End of Shift note 📝",
+          "Check client sprint milestones 🎯",
+        ],
+      });
+    }
+
+    // =========================================================================
+    // 5. NATURAL TASK MOVE ACTION (e.g. "move task #123 to in progress")
+    // =========================================================================
+    const moveMatch = cleanMsg.match(
+      /(?:move|change|set|mark)\s+(?:task\s+)?#?([a-zA-Z0-9_-]+)\s+(?:to\s+|as\s+)?(in progress|review|for review|done|closed|approved|to do)/i
+    );
     if (moveMatch) {
       const targetTaskId = moveMatch[1];
       const targetStatusRaw = moveMatch[2].toLowerCase();
       let newStatus = "In Progress";
       if (targetStatusRaw.includes("progress")) newStatus = "In Progress";
       else if (targetStatusRaw.includes("review")) newStatus = "In Review";
-      else if (targetStatusRaw.includes("done") || targetStatusRaw.includes("closed") || targetStatusRaw.includes("approved")) newStatus = "Closed";
+      else if (
+        targetStatusRaw.includes("done") ||
+        targetStatusRaw.includes("closed") ||
+        targetStatusRaw.includes("approved")
+      )
+        newStatus = "Closed";
       else if (targetStatusRaw.includes("to do") || targetStatusRaw.includes("open")) newStatus = "To Do";
 
       return NextResponse.json({
-        reply: `✅ I have processed your request to update task **#${targetTaskId}** to **${newStatus}**. You can confirm the update with the action button below:`,
+        reply: `All set! 👍 I can update task **#${targetTaskId}** to **${newStatus}**. Click the confirmation button below to apply it:`,
         action: {
           type: "UPDATE_TASK_STATUS",
           taskId: targetTaskId,
           status: newStatus,
         },
         suggestedActions: [
-          "Show all my active tasks",
-          "Check today's shift log",
-          "Draft End of Shift note",
+          "Show all my active tasks 📋",
+          "Draft End of Shift note 📝",
+          "Check sprint goals 🎯",
         ],
       });
     }
 
-    // 4. COMMON INTELLIGENT QUERIES:
-    // A. "Tasks" / "What are my deliverables"
-    if (cleanMsg.includes("task") || cleanMsg.includes("deliverable") || cleanMsg.includes("assigned to me") || cleanMsg.includes("to do")) {
+    // =========================================================================
+    // 6. TASKS / DELIVERABLES INQUIRY
+    // =========================================================================
+    if (
+      cleanMsg.includes("task") ||
+      cleanMsg.includes("deliverable") ||
+      cleanMsg.includes("assigned to me") ||
+      cleanMsg.includes("to do") ||
+      cleanMsg.includes("what should i work on")
+    ) {
       const listToShow = myAssignedTasks.length > 0 ? myAssignedTasks : accessibleTasks.slice(0, 5);
       if (listToShow.length === 0) {
         return NextResponse.json({
-          reply: `Hello **${userNick}**! You currently have **0 pending tasks** under your authorized scope (**${assignedClients.join(", ")}**). Everything is up to date! Would you like to review client sprint goals or draft an End of Shift (EOS) report?`,
+          reply: `Great news, ${userNick}! 🎉 You have **0 pending tasks** under your scope (**${assignedClients.join(", ")}**). Everything is up to date! 
+
+Would you like to review client sprint goals or draft your daily End of Shift (EOS) note?`,
           suggestedActions: [
-            "View client sprint milestones",
-            "Draft End of Shift (EOS) note",
-            "Review SOP guidelines",
+            "View client sprint milestones 🎯",
+            "Draft End of Shift (EOS) note 📝",
+            "Review SOP guidelines 📘",
           ],
         });
       }
 
-      const taskLines = listToShow.slice(0, 6).map((t, i) => {
-        return `${i + 1}. **[${t.status.toUpperCase()}]** ${t.name} (Client: *${t.client}*) — Task ID: \`#${t.id}\``;
-      }).join("\n");
+      const taskLines = listToShow
+        .slice(0, 6)
+        .map((t, i) => {
+          return `${i + 1}. **[${t.status.toUpperCase()}]** ${t.name} (Client: *${t.client}*) — \`#${t.id}\``;
+        })
+        .join("\n");
 
       return NextResponse.json({
-        reply: `Here are the active deliverables under your scope (**${assignedClients.join(", ")}**):\n\n${taskLines}\n\n💡 *Tip: You can tell me to "Move task #[ID] to In Progress" or "Mark task #[ID] as Review" anytime!*`,
+        reply: `Here are your active deliverables, ${userNick}! 📋 Let's get these knocked out:
+
+${taskLines}
+
+💡 *Quick tip: You can say 'Move task #[ID] to In Progress' or 'Mark task #[ID] as Done' anytime!* 🚀`,
         suggestedActions: [
           `Mark task #${listToShow[0]?.id} as In Progress`,
-          "Draft End of Shift note for today",
-          "What are the client milestones?",
+          "Draft End of Shift note for today 📝",
+          "What are the client milestones? 🎯",
         ],
       });
     }
 
-    // B. "End of Shift" / "EOS" / "Shift Note"
-    if (cleanMsg.includes("eos") || cleanMsg.includes("end of shift") || cleanMsg.includes("shift note") || cleanMsg.includes("clock out")) {
-      const tasksSummary = myAssignedTasks.slice(0, 3).map((t) => t.name).join(", ") || "Client sprint deliverable reviews";
+    // =========================================================================
+    // 7. END OF SHIFT (EOS) NOTE GENERATOR
+    // =========================================================================
+    if (
+      cleanMsg.includes("eos") ||
+      cleanMsg.includes("end of shift") ||
+      cleanMsg.includes("shift note") ||
+      cleanMsg.includes("clock out") ||
+      cleanMsg.includes("done for today")
+    ) {
+      const tasksSummary =
+        myAssignedTasks
+          .slice(0, 3)
+          .map((t) => `• ${t.name} (${t.client}) — Status: ${t.status}`)
+          .join("\n") || "• Reviewed sprint deliverables and synchronized asset updates";
+
+      const todayFormatted = new Date().toLocaleDateString("en-AU", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+
       return NextResponse.json({
-        reply: `Here is a tailored **End of Shift (EOS) Note** draft for your shift today, **${userNick}**:\n\n---\n**GIM END OF SHIFT REPORT — ${new Date().toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}**\n- **Specialist:** ${userName} (${userRole})\n- **Client Accounts:** ${assignedClients.join(", ")}\n- **Shift Status:** Complete\n\n**1. Completed Deliverables Today:**\n- ${tasksSummary}\n- Daily & hourly communication channel checks conducted across designated channels\n\n**2. Blockers Encountered:**\n- None. All workflows and client assets proceeding on schedule.\n\n**3. Priorities for Next Shift:**\n- Advance pending QA approvals and coordinate with account leads.\n---\n\nYou can copy this note and submit it directly to your attendance timesheet before clocking out!`,
+        reply: `Here is your **End of Shift (EOS) Note** ready to copy, ${userNick}! 📝✨
+
+---
+**GIM END OF SHIFT REPORT — ${todayFormatted}**
+• **Specialist:** ${userName} (${userRole})
+• **Client Scope:** ${assignedClients.join(", ")}
+• **Shift Status:** Complete ✅
+
+**1. Accomplished Deliverables Today:**
+${tasksSummary}
+• Monitored assigned communication channels at the top of each operating hour
+
+**2. Blockers / Impediments:**
+• None — all workflows and deliverables moving smoothly on schedule
+
+**3. Focus for Next Shift:**
+• Continue advancing sprint targets and coordinate with account leads
+---
+
+You can copy this directly and attach it to your timesheet before clocking out! Great work today! 🎉👏`,
         suggestedActions: [
-          "Copy EOS note to clipboard",
-          "Check timesheet hours",
-          "Show communication channels SOP",
+          "Copy EOS note to clipboard 📋",
+          "Check timesheet hours ⏱️",
+          "Show communication channels SOP 📘",
         ],
       });
     }
 
-    // C. "SOP" / "Communication" / "Report" / "Policy"
-    if (cleanMsg.includes("sop") || cleanMsg.includes("communication") || cleanMsg.includes("channel") || cleanMsg.includes("hourly") || cleanMsg.includes("rule")) {
+    // =========================================================================
+    // 8. SOP & CHANNEL OPERATING RULES
+    // =========================================================================
+    if (
+      cleanMsg.includes("sop") ||
+      cleanMsg.includes("communication") ||
+      cleanMsg.includes("channel") ||
+      cleanMsg.includes("hourly") ||
+      cleanMsg.includes("rule") ||
+      cleanMsg.includes("policy")
+    ) {
       return NextResponse.json({
-        reply: `📘 **GIM Operational SOP Reference:**\n\n1. **Daily & Hourly Communication Channels Check (7 AM – 8 PM):**\n   - Check client channels at the top of every operating hour.\n   - Urgent messages must be acknowledged within 15 minutes.\n   - Always post in designated channels (e.g. \`#little-treasures-ops\`, \`#wrts-automations\`). Never send client assets via direct unlogged channels.\n\n2. **Shift Integrity:**\n   - Clock in at start of shift; toggle to **On Break** when away.\n   - Mandatory EOS note submitted before clocking out.\n\n3. **Client Isolation:**\n   - Strictly 0 cross-client drift. Assets for one client never enter another client's workspace.`,
+        reply: `Here are our key GIM Agency SOPs, ${userNick}! 📘✨
+
+1. **Hourly Channel Checks (7 AM – 8 PM):** 💬
+   • Check client channels at the top of every operating hour.
+   • Acknowledge urgent client inquiries within 15 minutes.
+   • Always communicate in official client channels (e.g. \`#little-treasures-ops\`, \`#wrts-automations\`). Never send client assets via direct unlogged DMs.
+
+2. **Shift Logging:** ⏱️
+   • Clock in when your shift starts; switch to 'On Break' when away.
+   • Submit your EOS note before clocking out.
+
+3. **Client Isolation:** 🛡️
+   • Zero cross-client mixing. Assets and tasks for one client never enter another client's workspace.
+
+Let me know if you need clarification on anything! 😊`,
         suggestedActions: [
-          "What are the weekly KPI scorecards?",
-          "How do we handle new client onboarding?",
-          "Show my active deliverables",
+          "What are the client milestones? 🎯",
+          "Show my active deliverables 📋",
+          "Draft End of Shift note 📝",
         ],
       });
     }
 
-    // D. "Client Milestones" / "Sprint Targets"
-    if (cleanMsg.includes("milestone") || cleanMsg.includes("goal") || cleanMsg.includes("sprint") || cleanMsg.includes("summit") || cleanMsg.includes("launch")) {
+    // =========================================================================
+    // 9. CLIENT MILESTONES & SPRINT TARGETS
+    // =========================================================================
+    if (
+      cleanMsg.includes("milestone") ||
+      cleanMsg.includes("goal") ||
+      cleanMsg.includes("sprint") ||
+      cleanMsg.includes("summit") ||
+      cleanMsg.includes("launch")
+    ) {
       const milestones: string[] = [];
       const scopeStr = assignedClients.join(" ").toLowerCase();
 
       if (isCoreAdmin || scopeStr.includes("little treasure")) {
-        milestones.push("• **Little Treasures Company:** Fri 11 Dec 2026 Global Autism Summit Ticket Funnel Launch, $99 Course Build & GHL Payment Automation.");
+        milestones.push(
+          "• **Little Treasures Company:** Fri 11 Dec 2026 Global Autism Summit Ticket Funnel Launch, $99 Course Build & GHL Payment Automation."
+        );
       }
       if (isCoreAdmin || scopeStr.includes("spectrum") || scopeStr.includes("wrts")) {
-        milestones.push("• **We Rock the Spectrum:** 21 n8n automation workflows, franchise webhook triggers, and Leadly error handling.");
+        milestones.push(
+          "• **We Rock the Spectrum (WRTS):** 21 n8n automation workflows, franchise webhook triggers, and Leadly error handling."
+        );
       }
       if (isCoreAdmin || scopeStr.includes("juvibolt")) {
-        milestones.push("• **Juvibolt Cybertech:** Sub-Account `mg57RFEKUm6nvnSadv2D` setup, WordPress LMS integration, and WooCommerce student enrollments.");
+        milestones.push(
+          "• **Juvibolt Cybertech:** Sub-Account `mg57RFEKUm6nvnSadv2D` setup, WordPress LMS integration, and WooCommerce student enrollments."
+        );
       }
       if (isCoreAdmin || scopeStr.includes("risewise")) {
-        milestones.push("• **Risewise:** Multi-channel appointment routing, executive pipeline tracking, and funnel automation.");
+        milestones.push(
+          "• **Risewise:** Multi-channel appointment routing, executive pipeline tracking, and funnel automation."
+        );
       }
       if (isCoreAdmin || scopeStr.includes("studio net")) {
-        milestones.push("• **Studio Nets:** Figma component reviews, creative ingestion forms, and 48-hour wireframe pipeline.");
+        milestones.push(
+          "• **Studio Nets:** Figma component reviews, creative ingestion forms, and 48-hour wireframe pipeline."
+        );
       }
       if (isCoreAdmin || scopeStr.includes("invogue")) {
-        milestones.push("• **InVogue Cleans:** 30-60-90 Day Retention Funnel, cleaner SMS alerts, and weekly subcontractor billing audits.");
+        milestones.push(
+          "• **InVogue Cleans:** 30-60-90 Day Retention Funnel, cleaner SMS alerts, and weekly subcontractor billing audits."
+        );
       }
 
       return NextResponse.json({
-        reply: `🎯 **Q4 Active Client Milestones (Your Scope: ${assignedClients.join(", ")}):**\n\n${milestones.join("\n\n")}\n\nOur team delivery SLA requires zero missed deadlines across all active sprints!`,
+        reply: `Here are our active Q4 client targets, ${userNick}! 🎯🚀
+
+${milestones.join("\n\n")}
+
+Our delivery SLA target is 100% on-time sprint completions. Want me to pull up your specific deliverables for any of these? 💼`,
         suggestedActions: [
-          "Show deliverables for these milestones",
-          "Draft End of Shift (EOS) note",
-          "Review communication SOP",
+          "Show my active deliverables 📋",
+          "Draft End of Shift note 📝",
+          "Review communication SOP 📘",
         ],
       });
     }
 
-    // E. General contextual inquiry / AI Assistance
-    const availableActions = [
-      `Show my deliverables`,
-      "Draft an End of Shift (EOS) note",
-      "Explain communication SOP",
-      "Check client milestones",
-    ];
-
+    // =========================================================================
+    // 10. DEFAULT FRIENDLY RESPONSE
+    // =========================================================================
     return NextResponse.json({
-      reply: `Hello **${userNick}**! I am your dedicated **GIM AI Co-Pilot** operating under your authentic security profile:\n\n- **Role:** ${userRole}\n- **Authorized Scope:** ${assignedClients.join(", ")}\n- **Security Isolation:** Strict Multi-Tenant Isolation Active\n\nHow can I help you today? You can ask me to inspect your tasks, update a task status, draft an EOS note, or check agency SOPs!`,
-      suggestedActions: availableActions,
+      reply: `Hey ${userNick}! 😊 I'm here to support you with our agency deliverables.
+
+Here's what I can help you with:
+• 📋 View your assigned tasks and deliverables
+• 🚀 Move or update a task status
+• 📝 Draft your End of Shift (EOS) report in seconds
+• 🎯 Check client sprint goals and milestones
+• 📘 Review our communication & shift SOPs
+
+What do you want to work on right now? ✨`,
+      suggestedActions: [
+        "What are my active deliverables? 📋",
+        "Draft today's End of Shift note 📝",
+        "Check client sprint milestones 🎯",
+      ],
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal error";

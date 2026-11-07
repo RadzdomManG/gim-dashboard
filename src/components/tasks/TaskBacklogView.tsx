@@ -394,28 +394,24 @@ export function TaskBacklogView({
 
   return (
     <div className="space-y-6">
-      {/* 1. TOP HEADER & READ-ONLY MIRROR NOTICE */}
+      {/* 1. TOP HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center space-x-2">
             <h2 className="text-xl font-bold tracking-tight text-[#242E29]">
-              Task & Delivery Pipeline
+              Tasks & Deliverables
             </h2>
-            <Badge variant="brand">Read-Only Mirror</Badge>
+            <Badge variant="brand" dot>Live Synced</Badge>
           </div>
           <p className="text-xs text-[#65746C] mt-0.5">
-            Real-time feed synced directly from ClickUp workspace (Little Treasures & Internal GIM).
+            Track active deliverables, client sprint progress, and team assignments.
           </p>
         </div>
 
         <div className="flex items-center space-x-3">
-          <div className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Auto-Connected (60s live feed)</span>
-          </div>
           {lastSynced && (
             <span className="text-[11px] text-[#65746C] hidden md:inline">
-              Last synced: {new Date(lastSynced).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              Synced: {new Date(lastSynced).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
           <Button
@@ -534,7 +530,7 @@ export function TaskBacklogView({
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#65746C]" />
               <input
                 type="text"
-                placeholder="Search tasks by name, G-gate (G5, G7), ClickUp ID, or assignee..."
+                placeholder="Search tasks, clients, or team members..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 bg-[#FBF6F3]/50 border border-[#E8E2DD] rounded-lg text-xs text-[#242E29] placeholder-[#65746C]/60 focus:outline-none focus:ring-1 focus:ring-[#518E6A] focus:border-[#518E6A]"
@@ -579,7 +575,7 @@ export function TaskBacklogView({
                 onChange={(e) => setClientFilter(e.target.value)}
                 className="px-3 py-2 bg-white border border-[#E8E2DD] rounded-lg text-xs font-medium text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
               >
-                <option value="all">All Clients ({tasks.length} ClickUp Tasks)</option>
+                <option value="all">All Clients ({tasks.length})</option>
                 <option value="little-treasures">Little Treasures Company</option>
                 <option value="we-rock-the-spectrum">We Rock the Spectrum (WRTS)</option>
                 <option value="juvibolt-cybertech">Juvibolt Cybertech</option>
@@ -596,7 +592,7 @@ export function TaskBacklogView({
                 onChange={(e) => setAssigneeFilter(e.target.value)}
                 className="px-3 py-2 bg-white border border-[#E8E2DD] rounded-lg text-xs font-medium text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
               >
-                <option value="all">All Members ({uniqueAssignees.length} Assignees)</option>
+                <option value="all">All Members ({uniqueAssignees.length})</option>
                 {uniqueAssignees.map((assignee) => (
                   <option key={assignee} value={assignee}>
                     {assignee}
@@ -630,9 +626,9 @@ export function TaskBacklogView({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between py-3.5 px-4 border-b border-[#E8E2DD]">
           <div className="flex items-center space-x-2">
-            <CardTitle className="text-sm">ClickUp Task Backlog</CardTitle>
+            <CardTitle className="text-sm">All Deliverables</CardTitle>
             <Badge variant="neutral">
-              Showing {paginatedTasks.length} of {filteredTasks.length} tasks
+              Showing {paginatedTasks.length} of {filteredTasks.length}
             </Badge>
           </div>
           <div className="flex items-center space-x-2">
@@ -812,37 +808,34 @@ export function TaskBacklogView({
               <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-[#E8E2DD] bg-[#FBF6F3] text-[#65746C]">
-                  <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-[10px] w-20">Gate</th>
-                  <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-[10px]">Task Name & ID</th>
-                  <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-[10px] hidden md:table-cell">Client Source</th>
-                  <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-[10px]">Assignee(s)</th>
+                  <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-[10px]">Task Deliverable</th>
+                  <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-[10px] hidden md:table-cell">Client</th>
+                  <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-[10px]">Assignee</th>
                   <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-[10px] hidden lg:table-cell">Due Date</th>
                   <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-[10px]">Status</th>
                   <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-[10px] text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E8E2DD]/60">
-                {paginatedTasks.map((task) => (
+                {paginatedTasks.map((task) => {
+                  const cleanTitle = task.name.replace(/\s*\|\s*(Juvibolt Cybertech|Little Treasures Company|We Rock the Spectrum|Risewise|NoirLab|Studio Nets|InVogue Cleans|Grace in Motion).*$/i, "");
+                  return (
                   <tr
                     key={task.id}
                     onClick={() => setSelectedTask(task)}
                     className="hover:bg-[#FBF6F3]/50 transition-colors cursor-pointer group"
                   >
-                    {/* Gate Code */}
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      {task.gateCode ? (
-                        <span className="font-bold text-[#3D5249] text-[11px] bg-[#466B53]/15 px-2 py-0.5 rounded border border-[#466B53]/25">
-                          {task.gateCode}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-[#65746C]/60">—</span>
-                      )}
-                    </td>
-
-                    {/* Task Title & ID */}
+                    {/* Task Title with optional Gate Code */}
                     <td className="py-3 px-4">
-                      <div className="font-semibold text-[#242E29] group-hover:text-[#466B53] transition-colors line-clamp-1">
-                        {task.name}
+                      <div className="flex items-center gap-2">
+                        {task.gateCode && (
+                          <span className="font-bold text-[#3D5249] text-[10px] bg-[#466B53]/15 px-1.5 py-0.5 rounded border border-[#466B53]/25 shrink-0">
+                            {task.gateCode}
+                          </span>
+                        )}
+                        <span className="font-semibold text-[#242E29] group-hover:text-[#466B53] transition-colors line-clamp-1">
+                          {cleanTitle}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-1.5 mt-0.5 text-[10px] text-[#65746C]">
                         <span>#{task.id}</span>
@@ -856,7 +849,7 @@ export function TaskBacklogView({
 
                     {/* Client Source */}
                     <td className="py-3 px-4 whitespace-nowrap hidden md:table-cell">
-                      <span className="text-[#242E29] font-medium text-[11px]">
+                      <span className="text-[#242E29] font-medium text-[11px] bg-[#FBF6F3] px-2 py-0.5 rounded border border-[#E8E2DD]">
                         {task.client}
                       </span>
                     </td>
@@ -909,7 +902,8 @@ export function TaskBacklogView({
                       </Button>
                     </td>
                   </tr>
-                ))}
+                );
+                })}
               </tbody>
             </table>
           </div>
