@@ -62,34 +62,34 @@ All accounts can be tested live at **`https://graceinmotion.vercel.app/login`**:
 ### Executive & Core Admin Leadership (Universal Authority)
 | Personnel | Username | Password | Role | Assigned Client Scope |
 | :--- | :--- | :--- | :--- | :--- |
-| **Divine Origines** | `divine.origines` | `GIM_2026!OS!` | Owner | **All Accounts** (Universal) |
-| **Radzdom Gallego (Radz)** | `rdzgllgo` | `Radzrose012116!` | Admin | **All Accounts** (Universal) |
-| **Ma. Rose Anne Malinao (RA)** | `ra.malinao` | `Password123!` | Admin | **All Accounts** (Universal) |
-| **RA Alternative** | `aneweraa.ai@gmail.com` | `Password123!` | Admin | **All Accounts** (Universal) |
+| **Divine Origines** | `divine.origines` | `GIM_Divine2026!Strategy` | Owner | **All Accounts** (Universal) |
+| **Radzdom Gallego (Radz)** | `rdzgllgo` | `GIM_Radz2026!Architect` | Admin | **All Accounts** (Universal) |
+| **Ma. Rose Anne Malinao (RA)** | `ra.malinao` | `GIM_RA2026!Finance` | Admin | **All Accounts** (Universal) |
+| **RA Operations** | `aneweraa.ai@gmail.com` | `GIM_RA2026!Operations` | Admin | **All Accounts** (Universal) |
 
 ### Delivery Squad & Client Specialists (Scoped Isolation)
 | Personnel | Username | Password | Role | Assigned Client Scope |
 | :--- | :--- | :--- | :--- | :--- |
-| **Erwin Manaog** | `erwin.manaog` | `Password123!` | Project Owner | `Little Treasures Company`, `We Rock the Spectrum (WRTS)` |
-| **BJ Ricafrente** | `bj.ricafrente` | `Password123!` | Operations Specialist | `We Rock the Spectrum (WRTS)`, `Grace In Motion (Internal)` |
-| **Camille Bautista** | `camille.smm` | `Password123!` | Social Media Specialist | `Little Treasures Company` Only |
-| **Jerold Recaplaza** | `jerold.recaplaza` | `Password123!` | Operations Specialist | `Risewise` Only |
-| **Jane Caillio** | `jane.caillio` | `Password123!` | Project Lead | `NoirLab` Only |
-| **Jedy Caillio** | `jedy.caillio` | `Password123!` | Operations Specialist | `InVogue Cleans` Only |
-| **Ellyka Claire Pama** | `ellyka.pama` | `Password123!` | Operations Assistant | `InVogue Cleans`, `Studio Nets` |
-| **Joyce Roble** | `joyce.roble` | `Password123!` | Project Specialist | `Studio Nets` Only |
-| **Joy Fabular** | `joy.fabular` | `Password123!` | Operations Assistant | `InVogue Cleans` Only |
-| **Aldwin** | `aldwin.ops` | `Password123!` | Operations Assistant | `We Rock the Spectrum (WRTS)` Only |
-| **Hashim Saudi** | `hashim.saudi` | `Password123!` | Tech Specialist | `Studio Nets` Only |
-| **Kimberly Besa** | `kimberly.besa` | `Password123!` | Operations Assistant | `Grace In Motion (Internal)` Only |
+| **Erwin Manaog** | `erwin.manaog` | `GIM_Erwin2026!Sprint` | Project Owner | `Little Treasures Company`, `We Rock the Spectrum (WRTS)` |
+| **BJ Ricafrente** | `bj.ricafrente` | `GIM_BJ2026!Franchise` | Operations Specialist | `We Rock the Spectrum (WRTS)`, `Grace In Motion (Internal)` |
+| **Camille Bautista** | `camille.smm` | `GIM_Camille2026!Social` | Social Media Specialist | `Little Treasures Company` Only |
+| **Jerold Recaplaza** | `jerold.recaplaza` | `GIM_Jerold2026!Growth` | Operations Specialist | `Risewise` Only |
+| **Jane Caillio** | `jane.caillio` | `GIM_Jane2026!Lead` | Project Lead | `NoirLab` Only |
+| **Jedy Caillio** | `jedy.caillio` | `GIM_Jedy2026!Systems` | Operations Specialist | `InVogue Cleans` Only |
+| **Ellyka Claire Pama** | `ellyka.pama` | `GIM_Ellyka2026!Assist` | Operations Assistant | `InVogue Cleans`, `Studio Nets` |
+| **Joyce Roble** | `joyce.roble` | `GIM_Joyce2026!Design` | Project Specialist | `Studio Nets` Only |
+| **Joy Fabular** | `joy.fabular` | `GIM_Joy2026!Clean` | Operations Assistant | `InVogue Cleans` Only |
+| **Aldwin** | `aldwin.ops` | `GIM_Aldwin2026!Ops` | Operations Assistant | `We Rock the Spectrum (WRTS)` Only |
+| **Hashim Saudi** | `hashim.saudi` | `GIM_Hashim2026!Tech` | Tech Specialist | `Studio Nets` Only |
+| **Kimberly Besa** | `kimberly.besa` | `GIM_Kimberly2026!GIM` | Operations Assistant | `Grace In Motion (Internal)` Only |
 
 ### Verified Client Principals (Single-Tenant Portal Isolation)
 | Personnel | Username | Password | Role | Client Portal Scope |
 | :--- | :--- | :--- | :--- | :--- |
-| **Zoe Horner** | `zoe.horner` | `Password123!` | Client User | `Little Treasures Company` Only |
-| **Aaron Ofosu** | `aaron.ofosu` | `Password123!` | Client User | `Juvibolt Cybertech` Only |
-| **Matthew Robbins** | `matthew.robbins` | `Password123!` | Client User | `InVogue Cleans` Only |
-| **Nathan Blake** | `nathan.blake` | `Password123!` | Client User | `Studio Nets` Only |
+| **Zoe Horner** | `zoe.horner` | `Portal_Zoe2026!LTC` | Client User | `Little Treasures Company` Only |
+| **Aaron Ofosu** | `aaron.ofosu` | `Portal_Aaron2026!JB` | Client User | `Juvibolt Cybertech` Only |
+| **Matthew Robbins** | `matthew.robbins` | `Portal_Matthew2026!IVC` | Client User | `InVogue Cleans` Only |
+| **Nathan Blake** | `nathan.blake` | `Portal_Nathan2026!SN` | Client User | `Studio Nets` Only |
 
 ---
 

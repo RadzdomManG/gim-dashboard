@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
-// Verified personnel credentials database
+// Verified personnel credentials database (Synchronized with Backend BUILT_IN_ACCOUNTS)
 export const VERIFIED_ACCOUNTS: Record<
   string,
   {
@@ -23,16 +23,18 @@ export const VERIFIED_ACCOUNTS: Record<
       name: string;
       nickname: string;
       email: string;
-      role: "Owner" | "Admin" | "Operations Manager" | "Project Owner" | "Team Member" | "Team Specialist" | "Social Media Specialist" | "Client User";
+      role: string;
       isCoreAdmin: boolean;
       avatarColor: string;
       title: string;
       clientScope: string;
+      assigned_clients: string[];
     };
   }
 > = {
+  // 1. Executive Leadership
   "divine.origines": {
-    password: "GIM_2026!OS!",
+    password: "GIM_Divine2026!Strategy",
     user: {
       id: "divine-001",
       username: "divine.origines",
@@ -40,14 +42,15 @@ export const VERIFIED_ACCOUNTS: Record<
       nickname: "Divine",
       email: "divine@graceinmotion.agency",
       role: "Owner",
-      isCoreAdmin: false, // Divine is Owner, Radz & RA are Core Admins
+      isCoreAdmin: false,
       avatarColor: "bg-[#3D5249]",
       title: "Founder & Strategy Lead",
       clientScope: "all",
+      assigned_clients: ["All Accounts"],
     },
   },
   "rdzgllgo": {
-    password: "Radzrose012116!",
+    password: "GIM_Radz2026!Architect",
     user: {
       id: "radz-001",
       username: "rdzgllgo",
@@ -59,10 +62,11 @@ export const VERIFIED_ACCOUNTS: Record<
       avatarColor: "bg-[#466B53]",
       title: "Chief Automation Architect & Platform Systems Lead",
       clientScope: "all",
+      assigned_clients: ["All Accounts"],
     },
   },
   "ra.malinao": {
-    password: "RA_GIM2026!",
+    password: "GIM_RA2026!Finance",
     user: {
       id: "ra-001",
       username: "ra.malinao",
@@ -72,12 +76,13 @@ export const VERIFIED_ACCOUNTS: Record<
       role: "Admin",
       isCoreAdmin: true,
       avatarColor: "bg-[#518E6A]",
-      title: "Core Admin & Commercial Operations / Invoicing",
+      title: "Commercial Operations & Billing Lead",
       clientScope: "all",
+      assigned_clients: ["All Accounts"],
     },
   },
   "aneweraa.ai@gmail.com": {
-    password: "Password123!",
+    password: "GIM_RA2026!Operations",
     user: {
       id: "ra-002",
       username: "aneweraa.ai@gmail.com",
@@ -87,12 +92,15 @@ export const VERIFIED_ACCOUNTS: Record<
       role: "Admin",
       isCoreAdmin: true,
       avatarColor: "bg-[#518E6A]",
-      title: "Core Admin & Commercial Operations / Invoicing",
+      title: "Commercial Operations & Billing Lead",
       clientScope: "all",
+      assigned_clients: ["All Accounts"],
     },
   },
+
+  // 2. Delivery Squad & Client Specialists
   "erwin.manaog": {
-    password: "Erwin_GIM2026!",
+    password: "GIM_Erwin2026!Sprint",
     user: {
       id: "erwin-001",
       username: "erwin.manaog",
@@ -101,13 +109,30 @@ export const VERIFIED_ACCOUNTS: Record<
       email: "erwin@graceinmotion.agency",
       role: "Project Owner",
       isCoreAdmin: false,
-      avatarColor: "bg-blue-600",
-      title: "Project Owner & Delivery Lead",
-      clientScope: "Little Treasures Company",
+      avatarColor: "bg-[#65746C]",
+      title: "Project Owner & Delivery Specialist",
+      clientScope: "Little Treasures Company, We Rock the Spectrum (WRTS)",
+      assigned_clients: ["Little Treasures Company", "We Rock the Spectrum (WRTS)"],
+    },
+  },
+  "bj.ricafrente": {
+    password: "GIM_BJ2026!Franchise",
+    user: {
+      id: "bj-001",
+      username: "bj.ricafrente",
+      name: "BJ Ricafrente",
+      nickname: "BJ",
+      email: "bj@graceinmotion.agency",
+      role: "Operations Specialist",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#3D5249]",
+      title: "Operations Specialist",
+      clientScope: "We Rock the Spectrum (WRTS), Grace In Motion (Internal)",
+      assigned_clients: ["We Rock the Spectrum (WRTS)", "Grace In Motion (Internal)"],
     },
   },
   "camille.smm": {
-    password: "Camille_GIM2026!",
+    password: "GIM_Camille2026!Social",
     user: {
       id: "camille-001",
       username: "camille.smm",
@@ -116,9 +141,220 @@ export const VERIFIED_ACCOUNTS: Record<
       email: "camille.smm@graceinmotion.agency",
       role: "Social Media Specialist",
       isCoreAdmin: false,
-      avatarColor: "bg-purple-600",
+      avatarColor: "bg-[#518E6A]",
       title: "Social Media Specialist",
       clientScope: "Little Treasures Company",
+      assigned_clients: ["Little Treasures Company"],
+    },
+  },
+  "jerold.recaplaza": {
+    password: "GIM_Jerold2026!Growth",
+    user: {
+      id: "jerold-001",
+      username: "jerold.recaplaza",
+      name: "Jerold Recaplaza",
+      nickname: "Jerold",
+      email: "jerold@graceinmotion.agency",
+      role: "Operations Specialist",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#466B53]",
+      title: "Operations Specialist",
+      clientScope: "Risewise",
+      assigned_clients: ["Risewise"],
+    },
+  },
+  "jane.caillio": {
+    password: "GIM_Jane2026!Lead",
+    user: {
+      id: "jane-001",
+      username: "jane.caillio",
+      name: "Jane Caillio",
+      nickname: "Jane",
+      email: "jane@graceinmotion.agency",
+      role: "Project Lead",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#518E6A]",
+      title: "Project Lead",
+      clientScope: "NoirLab",
+      assigned_clients: ["NoirLab"],
+    },
+  },
+  "jedy.caillio": {
+    password: "GIM_Jedy2026!Systems",
+    user: {
+      id: "jedy-001",
+      username: "jedy.caillio",
+      name: "Jedy Caillio",
+      nickname: "Jedy",
+      email: "jedy@graceinmotion.agency",
+      role: "Operations Specialist",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#466B53]",
+      title: "Operations Specialist",
+      clientScope: "InVogue Cleans",
+      assigned_clients: ["InVogue Cleans"],
+    },
+  },
+  "ellyka.pama": {
+    password: "GIM_Ellyka2026!Assist",
+    user: {
+      id: "ellyka-001",
+      username: "ellyka.pama",
+      name: "Ellyka Claire Pama",
+      nickname: "Ellyka",
+      email: "ellyka@graceinmotion.agency",
+      role: "Operations Assistant",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#65746C]",
+      title: "Operations Assistant",
+      clientScope: "InVogue Cleans, Studio Nets",
+      assigned_clients: ["InVogue Cleans", "Studio Nets"],
+    },
+  },
+  "joyce.roble": {
+    password: "GIM_Joyce2026!Design",
+    user: {
+      id: "joyce-001",
+      username: "joyce.roble",
+      name: "Joyce Roble",
+      nickname: "Joyce",
+      email: "joyce@graceinmotion.agency",
+      role: "Project Specialist",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#3D5249]",
+      title: "Project Specialist",
+      clientScope: "Studio Nets",
+      assigned_clients: ["Studio Nets"],
+    },
+  },
+  "joy.fabular": {
+    password: "GIM_Joy2026!Clean",
+    user: {
+      id: "joy-001",
+      username: "joy.fabular",
+      name: "Joy Fabular",
+      nickname: "Joy",
+      email: "joy@graceinmotion.agency",
+      role: "Operations Assistant",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#518E6A]",
+      title: "Operations Assistant",
+      clientScope: "InVogue Cleans",
+      assigned_clients: ["InVogue Cleans"],
+    },
+  },
+  "aldwin.ops": {
+    password: "GIM_Aldwin2026!Ops",
+    user: {
+      id: "aldwin-001",
+      username: "aldwin.ops",
+      name: "Aldwin",
+      nickname: "Aldwin",
+      email: "aldwin@graceinmotion.agency",
+      role: "Operations Assistant",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#65746C]",
+      title: "Operations Assistant",
+      clientScope: "We Rock the Spectrum (WRTS)",
+      assigned_clients: ["We Rock the Spectrum (WRTS)"],
+    },
+  },
+  "hashim.saudi": {
+    password: "GIM_Hashim2026!Tech",
+    user: {
+      id: "hashim-001",
+      username: "hashim.saudi",
+      name: "Hashim Saudi",
+      nickname: "Hashim",
+      email: "hashim@graceinmotion.agency",
+      role: "Tech Specialist",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#466B53]",
+      title: "Tech Specialist",
+      clientScope: "Studio Nets",
+      assigned_clients: ["Studio Nets"],
+    },
+  },
+  "kimberly.besa": {
+    password: "GIM_Kimberly2026!GIM",
+    user: {
+      id: "kimberly-001",
+      username: "kimberly.besa",
+      name: "Kimberly Besa",
+      nickname: "Kimberly",
+      email: "kimberly@graceinmotion.agency",
+      role: "Operations Assistant",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#3D5249]",
+      title: "Operations Assistant",
+      clientScope: "Grace In Motion (Internal)",
+      assigned_clients: ["Grace In Motion (Internal)"],
+    },
+  },
+
+  // 3. Verified Client Principals
+  "zoe.horner": {
+    password: "Portal_Zoe2026!LTC",
+    user: {
+      id: "zoe-001",
+      username: "zoe.horner",
+      name: "Zoe Horner",
+      nickname: "Zoe",
+      email: "zoe@littletreasures.com.au",
+      role: "Client User",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#518E6A]",
+      title: "Founder, Little Treasures",
+      clientScope: "Little Treasures Company",
+      assigned_clients: ["Little Treasures Company"],
+    },
+  },
+  "aaron.ofosu": {
+    password: "Portal_Aaron2026!JB",
+    user: {
+      id: "aaron-001",
+      username: "aaron.ofosu",
+      name: "Aaron Ofosu",
+      nickname: "Aaron",
+      email: "aaron@juviboltcybertech.com",
+      role: "Client User",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#466B53]",
+      title: "Founder, Juvibolt Cybertech",
+      clientScope: "Juvibolt Cybertech",
+      assigned_clients: ["Juvibolt Cybertech"],
+    },
+  },
+  "matthew.robbins": {
+    password: "Portal_Matthew2026!IVC",
+    user: {
+      id: "matthew-001",
+      username: "matthew.robbins",
+      name: "Matthew Robbins",
+      nickname: "Matthew",
+      email: "matthew@invoguecleans.com",
+      role: "Client User",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#3D5249]",
+      title: "Founder, InVogue Cleans",
+      clientScope: "InVogue Cleans",
+      assigned_clients: ["InVogue Cleans"],
+    },
+  },
+  "nathan.blake": {
+    password: "Portal_Nathan2026!SN",
+    user: {
+      id: "nathan-001",
+      username: "nathan.blake",
+      name: "Nathan Blake",
+      nickname: "Nathan",
+      email: "nathan@studionets.com.au",
+      role: "Client User",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#65746C]",
+      title: "Creative Director, Studio Nets",
+      clientScope: "Studio Nets",
+      assigned_clients: ["Studio Nets"],
     },
   },
 };
@@ -145,77 +381,27 @@ export default function LoginPage() {
     setError(null);
 
     const cleanUsername = username.trim().toLowerCase();
+    const cleanPassword = password.trim();
 
     // 1. Check built-in verified accounts (instant local verification)
     const account = VERIFIED_ACCOUNTS[cleanUsername];
-    if (account && account.password === password) {
+    if (account && account.password === cleanPassword) {
       if (typeof window !== "undefined") {
         localStorage.setItem("gim_auth_user", JSON.stringify(account.user));
       }
       setTimeout(() => {
         setLoading(false);
         router.push("/");
-      }, 400);
+      }, 300);
       return;
     }
 
-    // 2. Check dynamic accounts in local storage (same browser fast lookup)
-    if (typeof window !== "undefined") {
-      try {
-        const storedCustomLogins = localStorage.getItem("gim_custom_logins");
-        if (storedCustomLogins) {
-          const customLogins = JSON.parse(storedCustomLogins);
-          const userEntry = customLogins[cleanUsername];
-          if (userEntry && userEntry.password === password && !userEntry.is_revoked) {
-            localStorage.setItem("gim_auth_user", JSON.stringify(userEntry.user));
-            setTimeout(() => {
-              setLoading(false);
-              router.push("/");
-            }, 400);
-            return;
-          }
-        }
-
-        const storedInvites = localStorage.getItem("gim_invited_users");
-        if (storedInvites) {
-          const invites = JSON.parse(storedInvites);
-          const matched = invites.find(
-            (inv: any) =>
-              (inv.username?.toLowerCase() === cleanUsername || inv.name?.toLowerCase() === cleanUsername) &&
-              inv.password === password
-          );
-          if (matched) {
-            const userObj = {
-              id: matched.id || `usr-${Date.now()}`,
-              username: matched.username || cleanUsername,
-              name: matched.name,
-              nickname: matched.name.split(" ")[0],
-              email: matched.email || `${cleanUsername}@graceinmotion.agency`,
-              role: matched.role || "Team Member",
-              isCoreAdmin: matched.role === "Admin",
-              avatarColor: "bg-[#466B53]",
-              title: matched.title || matched.role,
-              clientScope: matched.clientScope || "all",
-            };
-            localStorage.setItem("gim_auth_user", JSON.stringify(userObj));
-            setTimeout(() => {
-              setLoading(false);
-              router.push("/");
-            }, 400);
-            return;
-          }
-        }
-      } catch (err) {
-        console.error("Local invite lookup failed:", err);
-      }
-    }
-
-    // 3. Query Cloud Database (/api/auth/login) for cross-browser, multi-device authentication
+    // 2. Query Cloud Database (/api/auth/login) for cross-browser, multi-device authentication
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: cleanUsername, password }),
+        body: JSON.stringify({ username: cleanUsername, password: cleanPassword }),
       });
       const data = await res.json();
       if (res.ok && data.success && data.user) {
@@ -235,10 +421,10 @@ export default function LoginPage() {
       console.error("Cloud authentication lookup failed:", err);
     }
 
-    // 4. Fallback Authentication failure
+    // 3. Fallback Authentication failure
     setTimeout(() => {
       setLoading(false);
-      setError("Invalid username or password. Only verified GIM personnel may access Mission Control.");
+      setError("Invalid username or password. All legacy credentials have been revoked. Please use your newly issued GIM Mission Control credentials.");
     }, 300);
   };
 
@@ -320,7 +506,7 @@ export default function LoginPage() {
               size="md"
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center space-x-1.5 py-2.5 mt-2"
+              className="w-full flex items-center justify-center space-x-1.5 py-2.5 mt-2 cursor-pointer"
             >
               <span>{loading ? "Verifying Credentials..." : "Sign In to GIM"}</span>
               <ArrowRight className="w-3.5 h-3.5" />
