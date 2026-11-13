@@ -243,7 +243,7 @@ export function WelcomeOnboardingModal({
                       </div>
                       <div>
                         <div className="font-bold text-[11px] text-[#242E29]">Erwin Manaog</div>
-                        <div className="text-[10px] text-[#65746C]">Project Owner · Little Treasures & Studio Nets</div>
+                        <div className="text-[10px] text-[#65746C]">Project Owner · WRTS & Studio Nets</div>
                       </div>
                     </div>
 
@@ -329,7 +329,7 @@ export function WelcomeOnboardingModal({
                   <div>
                     <h4 className="text-xs font-bold text-[#242E29]">Communication in Designated Channels</h4>
                     <p className="text-[11px] text-[#65746C] mt-0.5 leading-relaxed">
-                      Discuss client-related topics in that client&apos;s channel (e.g. <code>#little-treasures-ops</code>). All files and discussions are permanent and backreadable.
+                      Discuss client-related topics in that client&apos;s channel (e.g. <code>#wrts-automations</code>). All files and discussions are permanent and backreadable.
                     </p>
                   </div>
                 </div>
@@ -356,13 +356,6 @@ export function WelcomeOnboardingModal({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs max-h-[280px] overflow-y-auto pr-1">
                 {[
-                  {
-                    name: "Little Treasures Company",
-                    scopeKey: "Little Treasures",
-                    badge: "Summit Launch",
-                    badgeVariant: "brand" as const,
-                    desc: "GHL Website, $99 Course Build, and payment verification for Fri 11 Dec 2026 summit.",
-                  },
                   {
                     name: "We Rock the Spectrum (WRTS)",
                     scopeKey: "We Rock the Spectrum",

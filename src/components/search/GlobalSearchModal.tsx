@@ -317,22 +317,22 @@ export function GlobalSearchModal({
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                 <button
-                  onClick={() => setQuery("Little Treasures")}
+                  onClick={() => setQuery("We Rock the Spectrum")}
                   className="p-2.5 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/50 hover:bg-[#FBF6F3] text-left transition-colors flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-[#518E6A]" />
-                    <span className="font-semibold text-[#242E29]">Little Treasures Company</span>
+                    <span className="font-semibold text-[#242E29]">We Rock the Spectrum (WRTS)</span>
                   </div>
-                  <span className="text-[10px] text-[#65746C]">98 tasks</span>
+                  <span className="text-[10px] text-[#65746C]">21 flows</span>
                 </button>
                 <button
-                  onClick={() => setQuery("G5 Website")}
+                  onClick={() => setQuery("W1 Lead Engine")}
                   className="p-2.5 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/50 hover:bg-[#FBF6F3] text-left transition-colors flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
                     <Layers className="w-4 h-4 text-[#518E6A]" />
-                    <span className="font-semibold text-[#242E29]">G5 | Website 6 Pages</span>
+                    <span className="font-semibold text-[#242E29]">W1 | Lead Engine Setup</span>
                   </div>
                   <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">In Review</span>
                 </button>
@@ -354,7 +354,7 @@ export function GlobalSearchModal({
               <Search className="w-8 h-8 text-[#65746C]/40 mx-auto" />
               <p className="text-sm font-semibold text-[#242E29]">No matching results found</p>
               <p className="text-xs text-[#65746C]">
-                Try searching for a client name (e.g. &ldquo;Little Treasures&rdquo;), gate code (e.g. &ldquo;G5&rdquo;), team member, or comment.
+                Try searching for a client name (e.g. &ldquo;We Rock the Spectrum&rdquo;), gate code (e.g. &ldquo;W1&rdquo;), team member, or comment.
               </p>
             </div>
           ) : (

@@ -228,7 +228,7 @@ export default function GimDashboard() {
         setModalTask({
           id: taskId,
           title: `${taskId} Deliverable Gate Verification`,
-          client: clientName || "Little Treasures Company",
+          client: clientName || "We Rock the Spectrum (WRTS)",
           status: "In Progress",
           priority: "Normal",
         });
@@ -343,8 +343,8 @@ export default function GimDashboard() {
       role: "Project Owner",
       isCoreAdmin: false,
       avatarColor: "bg-[#466B53]",
-      title: "Project Owner (Little Treasures & WRTS)",
-      clientScope: "Little Treasures Company, We Rock the Spectrum (WRTS)",
+      title: "Project Owner (WRTS & Studio Nets)",
+      clientScope: "We Rock the Spectrum (WRTS), Studio Nets, InVogue Cleans",
     },
     bj: {
       id: "bj",
@@ -444,17 +444,6 @@ export default function GimDashboard() {
       avatarColor: "bg-[#518E6A]",
       title: "Social Media Manager (SMM)",
       clientScope: "We Rock the Spectrum (WRTS), Juvibolt Cybertech, Studio Nets",
-    },
-    zoe: {
-      id: "zoe",
-      name: "Zoe Horner",
-      nickname: "Zoe",
-      email: "zoe@littletreasures.com.au",
-      role: "Client User",
-      isCoreAdmin: false,
-      avatarColor: "bg-[#518E6A]",
-      title: "Founder, Little Treasures",
-      clientScope: "Little Treasures Company",
     },
     aaron: {
       id: "aaron",
@@ -677,7 +666,7 @@ export default function GimDashboard() {
       username: "erwin.manaog",
       name: "Erwin Manaog",
       role: "Project Owner",
-      clientScope: "Little Treasures Company",
+      clientScope: "We Rock the Spectrum (WRTS)",
       invitedBy: "Divine Origines",
       token: "gim_tok_8f92e104a",
       status: "Active",
@@ -821,7 +810,7 @@ export default function GimDashboard() {
       username: "zoe.horner",
       name: "Zoe Horner",
       role: "Client User",
-      clientScope: "Little Treasures Company",
+      clientScope: "We Rock the Spectrum (WRTS)",
       invitedBy: "Divine Origines",
       token: "gim_tok_4e12c980b",
       status: "Active",
@@ -1058,21 +1047,6 @@ export default function GimDashboard() {
       retainer: "USD $2,500 / mo",
       progress: 40,
     },
-    {
-      id: "little-treasures",
-      name: "Little Treasures Company",
-      code: "LT-AU",
-      lead: "Erwin Manaog",
-      contact: "Zoe Horner (Founder)",
-      currentSprint: "Paused by client request (historical ClickUp tasks archived)",
-      status: "Paused (Archive)",
-      statusVariant: "upcoming" as const,
-      milestone: "Historical Archive",
-      tasksCount: "47 archived tasks",
-      retainer: "AUD $4,500 / mo (Paused)",
-      progress: 100,
-      isPaused: true,
-    },
   ];
 
   const [showPausedClients, setShowPausedClients] = useState(false);
@@ -1167,8 +1141,8 @@ export default function GimDashboard() {
     {
       name: userProfiles.erwin.name,
       nickname: userProfiles.erwin.nickname,
-      role: "Project Owner · Little Treasures",
-      focus: "Summit Launch Funnel & Sprint Velocity",
+      role: "Project Owner · WRTS & Studio Nets",
+      focus: "Franchise Workflows & Sprint Velocity",
       load: "7h 10m logged today",
       status: "Online",
       shift: "08:00 AM - 05:00 PM",
@@ -1179,7 +1153,7 @@ export default function GimDashboard() {
       name: userProfiles.smm.name,
       nickname: userProfiles.smm.nickname,
       role: "Social Media Specialist",
-      focus: "Little Treasures Reel Batches & Meta Ads",
+      focus: "WRTS & Juvibolt Reel Batches & Meta Ads",
       load: "6h 20m logged today",
       status: "Online",
       shift: "09:00 AM - 06:00 PM",
@@ -1244,7 +1218,7 @@ export default function GimDashboard() {
       time: "2 hours ago",
       actor: `${userProfiles.erwin.name} (${userProfiles.erwin.nickname})`,
       action: "Updated review notes on Gate G5 (Website 6 Pages)",
-      target: "Little Treasures",
+      target: "We Rock the Spectrum (WRTS)",
     },
     {
       time: "Yesterday",
@@ -1502,7 +1476,6 @@ export default function GimDashboard() {
                   <option value="risewise">Risewise (Global)</option>
                   <option value="noirlab">NoirLab (Global)</option>
                   <option value="gim-internal">Grace In Motion (Internal)</option>
-                  <option value="little-treasures">📁 Paused Archive (Little Treasures)</option>
                 </select>
               </div>
             </div>
@@ -1865,10 +1838,10 @@ export default function GimDashboard() {
                   </CardContent>
                 </Card>
 
-                {/* Summit Countdown */}
+                {/* Franchise Automation Target */}
                 <Card
                   onClick={() => {
-                    setSelectedPortfolioClientId("little-treasures");
+                    setSelectedPortfolioClientId("wrts");
                     setSelectedPortfolioSubTab("calendar");
                     setActiveTab("clients");
                   }}
@@ -1877,14 +1850,14 @@ export default function GimDashboard() {
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-[#65746C] group-hover:text-[#3D5249] transition-colors flex items-center gap-1">
-                        Summit Launch Deadline
+                        WRTS Franchise Launch Target
                         <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </p>
                       <div className="text-2xl font-bold text-[#242E29] mt-1">
                         38 Days
                       </div>
                       <p className="text-[11px] text-[#3D5249] font-medium mt-0.5">
-                        Hard Target: Fri 11 Dec 2026
+                        Target Sprint: Fri 11 Dec 2026
                       </p>
                     </div>
                     <div className="w-10 h-10 rounded-lg bg-[#3D5249]/10 text-[#3D5249] group-hover:bg-[#3D5249] group-hover:text-white transition-all flex items-center justify-center">
@@ -2010,7 +1983,7 @@ export default function GimDashboard() {
                         <div>
                           <CardTitle>Delivery QA Gates</CardTitle>
                           <CardDescription>
-                            Little Treasures verification gates
+                            Agency sprint verification gates
                           </CardDescription>
                         </div>
                         <ShieldCheck className="w-4 h-4 text-[#518E6A]" />
@@ -2020,7 +1993,7 @@ export default function GimDashboard() {
                         {urgentTasks.map((task, idx) => (
                           <div
                             key={idx}
-                            onClick={() => handleOpenSearchTask(task.code, "Little Treasures Company")}
+                            onClick={() => handleOpenSearchTask(task.code, "We Rock the Spectrum (WRTS)")}
                             className="p-3 rounded-lg border border-[#E8E2DD] bg-[#FBF6F3]/40 hover:border-[#518E6A]/60 hover:bg-[#FBF6F3] cursor-pointer transition-all text-xs group"
                             title={`Inspect ${task.code} requirements & sign-off`}
                           >
@@ -3123,8 +3096,6 @@ export default function GimDashboard() {
         defaultClient={
           currentUser.clientScope && currentUser.clientScope !== "all"
             ? currentUser.clientScope.split(",")[0].trim()
-            : selectedPortfolioClientId === "little-treasures"
-            ? "Little Treasures Company"
             : selectedPortfolioClientId === "we-rock-the-spectrum"
             ? "We Rock the Spectrum (WRTS)"
             : selectedPortfolioClientId === "juvibolt-cybertech" || selectedPortfolioClientId === "aaron-ofosu"
@@ -3141,7 +3112,7 @@ export default function GimDashboard() {
             ? "Grace In Motion (Internal)"
             : selectedPortfolioClientId === "tch2thrive"
             ? "Tch2Thrive"
-            : "Little Treasures Company"
+            : "We Rock the Spectrum (WRTS)"
         }
         currentUserName={currentUser.name}
         currentUserRole={currentUser.role}

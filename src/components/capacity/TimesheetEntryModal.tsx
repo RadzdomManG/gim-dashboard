@@ -38,13 +38,13 @@ export function TimesheetEntryModal({
     { id: "erwin", name: "Erwin Manaog", nickname: "Erwin" },
     { id: "charise", name: "Charise Malinao", nickname: "Charise" },
     { id: "pat", name: "Patrisha Garcia", nickname: "Pat" },
-    { id: "zoe-ops", name: "Zoe Horner (AU Operations)", nickname: "Zoe" },
+    { id: "bj", name: "BJ Ricafrente", nickname: "BJ" },
   ],
 }: TimesheetEntryModalProps) {
   const [selectedMember, setSelectedMember] = useState(teamMembers[0]?.id || "radz");
-  const [client, setClient] = useState("Little Treasures Company");
+  const [client, setClient] = useState("We Rock the Spectrum (WRTS)");
   const [hours, setHours] = useState("3.5");
-  const [deliverable, setDeliverable] = useState("G5 Website Copy & Responsive Layout");
+  const [deliverable, setDeliverable] = useState("WRTS Franchise Lead Engine Automation");
   const [notes, setNotes] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [submitted, setSubmitted] = useState(false);
@@ -134,7 +134,8 @@ export function TimesheetEntryModal({
                 onChange={(e) => setClient(e.target.value)}
                 className="w-full px-3 py-2 text-sm rounded-xl border border-[#3D5249]/20 bg-white text-[#242E29]"
               >
-                <option value="Little Treasures Company">Little Treasures Company</option>
+                <option value="We Rock the Spectrum (WRTS)">We Rock the Spectrum (WRTS)</option>
+                <option value="Juvibolt Cybertech">Juvibolt Cybertech</option>
                 <option value="Studio Nets">Studio Nets</option>
                 <option value="InVogue Cleans">InVogue Cleans</option>
                 <option value="Aaron Ofosu Bootcamp">Aaron Ofosu Bootcamp</option>

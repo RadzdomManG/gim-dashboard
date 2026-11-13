@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { fetchClickUpTasks } from '@/lib/clickup/client';
+import { notifyTaskUpdated } from '@/lib/slack/notifier';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,7 +49,6 @@ export async function GET(req: NextRequest) {
               }
 
               // Exact Client Aliases
-              if (param.includes('little treasures') && (clientName.includes('little treasures') || listName.includes('little treasures'))) return true;
               if (param.includes('spectrum') && (clientName.includes('spectrum') || listName.includes('spectrum'))) return true;
               if (param.includes('juvibolt') && (clientName.includes('juvibolt') || listName.includes('juvibolt'))) return true;
               if (param.includes('ofosu') && (clientName.includes('juvibolt') || listName.includes('juvibolt') || clientName.includes('ofosu'))) return true;
@@ -229,6 +229,21 @@ export async function PATCH(req: NextRequest) {
         .single();
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       taskData = task;
+    }
+
+    if (taskData && (status !== undefined || assignee_name !== undefined)) {
+      try {
+        await notifyTaskUpdated({
+          taskTitle: taskData.title || title || 'Task',
+          client: taskData.client || client || 'Grace In Motion',
+          newStatus: taskData.status || status || 'Updated',
+          assigneeName: taskData.assignee_name || assignee_name,
+          updatedBy: body.updated_by || 'Admin',
+          priority: taskData.priority,
+        });
+      } catch (slackErr) {
+        console.error('Slack task notification broadcast error:', slackErr);
+      }
     }
 
     return NextResponse.json({ success: true, task: taskData });

@@ -104,7 +104,7 @@ export function SystemUpgradesModal({
       title: "Client-Dedicated Messaging Channels",
       category: "Communication",
       badgeVariant: "brand" as const,
-      desc: "Dedicated channels for every client (#little-treasures-ops, #wrts-automations, #juvibolt-cybertech, #risewise-growth, etc.) with automatic member routing.",
+      desc: "Dedicated channels for every client (#wrts-automations, #juvibolt-cybertech, #studio-nets-ops, #risewise-growth, etc.) with automatic member routing.",
       actionLabel: "View Channels",
       icon: MessageSquare,
     },

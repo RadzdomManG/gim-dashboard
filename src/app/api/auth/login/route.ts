@@ -85,8 +85,8 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       isCoreAdmin: false,
       avatarColor: 'bg-[#65746C]',
       title: 'Project Owner & Delivery Specialist',
-      clientScope: 'We Rock the Spectrum (WRTS), Little Treasures Company, InVogue Cleans, Studio Nets, NoirLab, Grace In Motion (Internal)',
-      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Little Treasures Company', 'InVogue Cleans', 'Studio Nets', 'NoirLab', 'Grace In Motion (Internal)'],
+      clientScope: 'We Rock the Spectrum (WRTS), InVogue Cleans, Studio Nets, NoirLab, Grace In Motion (Internal)',
+      assigned_clients: ['We Rock the Spectrum (WRTS)', 'InVogue Cleans', 'Studio Nets', 'NoirLab', 'Grace In Motion (Internal)'],
     },
   },
   'bj.ricafrente': {
@@ -101,8 +101,8 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       isCoreAdmin: false,
       avatarColor: 'bg-[#3D5249]',
       title: 'Operations Specialist',
-      clientScope: 'We Rock the Spectrum (WRTS), Little Treasures Company, Grace In Motion (Internal)',
-      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Little Treasures Company', 'Grace In Motion (Internal)'],
+      clientScope: 'We Rock the Spectrum (WRTS), Grace In Motion (Internal)',
+      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Grace In Motion (Internal)'],
     },
   },
   'camille.smm': {
@@ -267,22 +267,6 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
   },
 
   // 3. Verified Client Principals (Single-Tenant Portal Isolation)
-  'zoe.horner': {
-    password: 'Portal_Zoe2026!LTC',
-    user: {
-      id: 'zoe-001',
-      username: 'zoe.horner',
-      name: 'Zoe Horner',
-      nickname: 'Zoe',
-      email: 'zoe@littletreasures.com.au',
-      role: 'Client User',
-      isCoreAdmin: false,
-      avatarColor: 'bg-[#518E6A]',
-      title: 'Founder, Little Treasures',
-      clientScope: 'Little Treasures Company',
-      assigned_clients: ['Little Treasures Company'],
-    },
-  },
   'aaron.ofosu': {
     password: 'Portal_Aaron2026!JB',
     user: {
@@ -466,7 +450,7 @@ export async function POST(req: NextRequest) {
 
     const assignedClients = Array.isArray(meta.assigned_clients) && meta.assigned_clients.length > 0
       ? meta.assigned_clients
-      : ['Little Treasures Company'];
+      : ['We Rock the Spectrum (WRTS)'];
 
     const userProfile = {
       id: user.id,

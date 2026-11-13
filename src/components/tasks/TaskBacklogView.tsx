@@ -254,11 +254,16 @@ export function TaskBacklogView({
         if (!hasAccess && !isAssignedToUser) return false;
       }
 
+      // Little Treasures is strictly paused: omit entirely from all sprint and backlog views
+      if (task.client.toLowerCase().includes("little treasures") || task.listName.toLowerCase().includes("little treasures")) {
+        return false;
+      }
+
       // Global client context filter from header
       if (selectedClientId && selectedClientId !== "all") {
         const clientKeyMap: Record<string, string> = {
-          "little-treasures": "little treasures",
           "we-rock-the-spectrum": "we rock the spectrum",
+          "wrts": "we rock the spectrum",
           "juvibolt-cybertech": "juvibolt",
           "aaron-ofosu": "juvibolt",
           "risewise": "risewise",
@@ -276,14 +281,8 @@ export function TaskBacklogView({
       }
 
       // Client filter
-      if (clientFilter === "all") {
-        // Zoe / Little Treasures is paused: omit from active sprint views, keep historical accessible via "little-treasures"
-        if (task.client.toLowerCase().includes("little treasures")) {
-          return false;
-        }
-      } else if (clientFilter !== "all-with-paused") {
+      if (clientFilter !== "all") {
         const clientKeyMap: Record<string, string> = {
-          "little-treasures": "little treasures",
           "we-rock-the-spectrum": "we rock the spectrum",
           "wrts": "we rock the spectrum",
           "juvibolt-cybertech": "juvibolt",
@@ -649,8 +648,6 @@ export function TaskBacklogView({
                 <option value="risewise">Risewise</option>
                 <option value="noirlab">NoirLab</option>
                 <option value="gim-internal">Grace In Motion (Internal)</option>
-                <option value="little-treasures">📁 Paused Archive (Little Treasures)</option>
-                <option value="all-with-paused">All Clients (Incl. Paused)</option>
               </select>
 
               {/* Assignee Filter */}

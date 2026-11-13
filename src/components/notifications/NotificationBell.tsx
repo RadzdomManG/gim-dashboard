@@ -47,6 +47,34 @@ export function NotificationBell({
   const [showSoundSettings, setShowSoundSettings] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isTestingSlack, setIsTestingSlack] = useState(false);
+  const [slackTestStatus, setSlackTestStatus] = useState<string | null>(null);
+
+  const handleTestSlack = async () => {
+    setIsTestingSlack(true);
+    setSlackTestStatus(null);
+    try {
+      const res = await fetch("/api/notifications/slack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "test",
+          payload: { sender: "Notification Hub" },
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSlackTestStatus(data.dispatch?.simulated ? "Simulated (Add Webhook)" : "Dispatched to Slack!");
+      } else {
+        setSlackTestStatus("Error dispatching");
+      }
+    } catch {
+      setSlackTestStatus("Failed to send");
+    } finally {
+      setIsTestingSlack(false);
+      setTimeout(() => setSlackTestStatus(null), 3000);
+    }
+  };
 
   // Sound preferences state
   const [soundPrefs, setSoundPrefs] = useState({
@@ -101,10 +129,10 @@ export function NotificationBell({
             {
               id: "notif-task-assigned",
               type: "task",
-              title: "Task Assigned to You: G5 Website 6 Pages",
+              title: "Task Assigned to You: WRTS Gym Funnel QA",
               description: "Erwin Manaog requested final review on mobile responsiveness.",
               time: "10 mins ago",
-              client: "Little Treasures Company",
+              client: "We Rock the Spectrum (WRTS)",
               taskId: "14zf25zm1yv",
               isRead: false,
               priority: "Urgent",
@@ -112,20 +140,20 @@ export function NotificationBell({
             {
               id: "notif-g5-review",
               type: "approval",
-              title: "Gate Sign-Off Pending: G5 Website 6 Pages",
+              title: "Gate Sign-Off Pending: Juvibolt LMS Course Setup",
               description: "Review submission ready for Divine, Radz, or RA sign-off.",
               time: "Today",
-              client: "Little Treasures Company",
+              client: "Juvibolt Cybertech",
               isRead: false,
               priority: "Urgent",
             },
             {
               id: "notif-bj-comment",
               type: "comment",
-              title: "BJ commented on G5 Website",
-              description: "Copy and hero layout updated based on Zoe's feedback.",
+              title: "BJ commented on WRTS Automation",
+              description: "Webhook payloads and error triggers verified.",
               time: "2 hours ago",
-              client: "Little Treasures Company",
+              client: "We Rock the Spectrum (WRTS)",
               taskId: "14zf25zm1yv",
               isRead: false,
             },
@@ -317,6 +345,26 @@ export function NotificationBell({
                     >
                       <Play className="w-2.5 h-2.5" /> Test
                     </button>
+                  </div>
+
+                  {/* Slack Operational Hub */}
+                  <div className="pt-2 border-t border-[#E8E2DD] space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-[#242E29]">Slack Operational Broadcast</span>
+                      <button
+                        type="button"
+                        disabled={isTestingSlack}
+                        onClick={handleTestSlack}
+                        className="px-2 py-0.5 rounded bg-[#3D5249] text-white text-[10px] font-medium hover:bg-[#2D3D36] transition-colors disabled:opacity-50"
+                      >
+                        {isTestingSlack ? "Testing..." : slackTestStatus || "Test Dispatch"}
+                      </button>
+                    </div>
+                    <div className="text-[10px] text-[#65746C] space-y-0.5 font-mono">
+                      <div>#gim-shift-reports · Daily EOS notes</div>
+                      <div>#gim-client-ops · Gate approvals</div>
+                      <div>#gim-social-media · Scheduled campaigns</div>
+                    </div>
                   </div>
                 </div>
               )}

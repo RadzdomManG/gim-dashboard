@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const clientFilter = searchParams.get('client'); // 'all' | 'little-treasures' | 'gim-internal'
+    const clientFilter = searchParams.get('client'); // 'all' | 'wrts' | 'gim-internal'
     const statusFilter = searchParams.get('status');
     const assigneeFilter = searchParams.get('assignee');
     const search = searchParams.get('search')?.toLowerCase();
@@ -103,7 +103,6 @@ export async function GET(request: NextRequest) {
     // 3. Client Filter
     if (clientFilter && clientFilter !== 'all') {
       const clientKeyMap: Record<string, string> = {
-        'little-treasures': 'little treasures',
         'we-rock-the-spectrum': 'we rock the spectrum',
         'wrts': 'we rock the spectrum',
         'juvibolt-cybertech': 'juvibolt',

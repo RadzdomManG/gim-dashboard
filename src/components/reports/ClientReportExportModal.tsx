@@ -24,7 +24,7 @@ interface ClientReportExportModalProps {
 export function ClientReportExportModal({
   isOpen,
   onClose,
-  clientName = "Little Treasures Company",
+  clientName = "We Rock the Spectrum (WRTS)",
 }: ClientReportExportModalProps) {
   const [downloadedCsv, setDownloadedCsv] = useState(false);
 
@@ -36,22 +36,22 @@ export function ClientReportExportModal({
 
   const handleDownloadCsv = () => {
     const csvContent = `Client,Gate Code,Deliverable,Status,Target Date,Owner
-Little Treasures Company,G1,Foundation: AUD Currency & Account Defaults,Completed,Oct 25,Radzdom
-Little Treasures Company,G2,Course Shell Architecture & Video Player,Completed,Oct 26,Radzdom
-Little Treasures Company,G3,Custom Fields Tags Pipeline & Smart Lists,Completed,Oct 27,Radzdom
-Little Treasures Company,G4,Three Clinical Forms with Privacy Notices,Completed,Oct 28,Radzdom
-Little Treasures Company,G5,Website: Six Pages in Zoe's Brand,In Review,Nov 03,Radzdom
-Little Treasures Company,G6,Page Copy & Enquiry Auto-Reply A1,Completed,Oct 29,Erwin
-Little Treasures Company,G7,Enquiry Workflow & Phone SMS Alert to Zoe,In Review,Nov 03,Radzdom
-Little Treasures Company,G11,Course Checkout & Stripe GST Automation,In Progress,Nov 07,Radzdom
-Little Treasures Company,G14,Custom Domain littletreasurescompany.com,Queued,Nov 10,BJ
-Little Treasures Company,G18,Dry Run & Summit-Ready Sign-Off,Queued,Dec 05,Erwin
+We Rock the Spectrum (WRTS),W1,Franchise Turnstile Webhook Sync,Completed,Oct 25,Radzdom
+We Rock the Spectrum (WRTS),W2,Roller POS to Google Sheets Database,Completed,Oct 26,Radzdom
+We Rock the Spectrum (WRTS),W3,Birthday Party Deposit & Waiver Automations,Completed,Oct 27,Radzdom
+We Rock the Spectrum (WRTS),W4,CVRC Regional Center Vendor Invoicing,Completed,Oct 28,Radzdom
+We Rock the Spectrum (WRTS),W5,Dead-Letter Queue Webhook Recovery,In Review,Nov 03,Radzdom
+We Rock the Spectrum (WRTS),W6,GoHighLevel Lead Funnel & SMS Routing,Completed,Oct 29,Erwin
+We Rock the Spectrum (WRTS),W7,Staff Shift Attendance & Check-In Trigger,In Review,Nov 03,Radzdom
+We Rock the Spectrum (WRTS),W8,Customer Feedback & Review Generation,In Progress,Nov 07,Radzdom
+We Rock the Spectrum (WRTS),W9,Monthly Franchise Metric Dashboards,Queued,Nov 10,BJ
+We Rock the Spectrum (WRTS),W10,Full System Integration Dry Run,Queued,Dec 05,Erwin
 `;
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `GIM_Weekly_Report_Little_Treasures_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute("download", `GIM_Weekly_Report_WRTS_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -117,15 +117,15 @@ Little Treasures Company,G18,Dry Run & Summit-Ready Sign-Off,Queued,Dec 05,Erwin
                 <Badge variant="active">Completed</Badge>
               </div>
               <div className="p-2.5 flex justify-between items-center bg-white">
-                <span>G5 Website 6 Pages in Zoe's Brand</span>
+                <span>W1 Franchise Lead Engine Setup</span>
                 <Badge variant="review">In Review</Badge>
               </div>
               <div className="p-2.5 flex justify-between items-center bg-white">
-                <span>G7 Enquiry Workflow & Zoe's Phone Alert</span>
+                <span>W2 n8n Webhook & Booking Sync</span>
                 <Badge variant="review">In Review</Badge>
               </div>
               <div className="p-2.5 flex justify-between items-center bg-white">
-                <span>G14 Domain Pointing (littletreasurescompany.com)</span>
+                <span>W3 Custom Domain & Location Routing (werockthespectrum.com.au)</span>
                 <Badge variant="upcoming">Queued (Nov 10)</Badge>
               </div>
             </div>

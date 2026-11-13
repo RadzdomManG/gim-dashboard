@@ -98,13 +98,13 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     memberIds: [], // Open to all team members
   },
   {
-    id: "little-treasures",
-    name: "little-treasures-ops",
+    id: "juvibolt-ops",
+    name: "juvibolt-cybertech",
     type: "channel",
-    description: "Daily sprint updates, GHL funnels, and Dec 11 summit build.",
+    description: "Daily sprint updates, Tutor LMS architecture, and bootcamp student onboarding.",
     isPrivate: false,
-    membersCount: 5,
-    memberIds: ["divine", "radz", "erwin", "bj", "camille", "zoe"],
+    membersCount: 4,
+    memberIds: ["divine", "radz", "erwin", "aaron"],
   },
   {
     id: "wrts-ops",
@@ -250,7 +250,7 @@ export function MessagingCenter({
   useEffect(() => {
     if (!selectedClientId || selectedClientId === "all") return;
     const clientChannelMap: Record<string, string> = {
-      "little-treasures": "little-treasures",
+      "juvibolt": "juvibolt-ops",
       "studio-nets": "studio-nets-ops",
       "invogue-cleans": "invogue-ops",
       "aaron-ofosu": "aaron-ofosu-ops",
@@ -1057,7 +1057,6 @@ export function MessagingCenter({
       const channelName = c.name.toLowerCase();
       const channelId = c.id.toLowerCase();
       const isClientChannel = scopeList.some((sc) => {
-        if (sc.includes("little treasure") && (channelName.includes("little-treasure") || channelId.includes("little-treasure"))) return true;
         if (sc.includes("spectrum") && (channelName.includes("wrts") || channelName.includes("spectrum") || channelId.includes("wrts"))) return true;
         if (sc.includes("juvibolt") && (channelName.includes("juvibolt") || channelName.includes("ofosu") || channelId.includes("juvibolt"))) return true;
         if (sc.includes("risewise") && (channelName.includes("risewise") || channelId.includes("risewise"))) return true;
@@ -2190,8 +2189,8 @@ export function MessagingCenter({
                       : attachType === "video"
                       ? "e.g. G5_Page_Walkthrough_Review.mp4"
                       : attachType === "link"
-                      ? "e.g. Zoe's Live Funnel Staging"
-                      : "e.g. Little_Treasures_Intake_Audit.pdf"
+                      ? "e.g. Juvibolt Live Funnel Staging"
+                      : "e.g. WRTS_Franchise_Automation_Audit.pdf"
                   }
                   value={attachName}
                   onChange={(e) => setAttachName(e.target.value)}
@@ -2208,7 +2207,7 @@ export function MessagingCenter({
                   required
                   placeholder={
                     attachType === "link"
-                      ? "https://littletreasurescompany.com"
+                      ? "https://juviboltcybertech.com"
                       : "https://... or /gim-mark-green.png"
                   }
                   value={attachUrl}

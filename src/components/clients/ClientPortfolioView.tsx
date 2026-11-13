@@ -274,32 +274,6 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     ],
     keyTechStack: ["ClickUp", "Google Docs / Drive API", "Stripe Invoicing", "Airtable"],
   },
-  {
-    id: "little-treasures",
-    name: "Little Treasures Company",
-    code: "LT-AU",
-    industry: "Paediatric Therapy & Sensory Education",
-    location: "Perth / Brisbane, Australia",
-    contactName: "Zoe Horner",
-    contactRole: "Founder & Lead Paediatric OT",
-    accountLead: "Radzdom Gallego",
-    specialist: "Erwin Manaog",
-    status: "Paused (Archive)",
-    statusVariant: "upcoming",
-    retainer: "AUD $4,500 / month (Paused)",
-    progress: 100,
-    currentSprint: "Paused by client request (historical ClickUp tasks preserved in archive)",
-    targetMilestone: "Historical Archive",
-    description:
-      "Clinical paediatric occupational therapy clinic delivery system. Powers automated parent enquiry routing, GoHighLevel multi-step funnels, and ClassReach patient scheduling (Archived).",
-    deliverables: [
-      { code: "W3", title: "Website v2, summit pages, emails and downloads ready for Zoe", status: "Completed" },
-      { code: "G19", title: "Text number: GoHighLevel's business check, then the Australian number", status: "Completed" },
-      { code: "G5", title: "Website: Six Brand Pages in Zoe's Palette", status: "Completed" },
-      { code: "G7", title: "Enquiry Workflow & Zoe Mobile Alert", status: "Completed" },
-    ],
-    keyTechStack: ["GoHighLevel (AU)", "Stripe Payments (AUD)", "Make.com"],
-  },
 ];
 
 interface ClientPortfolioViewProps {
@@ -1099,7 +1073,7 @@ export function ClientPortfolioView({
       <CreateTaskModal
         isOpen={isCreateTaskOpen}
         onClose={() => setIsCreateTaskOpen(false)}
-        defaultClient={selectedClient.name === "All Clients" ? "Little Treasures Company" : selectedClient.name}
+        defaultClient={selectedClient.name === "All Clients" ? "We Rock the Spectrum (WRTS)" : selectedClient.name}
         availableClients={accessibleClients.map((c) => c.name)}
         onTaskCreated={fetchTasks}
         currentUserName={currentUserName}

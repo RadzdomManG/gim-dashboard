@@ -24,7 +24,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { ClientReportExportModal } from "@/components/reports/ClientReportExportModal";
 
 export default function StandaloneClientPortalPage() {
-  const [selectedClient, setSelectedClient] = useState("Little Treasures Company");
+  const [selectedClient, setSelectedClient] = useState("Juvibolt Cybertech");
   const [isReportOpen, setIsReportOpen] = useState(false);
 
   return (
@@ -58,8 +58,8 @@ export default function StandaloneClientPortalPage() {
               onChange={(e) => setSelectedClient(e.target.value)}
               className="text-xs bg-white/10 text-white border border-white/20 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-white/40 font-medium"
             >
-              <option value="Little Treasures Company" className="text-[#242E29]">
-                Little Treasures Company (LTC)
+              <option value="Juvibolt Cybertech" className="text-[#242E29]">
+                Juvibolt Cybertech (JB)
               </option>
               <option value="Studio Nets" className="text-[#242E29]">
                 Studio Nets (SN)
@@ -139,20 +139,20 @@ export default function StandaloneClientPortalPage() {
               <CardHeader className="flex-col items-start gap-1 pb-3">
                 <div className="flex items-center justify-between w-full">
                   <Badge variant="active">Production Ready</Badge>
-                  <span className="text-xs font-mono text-[#65746C]">Gate G5</span>
+                  <span className="text-xs font-mono text-[#65746C]">Gate J1</span>
                 </div>
                 <CardTitle className="text-base text-[#3D5249] mt-2">
-                  Website: Six Brand Pages (Copy & Mobile Layout)
+                  Juvibolt EdTech Platform & Tutor LMS Architecture
                 </CardTitle>
                 <CardDescription className="text-xs text-[#65746C]">
-                  Full responsive GoHighLevel funnel setup including Course Sales, Enquiries, and Waitlist.
+                  Full responsive course catalog, Discord sync webhook, and cybersecurity bootcamp registration funnel.
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="flex items-center justify-between pt-3 border-t border-[#3D5249]/10">
                   <span className="text-xs text-[#65746C]">Lead: Radzdom Gallego</span>
                   <a
-                    href="https://littletreasurescompany.com"
+                    href="https://juviboltcybertech.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#518E6A] hover:text-[#466B53]"

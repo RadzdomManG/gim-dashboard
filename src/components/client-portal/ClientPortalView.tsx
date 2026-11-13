@@ -25,7 +25,7 @@ interface ClientPortalViewProps {
 }
 
 export function ClientPortalView({ onExitPreview }: ClientPortalViewProps) {
-  const [activeClient, setActiveClient] = useState<"little-treasures" | "invogue">("little-treasures");
+  const [activeClient, setActiveClient] = useState<"juvibolt" | "wrts">("juvibolt");
 
   return (
     <div className="space-y-6">
@@ -43,7 +43,7 @@ export function ClientPortalView({ onExitPreview }: ClientPortalViewProps) {
               </Badge>
             </div>
             <p className="text-[11px] text-[#FBF6F3]/80 mt-0.5">
-              Simulating portal experience for <strong>Zoe Horner</strong> (Little Treasures Company). Internal agency retainers, contractor rates, and other client spaces are strictly hidden.
+              Simulating portal experience for <strong>Aaron Ofosu</strong> (Juvibolt Cybertech). Internal agency retainers, contractor rates, and other client spaces are strictly hidden.
             </p>
           </div>
         </div>
@@ -67,12 +67,13 @@ export function ClientPortalView({ onExitPreview }: ClientPortalViewProps) {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Badge variant="active" dot>Active Delivery Sprint</Badge>
-                <span className="text-xs font-semibold text-[#518E6A]">Progress: 72%</span>
+                <span className="text-xs font-semibold text-[#518E6A]">Progress: 88%</span>
               </div>
               <h2 className="text-xl font-bold text-[#242E29]">
-                Little Treasures — Paediatric Clinic & Summit Platform
+                Juvibolt Cybertech — EdTech & LMS Learning Portal
               </h2>
               <p className="text-xs text-[#65746C] mt-1 leading-relaxed">
+                Cybersecurity student training platform, cohort delivery systems, and GHL course funnels.
                 Your GoHighLevel digital intake, patient referral workflows, and online video training course. All assets are styled in your authentic brand palette for the December Summit.
               </p>
             </div>
@@ -172,24 +173,24 @@ export function ClientPortalView({ onExitPreview }: ClientPortalViewProps) {
           <div className="divide-y divide-[#E8E2DD]/50 p-1 text-xs">
             <div className="p-3 flex items-center justify-between">
               <div>
-                <p className="font-semibold text-[#242E29]">Gate G5: Website 6 Pages in Zoe's Brand</p>
-                <p className="text-[11px] text-[#65746C]">Mobile responsiveness review and final typography check</p>
+                <p className="font-semibold text-[#242E29]">Gate J1: Cybersecurity Syllabus Video Curriculum</p>
+                <p className="text-[11px] text-[#65746C]">Mobile responsiveness review and video CDN streaming check</p>
               </div>
               <Badge variant="review" dot>In Review</Badge>
             </div>
 
             <div className="p-3 flex items-center justify-between">
               <div>
-                <p className="font-semibold text-[#242E29]">Gate G7: Enquiry Workflow & SMS Alert</p>
-                <p className="text-[11px] text-[#65746C]">Automated alert sent directly to Zoe's mobile phone on new enquiry</p>
+                <p className="font-semibold text-[#242E29]">Gate J2: Student SMS & Email Onboarding Sequence</p>
+                <p className="text-[11px] text-[#65746C]">Automated 5-part drip email campaign with calendar sync</p>
               </div>
               <Badge variant="review" dot>In Review</Badge>
             </div>
 
             <div className="p-3 flex items-center justify-between">
               <div>
-                <p className="font-semibold text-[#242E29]">Gate G14: Custom Domain Pointing</p>
-                <p className="text-[11px] text-[#65746C]">littletreasurescompany.com DNS switch scheduled with Wix</p>
+                <p className="font-semibold text-[#242E29]">Gate J3: Custom Domain DNS Configuration</p>
+                <p className="text-[11px] text-[#65746C]">juviboltcybertech.com Cloudflare edge SSL & DNS switch</p>
               </div>
               <Badge variant="upcoming" dot>Upcoming</Badge>
             </div>

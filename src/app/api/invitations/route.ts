@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
             role: assignedRole,
             title: body.title || assignedRole,
             assigned_clients: clientList,
-            clientScope: assignedRole === 'admin' ? 'all' : (clientList[0] || 'Little Treasures Company'),
+            clientScope: assignedRole === 'admin' ? 'all' : (clientList[0] || 'We Rock the Spectrum (WRTS)'),
             isCoreAdmin: assignedRole === 'admin',
           },
         });
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
             role: assignedRole,
             title: body.title || assignedRole,
             assigned_clients: clientList,
-            clientScope: assignedRole === 'admin' ? 'all' : (clientList[0] || 'Little Treasures Company'),
+            clientScope: assignedRole === 'admin' ? 'all' : (clientList[0] || 'We Rock the Spectrum (WRTS)'),
             isCoreAdmin: assignedRole === 'admin',
           },
         });

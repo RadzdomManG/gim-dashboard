@@ -19,16 +19,16 @@ export interface SearchResultItem {
 
 const STATIC_CLIENTS = [
   {
-    id: 'little-treasures',
-    name: 'Little Treasures Company',
-    code: 'LT-AU',
-    industry: 'Paediatric Therapy & Education',
-    contact: 'Zoe Horner (Founder & Lead OT)',
-    lead: 'Radzdom Gallego',
-    specialist: 'Erwin Manaog',
-    retainer: 'AUD $4,500 / mo',
+    id: 'we-rock-the-spectrum',
+    name: 'We Rock the Spectrum (WRTS)',
+    code: 'WRTS-US',
+    industry: 'Sensory Gym Franchise Operations',
+    contact: 'Chris & Niko',
+    lead: 'Erwin Manaog',
+    specialist: 'BJ Ricafrente & Aldwin',
+    retainer: 'USD $4,000 / mo',
     status: 'Active Sprint',
-    description: 'Clinical paediatric occupational therapy clinic delivery system, GHL funnels, ClassReach patient scheduling.',
+    description: 'Sensory gym franchise operations, 21 n8n workflows, POS and lead generation sync.',
   },
   {
     id: 'studio-nets',
@@ -81,14 +81,6 @@ const STATIC_CLIENTS = [
 ];
 
 const STATIC_SOPS = [
-  {
-    id: 'sop-lt-spec',
-    title: 'Little Treasures: Paediatric Funnel & $99 Course Specification',
-    category: 'Client Delivery',
-    clientScope: 'Little Treasures Company',
-    author: 'Erwin Manaog',
-    summary: 'Full delivery roadmap, GoHighLevel account configuration, AUD Stripe tax compliance, and Dec 11 summit timeline.',
-  },
   {
     id: 'sop-studio-nets-ops',
     title: 'Studio Nets: Design Ingestion Systems & Creative Ops Runbook',
@@ -158,16 +150,16 @@ const TEAM_MEMBERS = [
     email: 'erwin@graceinmotion.agency',
     role: 'Team Specialist',
     title: 'Senior Technical Lead & Integrations Specialist',
-    clientScope: 'Little Treasures Company, InVogue Cleans',
+    clientScope: 'We Rock the Spectrum (WRTS), InVogue Cleans, Studio Nets',
   },
   {
-    id: 'zoe',
-    name: 'Zoe Horner',
-    nickname: 'Zoe',
-    email: 'zoe@littletreasurescompany.com',
+    id: 'aaron',
+    name: 'Aaron Ofosu',
+    nickname: 'Aaron',
+    email: 'aaron@juviboltcybertech.com',
     role: 'Client Stakeholder',
-    title: 'Founder & Lead Paediatric OT',
-    clientScope: 'Little Treasures Company',
+    title: 'Founder, Juvibolt Cybertech',
+    clientScope: 'Juvibolt Cybertech',
   },
   {
     id: 'bj',
@@ -176,7 +168,7 @@ const TEAM_MEMBERS = [
     email: 'bj@graceinmotion.agency',
     role: 'Team Specialist',
     title: 'Frontend & Funnel Specialist',
-    clientScope: 'Little Treasures Company',
+    clientScope: 'We Rock the Spectrum (WRTS), Grace In Motion (Internal)',
   },
 ];
 

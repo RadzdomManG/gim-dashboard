@@ -41,8 +41,8 @@ const INITIAL_INVOICES: InvoiceRecord[] = [
   {
     id: "inv-001",
     invoiceNumber: "GIM-2026-088",
-    clientName: "Little Treasures Company",
-    scopeTitle: "GoHighLevel Summit Build, Paediatric Funnel & $99 Course Shell (Nov 2026)",
+    clientName: "We Rock the Spectrum (WRTS)",
+    scopeTitle: "Franchise Automation Architecture & Lead Sync Infrastructure (Nov 2026)",
     amountAud: 4500,
     issueDate: "2026-11-01",
     dueDate: "2026-11-15",
@@ -120,7 +120,7 @@ export function ClientInvoicingView({
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // New Invoice Form State
-  const [newClient, setNewClient] = useState("Little Treasures Company");
+  const [newClient, setNewClient] = useState("We Rock the Spectrum (WRTS)");
   const [newScope, setNewScope] = useState("");
   const [newAmount, setNewAmount] = useState("1500");
   const [newDueDate, setNewDueDate] = useState("2026-11-30");
@@ -403,11 +403,12 @@ export function ClientInvoicingView({
                   onChange={(e) => setNewClient(e.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-[#E8E2DD] bg-white text-[#242E29]"
                 >
-                  <option value="Little Treasures Company">Little Treasures Company</option>
+                  <option value="We Rock the Spectrum (WRTS)">We Rock the Spectrum (WRTS)</option>
+                  <option value="Juvibolt Cybertech">Juvibolt Cybertech</option>
                   <option value="Studio Nets">Studio Nets</option>
                   <option value="InVogue Cleans">InVogue Cleans</option>
-                  <option value="Aaron Ofosu Bootcamp">Aaron Ofosu Bootcamp</option>
-                  <option value="Tch2Thrive">Tch2Thrive</option>
+                  <option value="Risewise">Risewise</option>
+                  <option value="NoirLab">NoirLab</option>
                 </select>
               </div>
 

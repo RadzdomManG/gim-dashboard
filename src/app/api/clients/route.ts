@@ -14,7 +14,7 @@ export async function GET() {
     if (error || !clients || clients.length === 0) {
       // Canonical verified GIM clients fallback
       const fallbackClients = [
-        { id: 'ltc', name: 'Little Treasures Company', code: 'LTC', lead_name: 'Radzdom Gallego', contact_name: 'Zoe Horner', contact_email: 'admin@littletreasurescompany.com', status: 'active' },
+        { id: 'jb', name: 'Juvibolt Cybertech', code: 'JB', lead_name: 'Radzdom Gallego', contact_name: 'Aaron Ofosu', contact_email: 'aaron@juviboltcybertech.com', status: 'active' },
         { id: 'wrts', name: 'We Rock the Spectrum (WRTS)', code: 'WRTS', lead_name: 'Radzdom Gallego', contact_name: 'National Operations Lead', contact_email: 'ops@werockthespectrum.com.au', status: 'active' },
         { id: 'sn', name: 'Studio Nets', code: 'SN', lead_name: 'Erwin Manaog', contact_name: 'Creative Director', contact_email: 'hello@studionets.com', status: 'active' },
         { id: 'ivc', name: 'InVogue Cleans', code: 'IVC', lead_name: 'Ma. Rose Anne (RA) Malinao', contact_name: 'Operations Manager', contact_email: 'ops@invoguecleans.com.au', status: 'active' },

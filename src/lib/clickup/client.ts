@@ -42,7 +42,6 @@ interface RawClickUpTask {
 }
 
 export const CLICKUP_LISTS: { id: string; client: string; listName: string }[] = [
-  { id: '1301240000003883', client: 'Little Treasures Company', listName: 'Little Treasures' },
   { id: '1301240000002387', client: 'We Rock the Spectrum (WRTS)', listName: 'We Rock the Spectrum' },
   { id: '1301240000005206', client: 'Juvibolt Cybertech', listName: 'Juvibolt Cybertech' },
   { id: '901617666653', client: 'InVogue Cleans', listName: 'InVogue Cleans' },

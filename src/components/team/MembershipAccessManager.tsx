@@ -119,7 +119,7 @@ export function MembershipAccessManager({
         nickname: "Erwin",
         email: "erwin@graceinmotion.agency",
         role: "Project Owner",
-        scope: "Little Treasures & Studio Nets",
+        scope: "WRTS, Studio Nets & IVC",
         focus: "Sprint Delivery & QA Runbooks",
         avatarBg: "bg-[#65746C]",
       },
@@ -129,7 +129,7 @@ export function MembershipAccessManager({
         nickname: "Camille",
         email: "camille.smm@graceinmotion.agency",
         role: "Social Media Specialist",
-        scope: "Little Treasures Company",
+        scope: "WRTS, Juvibolt & Studio Nets",
         focus: "30-Day Campaign Batches & Growth",
         avatarBg: "bg-[#518E6A]",
       },
@@ -857,18 +857,6 @@ export function MembershipAccessManager({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
                 {
-                  id: "ltc",
-                  name: "Little Treasures Company",
-                  code: "LT-AU",
-                  industry: "Paediatric Therapy & Education",
-                  contact: "Zoe Horner (Founder)",
-                  lead: "Erwin Manaog",
-                  specialist: "Camille Bautista (SMM)",
-                  retainer: "AUD $4,500 / mo",
-                  status: "Active Sprint",
-                  scope: "Dec 11 Global Autism Summit & GoHighLevel Infrastructure",
-                },
-                {
                   id: "wrts",
                   name: "We Rock the Spectrum (WRTS)",
                   code: "WRTS-AU",
@@ -997,15 +985,6 @@ export function MembershipAccessManager({
               <CardContent className="p-5 space-y-4">
                 {[
                   {
-                    client: "Little Treasures Company",
-                    goal: "Dec 11 Global Autism Summit & Ticket Funnel Launch",
-                    targetMetric: "100 Early Bird Registrations + Stripe AUD Checkout",
-                    progress: 75,
-                    dueDate: "11 Dec 2026",
-                    owner: "Erwin Manaog",
-                    status: "On Track",
-                  },
-                  {
                     client: "We Rock the Spectrum (WRTS)",
                     goal: "Franchise Automation Sync & Webhook Error Catching",
                     targetMetric: "21 Workflows operational with dead-letter queue recovery",
@@ -1110,13 +1089,6 @@ export function MembershipAccessManager({
                   </thead>
                   <tbody className="divide-y divide-[#E8E2DD]/70 bg-white">
                     {[
-                      {
-                        key: "zoe",
-                        name: "Zoe Horner",
-                        email: "zoe@littletreasures.com.au",
-                        client: "Little Treasures Company",
-                        role: "Client Principal / Founder",
-                      },
                       {
                         key: "aaron",
                         name: "Aaron Ofosu",

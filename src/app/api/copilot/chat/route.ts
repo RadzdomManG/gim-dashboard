@@ -78,10 +78,20 @@ I don't answer general non-work questions, but I'm ready to help you plan your d
     }
 
     // =========================================================================
-    // GUARDRAIL 2: STRICT MULTI-TENANT CLIENT ISOLATION
+    // GUARDRAIL 2: STRICT MULTI-TENANT CLIENT ISOLATION & PAUSED CLIENT CHECK
     // =========================================================================
+    if (cleanMsg.includes("little treasure")) {
+      return NextResponse.json({
+        reply: `⏸️ **Little Treasures Company is currently on pause.**\n\nOperations and deliverables for Little Treasures Company are paused per client request. Active sprint workflows are focused on **We Rock the Spectrum (WRTS)**, **Juvibolt Cybertech**, **Studio Nets**, **InVogue Cleans**, **Risewise**, and **NoirLab**.\n\nWould you like to review deliverables for one of the active clients instead?`,
+        suggestedActions: [
+          "Show WRTS deliverables 📋",
+          "Show Juvibolt deliverables 🛡️",
+          "Draft an End of Shift (EOS) note 📝",
+        ],
+      });
+    }
+
     const clientKeywords: Record<string, string> = {
-      "little treasure": "Little Treasures Company",
       "spectrum": "We Rock the Spectrum (WRTS)",
       "wrts": "We Rock the Spectrum (WRTS)",
       "juvibolt": "Juvibolt Cybertech",

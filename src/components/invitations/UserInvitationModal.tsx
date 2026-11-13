@@ -52,7 +52,6 @@ export function UserInvitationModal({
     { id: "rw-05", name: "Risewise", code: "RW" },
     { id: "nl-06", name: "NoirLab", code: "NL" },
     { id: "gim-07", name: "Grace In Motion (Internal)", code: "GIM" },
-    { id: "ltc-08", name: "Little Treasures Company", code: "LTC" },
   ],
   onUserProvisioned,
 }: UserInvitationModalProps) {
@@ -63,7 +62,7 @@ export function UserInvitationModal({
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("team_member");
   const [clientId, setClientId] = useState("");
-  const [selectedClients, setSelectedClients] = useState<string[]>(["Little Treasures Company"]);
+  const [selectedClients, setSelectedClients] = useState<string[]>(["We Rock the Spectrum (WRTS)"]);
   const [isLoading, setIsLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [createdCredentials, setCreatedCredentials] = useState<{ username: string; password: string; name: string } | null>(null);
@@ -86,7 +85,7 @@ export function UserInvitationModal({
             full_name: acc.user?.name || key,
             password: acc.password,
             role: acc.user?.role || "Team Member",
-            assigned_clients: acc.user?.clientScope ? [acc.user.clientScope] : ["Little Treasures Company"],
+            assigned_clients: acc.user?.clientScope ? [acc.user.clientScope] : ["We Rock the Spectrum (WRTS)"],
             created_at: acc.created_at || new Date().toISOString(),
             is_revoked: !!acc.is_revoked,
           };
@@ -100,7 +99,7 @@ export function UserInvitationModal({
             full_name: "Camille Bautista",
             password: "Camille_GIM2026!",
             role: "Social Media Specialist",
-            assigned_clients: ["Little Treasures Company"],
+            assigned_clients: ["We Rock the Spectrum (WRTS)", "Juvibolt Cybertech"],
             created_at: new Date().toISOString(),
             is_revoked: false,
           },
@@ -110,7 +109,7 @@ export function UserInvitationModal({
             full_name: "Erwin Manaog",
             password: "Erwin_GIM2026!",
             role: "Project Owner",
-            assigned_clients: ["Little Treasures Company", "Studio Nets"],
+            assigned_clients: ["We Rock the Spectrum (WRTS)", "Studio Nets"],
             created_at: new Date().toISOString(),
             is_revoked: false,
           },
@@ -146,7 +145,7 @@ export function UserInvitationModal({
       const existingRaw = localStorage.getItem("gim_custom_logins");
       const existing = existingRaw ? JSON.parse(existingRaw) : {};
 
-      const primaryClient = selectedClients[0] || "Little Treasures Company";
+      const primaryClient = selectedClients[0] || "We Rock the Spectrum (WRTS)";
       const roleDisplayName =
         role === "admin"
           ? "Admin"

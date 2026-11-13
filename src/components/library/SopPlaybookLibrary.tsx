@@ -318,32 +318,26 @@ Privacy:
 **Document status:** Draft — requires RA review and process owner sign-off.`,
   },
   {
-    id: "sop-lt-spec",
-    title: "Little Treasures: Paediatric Funnel & $99 Course Specification",
+    id: "sop-wrts-spec",
+    title: "We Rock the Spectrum: Sensory Gym Franchise Workflows & n8n Architecture",
     category: "Client Delivery",
-    clientScope: "Little Treasures Company",
+    clientScope: "We Rock the Spectrum (WRTS)",
     updatedDate: "Nov 02, 2026",
-    author: "Erwin Manaog",
+    author: "Radzdom Gallego & Erwin Manaog",
     summary:
-      "Full delivery roadmap, GoHighLevel account configuration, AUD Stripe tax compliance, and Dec 11 summit timeline.",
-    content: `# Little Treasures Company — Master Delivery Specification
+      "Full franchise automation blueprint: 21 n8n workflows, Roller POS gym check-ins, CVRC portal webhook sync, and SMS routing.",
+    content: `# We Rock the Spectrum (WRTS) — Franchise Automation Blueprint
 
 ## 1. Executive Summary
-- **Client:** Zoe Horner (Founder & Lead Paediatric OT)
-- **Hard Milestone:** Summit Readiness by Friday 11 Dec 2026 (Working target).
-- **Core Deliverable:** GoHighLevel 6-page brand website, intake booking funnels, automated phone SMS alerts, and $99 online video course delivery.
+- **Client:** Chris & Niko (Franchise Owners & CFO)
+- **Architecture:** 21 active n8n workflows, GoHighLevel sub-accounts, Roller POS gym check-ins, and CVRC state portal integration.
+- **Core Deliverable:** Automated birthday party booking pipeline, member attendance tracking, and dead-letter queue error recovery.
 
-## 2. Gate Verification Sequence (G1 - G19)
-- **G1 (Foundation):** Set currency to AUD, GST compliance, receipt as tax invoice.
-- **G2 (Course Shell):** 5 video modules, instructor profile cards, completion certificates.
-- **G3 (Custom Fields):** Pediatric sensory tags, patient pipeline stages, smart lists.
-- **G4 (Clinical Forms):** Three forms with Australian privacy disclosures.
-- **G5 (Website):** 6 pages styled in Zoe's authentic warm palette.
-- **G7 (Workflow):** Instant SMS alert dispatched to Zoe's mobile upon new enquiry submission.
-- **G11 (SMM):** 30-Day social media calendar, video reel batches, parent education hooks.
-- **G14 (Domain):** Point littletreasurescompany.com DNS via Wix.
-- **G18 (Dry Run):** Full purchase, course enrollment, refund audit, and summit-ready sign-off.
-- **G19 (Australian Phone Number):** Australian regulatory compliance, ABN verification, and direct outbound SMS alerting.`,
+## 2. Core Automation Sequence
+- **WF-01 (Roller Sync):** Real-time webhook ingestion from gym turnstiles into Google Sheets and Supabase.
+- **WF-02 (Party Bookings):** Multi-step deposit tracking, waiver signature validation, and reminder SMS.
+- **WF-03 (State Portal Sync):** CVRC vendor invoicing formatting and attendance auditing.
+- **WF-04 (Dead-Letter Catch):** Automated alerts dispatched to GIM Slack upon webhook timeout or retry failure.`,
   },
   {
     id: "sop-studio-nets-ops",

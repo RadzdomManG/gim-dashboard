@@ -47,7 +47,7 @@ interface CreateTaskModalProps {
 export function CreateTaskModal({
   isOpen,
   onClose,
-  defaultClient = "Little Treasures Company",
+  defaultClient = "We Rock the Spectrum (WRTS)",
   defaultDate,
   onTaskCreated,
   availableClients,
@@ -56,7 +56,6 @@ export function CreateTaskModal({
   clientScope = "all",
 }: CreateTaskModalProps) {
   const allStandardClients = [
-    "Little Treasures Company",
     "We Rock the Spectrum (WRTS)",
     "Juvibolt Cybertech",
     "Risewise",

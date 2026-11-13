@@ -111,8 +111,8 @@ export const VERIFIED_ACCOUNTS: Record<
       isCoreAdmin: false,
       avatarColor: "bg-[#65746C]",
       title: "Project Owner & Delivery Specialist",
-      clientScope: "Little Treasures Company, We Rock the Spectrum (WRTS)",
-      assigned_clients: ["Little Treasures Company", "We Rock the Spectrum (WRTS)"],
+      clientScope: "We Rock the Spectrum (WRTS), InVogue Cleans, Studio Nets",
+      assigned_clients: ["We Rock the Spectrum (WRTS)", "InVogue Cleans", "Studio Nets"],
     },
   },
   "bj.ricafrente": {
@@ -293,22 +293,6 @@ export const VERIFIED_ACCOUNTS: Record<
   },
 
   // 3. Verified Client Principals
-  "zoe.horner": {
-    password: "Portal_Zoe2026!LTC",
-    user: {
-      id: "zoe-001",
-      username: "zoe.horner",
-      name: "Zoe Horner",
-      nickname: "Zoe",
-      email: "zoe@littletreasures.com.au",
-      role: "Client User",
-      isCoreAdmin: false,
-      avatarColor: "bg-[#518E6A]",
-      title: "Founder, Little Treasures",
-      clientScope: "Little Treasures Company",
-      assigned_clients: ["Little Treasures Company"],
-    },
-  },
   "aaron.ofosu": {
     password: "Portal_Aaron2026!JB",
     user: {

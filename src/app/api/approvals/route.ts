@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { notifyGateApproved } from '@/lib/slack/notifier';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,31 +15,31 @@ export async function GET() {
     if (error || !data || data.length === 0) {
       const fallbackApprovals = [
         {
-          id: "app-g5",
-          code: "G5",
-          title: "Website: Six Pages in Zoe's Brand (Copy & Mobile Layout)",
-          client: "Little Treasures Company",
+          id: "app-wrts",
+          code: "W1",
+          title: "Franchise Automation Sync & Webhook Error Handling",
+          client: "We Rock the Spectrum (WRTS)",
           submitted_by: "Radzdom Gallego (Radz)",
           assigned_reviewer: "Erwin Manaog",
           status: "Pending Review",
           priority: "High",
-          summary: "All 6 website pages built in GoHighLevel with brand styling and responsive layout.",
-          deliverable_url: "https://littletreasurescompany.com",
-          target_milestone: "Summit Ready: Fri 11 Dec 2026",
+          summary: "Franchise n8n automations and webhooks verified with dead-letter queue retry mechanisms.",
+          deliverable_url: "https://werockthespectrum.com",
+          target_milestone: "Franchise Launch: Fri 20 Nov 2026",
           created_at: new Date().toISOString()
         },
         {
-          id: "app-g7",
-          code: "G7",
-          title: "Enquiry Workflow, Custom Fields & Phone Notification Alert",
-          client: "Little Treasures Company",
+          id: "app-jb",
+          code: "J1",
+          title: "GoHighLevel Sub-Account & WordPress LMS Integration",
+          client: "Juvibolt Cybertech",
           submitted_by: "Radzdom Gallego (Radz)",
           assigned_reviewer: "Erwin Manaog",
           status: "Pending Review",
           priority: "High",
-          summary: "Automated enquiry intake routing in GHL with SMS alert to Zoe.",
-          deliverable_url: "https://app.gohighlevel.com",
-          target_milestone: "Summit Ready: Fri 11 Dec 2026",
+          summary: "Automated student onboarding in GHL with LMS access and Discord role sync.",
+          deliverable_url: "https://juviboltcybertech.com",
+          target_milestone: "Student Launch: Sat 15 Nov 2026",
           created_at: new Date().toISOString()
         }
       ];
@@ -76,6 +77,21 @@ export async function PATCH(req: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (status === 'Approved' && data) {
+      try {
+        await notifyGateApproved({
+          gateCode: data.code || id,
+          gateTitle: data.title || 'Deliverable Gate',
+          client: data.client || 'Grace In Motion',
+          approvedBy: reviewed_by || 'Radzdom Gallego',
+          notes: review_notes,
+          deliverableUrl: data.deliverable_url,
+        });
+      } catch (slackErr) {
+        console.error('Slack gate approval broadcast error:', slackErr);
+      }
     }
 
     return NextResponse.json({ success: true, approval: data });

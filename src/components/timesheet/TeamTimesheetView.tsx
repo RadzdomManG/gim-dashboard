@@ -90,7 +90,7 @@ const INITIAL_MEMBERS: MemberAttendance[] = [
     assignedClient: "All Accounts",
     latestEos: {
       id: "eos-d1",
-      completedTasks: "Approved Little Treasures summit copy scope; reviewed Studio Nets intake roadmap.",
+      completedTasks: "Approved WRTS automation sprint scope; reviewed Studio Nets intake roadmap.",
       blockers: "None",
       prioritiesTomorrow: "Client retainer review with RA Malinao.",
       publishedAt: "Yesterday at 05:15 PM",
@@ -113,8 +113,8 @@ const INITIAL_MEMBERS: MemberAttendance[] = [
     hoursLoggedToday: 6.8,
     breakMinutesLogged: 20,
     breakLimitMinutes: 30,
-    currentTask: "Little Treasures GHL form tests & Studio Nets pipeline sync",
-    assignedClient: "Little Treasures & Studio Nets",
+    currentTask: "WRTS GHL webhook tests & Studio Nets pipeline sync",
+    assignedClient: "WRTS & Studio Nets",
     latestEos: null,
   },
   {
@@ -153,8 +153,8 @@ const INITIAL_MEMBERS: MemberAttendance[] = [
     hoursLoggedToday: 5.5,
     breakMinutesLogged: 35, // Over break warning
     breakLimitMinutes: 30,
-    currentTask: "G5 Website copy review & mobile breakpoint check",
-    assignedClient: "Little Treasures Company",
+    currentTask: "WRTS GHL form tests & mobile breakpoint check",
+    assignedClient: "We Rock the Spectrum (WRTS)",
     latestEos: null,
   },
   {
@@ -173,8 +173,8 @@ const INITIAL_MEMBERS: MemberAttendance[] = [
     hoursLoggedToday: 4.2,
     breakMinutesLogged: 15,
     breakLimitMinutes: 30,
-    currentTask: "Little Treasures Summit social teaser assets & reels schedule",
-    assignedClient: "Little Treasures Company",
+    currentTask: "Juvibolt social teaser assets & reels schedule",
+    assignedClient: "Juvibolt Cybertech",
     latestEos: null,
   },
   {
@@ -262,7 +262,7 @@ const INITIAL_AUDITS: ScheduleAuditRecord[] = [
     adjustmentDate: "Nov 02, 2026",
     oldShift: "09:00 AM - 05:00 PM",
     newShift: "09:00 AM - 06:00 PM",
-    reason: "Approved overtime for Little Treasures GHL summit deployment",
+    reason: "Approved overtime for WRTS franchise webhook deployment",
     timestamp: "Nov 02, 2026 at 04:30 PM",
   },
   {
@@ -391,6 +391,25 @@ export function TeamTimesheetView({
     );
 
     if (isPublish) {
+      // Broadcast EOS to Slack channel #gim-shift-reports
+      fetch("/api/notifications/slack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "eos",
+          payload: {
+            memberName: currentMember.name,
+            memberNickname: currentMember.nickname,
+            role: currentMember.role,
+            clientScope: currentMember.assignedClient,
+            completedTasks: eosCompleted,
+            blockers: eosBlockers,
+            prioritiesTomorrow: eosTomorrow,
+            hoursLogged: currentMember.hoursLoggedToday,
+          },
+        }),
+      }).catch((err) => console.error("Slack EOS broadcast error:", err));
+
       setIsEosModalOpen(false);
       setEosIsSavedDraft(false);
     } else {
