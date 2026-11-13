@@ -171,10 +171,10 @@ export const VERIFIED_ACCOUNTS: Record<
       name: "Erwin Manaog",
       nickname: "Erwin",
       email: "erwin@graceinmotion.agency",
-      role: "Project Owner",
+      role: "Operations Manager (OM)",
       isCoreAdmin: false,
       avatarColor: "bg-[#65746C]",
-      title: "Project Owner & Delivery Specialist",
+      title: "Operations Manager (OM) & Delivery Lead",
       clientScope: "We Rock the Spectrum (WRTS), InVogue Cleans, Studio Nets",
       assigned_clients: ["We Rock the Spectrum (WRTS)", "InVogue Cleans", "Studio Nets"],
     },
@@ -193,54 +193,6 @@ export const VERIFIED_ACCOUNTS: Record<
       title: "Operations Specialist",
       clientScope: "We Rock the Spectrum (WRTS), Grace In Motion (Internal)",
       assigned_clients: ["We Rock the Spectrum (WRTS)", "Grace In Motion (Internal)"],
-    },
-  },
-  "camille": {
-    password: "GIM_Camille2026!Ops",
-    user: {
-      id: "camille-001",
-      username: "camille",
-      name: "Camille Bautista",
-      nickname: "Camille",
-      email: "camille.bautista@graceinmotion.agency",
-      role: "Operations Manager",
-      isCoreAdmin: false,
-      avatarColor: "bg-[#518E6A]",
-      title: "Operations Manager",
-      clientScope: "All Active Clients (Operations Oversight)",
-      assigned_clients: ["We Rock the Spectrum (WRTS)", "Juvibolt Cybertech", "InVogue Cleans", "Studio Nets", "NoirLab", "Risewise", "Grace In Motion (Internal)"],
-    },
-  },
-  "camille.bautista": {
-    password: "GIM_Camille2026!Ops",
-    user: {
-      id: "camille-001",
-      username: "camille.bautista",
-      name: "Camille Bautista",
-      nickname: "Camille",
-      email: "camille.bautista@graceinmotion.agency",
-      role: "Operations Manager",
-      isCoreAdmin: false,
-      avatarColor: "bg-[#518E6A]",
-      title: "Operations Manager",
-      clientScope: "All Active Clients (Operations Oversight)",
-      assigned_clients: ["We Rock the Spectrum (WRTS)", "Juvibolt Cybertech", "InVogue Cleans", "Studio Nets", "NoirLab", "Risewise", "Grace In Motion (Internal)"],
-    },
-  },
-  "camille.smm": {
-    password: "GIM_Camille2026!Ops",
-    user: {
-      id: "camille-001",
-      username: "camille.smm",
-      name: "Camille Bautista",
-      nickname: "Camille",
-      email: "camille.bautista@graceinmotion.agency",
-      role: "Operations Manager",
-      isCoreAdmin: false,
-      avatarColor: "bg-[#518E6A]",
-      title: "Operations Manager",
-      clientScope: "All Active Clients (Operations Oversight)",
-      assigned_clients: ["We Rock the Spectrum (WRTS)", "Juvibolt Cybertech", "InVogue Cleans", "Studio Nets", "NoirLab", "Risewise", "Grace In Motion (Internal)"],
     },
   },
   "jerold.recaplaza": {
@@ -497,8 +449,7 @@ export default function LoginPage() {
 
     // 1. Check built-in verified accounts (instant local verification)
     const account = VERIFIED_ACCOUNTS[cleanUsername];
-    const isCamilleMatch = cleanUsername.includes("camille") && (cleanPassword === "GIM_Camille2026!Ops" || cleanPassword === "GIM_Camille2026!Social");
-    if (account && (account.password === cleanPassword || isCamilleMatch)) {
+    if (account && account.password === cleanPassword) {
       if (typeof window !== "undefined") {
         localStorage.setItem("gim_auth_user", JSON.stringify(account.user));
       }

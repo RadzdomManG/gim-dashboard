@@ -276,7 +276,7 @@ export function ClientKnowledgeHubView({
       content: (
         <div className="space-y-2 text-xs">
           <p className="text-[11px] text-[#65746C]">
-            Active creative copy, ad campaigns, and social media schedules for Camille Bautista and the SMM squad.
+            Active creative copy, ad campaigns, and social media schedules for Kim Besa and the marketing squad.
           </p>
           <div className="p-3 rounded-xl border border-[#E8E2DD] bg-white flex items-center justify-between">
             <span className="font-semibold text-[#242E29]">Meta Ads Creative Brief &bull; Sprint 4</span>

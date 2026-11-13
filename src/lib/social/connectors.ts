@@ -155,8 +155,8 @@ export const SEED_SOCIAL_POSTS: SocialPost[] = [
     id: "post-101",
     clientId: "we-rock-the-spectrum",
     clientName: "We Rock the Spectrum (WRTS)",
-    authorName: "Camille Lopez",
-    authorNickname: "Camille",
+    authorName: "Kimberly Besa",
+    authorNickname: "Kim",
     platforms: ["facebook", "tiktok"],
     rawBrief: "Sensory Sunday Open Gym announcement with quiet rooms and CVRC approval reminder for parents.",
     adaptedCopy: {
@@ -186,8 +186,8 @@ export const SEED_SOCIAL_POSTS: SocialPost[] = [
     id: "post-102",
     clientId: "juvibolt-cybertech",
     clientName: "Juvibolt Cybertech",
-    authorName: "Camille Lopez",
-    authorNickname: "Camille",
+    authorName: "Kimberly Besa",
+    authorNickname: "Kim",
     platforms: ["linkedin", "youtube"],
     rawBrief: "Juvibolt Cohort 1 Cybersecurity Career Roadmap: 3 high-paying security roles for non-technical beginners in 2027.",
     adaptedCopy: {
@@ -208,8 +208,8 @@ export const SEED_SOCIAL_POSTS: SocialPost[] = [
     id: "post-103",
     clientId: "studio-nets",
     clientName: "Studio Nets",
-    authorName: "Camille Lopez",
-    authorNickname: "Camille",
+    authorName: "Kimberly Besa",
+    authorNickname: "Kim",
     platforms: ["facebook", "linkedin"],
     rawBrief: "Client brand transformation case study: How minimal brand typography and consistent design tokens doubled conversion.",
     adaptedCopy: {

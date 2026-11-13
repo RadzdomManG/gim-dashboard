@@ -50,7 +50,7 @@ export function SystemUpgradesModal({
       title: "Personalized Internal AI Co-Pilot",
       category: "AI & Automation",
       badgeVariant: "brand" as const,
-      desc: "Each member has an isolated AI Assistant on the bottom-right (e.g. Camille's Co-Pilot, Radz's Co-Pilot) strictly bounded to their assigned clients with zero cross-client data drift.",
+      desc: "Each member has an isolated AI Assistant on the bottom-right (e.g. Kim's Co-Pilot, Radz's Co-Pilot) strictly bounded to their assigned clients with zero cross-client data drift.",
       actionLabel: "Try Co-Pilot",
       icon: Bot,
     },

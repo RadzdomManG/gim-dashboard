@@ -70,7 +70,7 @@ export function AiSocialMediaAssistant({
   const examplePrompts = [
     {
       title: "📁 3-Day GDrive Batch (WRTS Sensory Gym)",
-      text: `Hey Camille! Here's our Google Drive folder: https://drive.google.com/drive/folders/wrts-sensory-campaign-nov with Day 1, Day 2, Day 3 assets and captions. 
+      text: `Hey Kim! Here's our Google Drive folder: https://drive.google.com/drive/folders/wrts-sensory-campaign-nov with Day 1, Day 2, Day 3 assets and captions. 
 
 Day 1: Sensory zip-line video. Caption: Ever wonder why kids love our sensory zip lines? They build core stability and vestibular regulation! Tag a parent who needs to see this. #sensorygym #wrtsclovis
 Day 2: Quiet room photo carousel. Caption: Looking for a gentle, calming space? Our sensory rooms are equipped with fiber-optic lighting and weighted blankets.
@@ -178,7 +178,7 @@ Schedule this on Facebook and LinkedIn!`,
               <span>AI Social Media Campaign Assistant & GDrive Autopilot</span>
             </CardTitle>
             <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#518E6A]/15 text-[#3D5249] border border-[#518E6A]/30">
-              Camille's SMM LLM Engine
+              Kim's Marketing Engine
             </span>
           </div>
           <CardDescription className="text-xs text-[#65746C]">

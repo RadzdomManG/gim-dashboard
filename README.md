@@ -70,9 +70,9 @@ All accounts can be tested live at **`https://graceinmotion.vercel.app/login`**:
 ### Delivery Squad & Client Specialists (Scoped Isolation)
 | Personnel | Username | Password | Role | Assigned Client Scope |
 | :--- | :--- | :--- | :--- | :--- |
-| **Erwin Manaog** | `erwin.manaog` | `GIM_Erwin2026!Sprint` | Project Owner | `Little Treasures Company`, `We Rock the Spectrum (WRTS)` |
+| **Erwin Manaog** | `erwin.manaog` | `GIM_Erwin2026!Sprint` | Operations Manager (OM) | `InVogue Cleans`, `We Rock the Spectrum (WRTS)`, `NoirLab` |
 | **BJ Ricafrente** | `bj.ricafrente` | `GIM_BJ2026!Franchise` | Operations Specialist | `We Rock the Spectrum (WRTS)`, `Grace In Motion (Internal)` |
-| **Camille Bautista** | `camille.smm` | `GIM_Camille2026!Social` | Social Media Specialist | `Little Treasures Company` Only |
+| **Kimberly Besa** | `kimberly.besa` | `GIM_Kimberly2026!Marketing` | Marketing & Ops Specialist | `Juvibolt Cybertech`, `Grace In Motion (Internal)` |
 | **Jerold Recaplaza** | `jerold.recaplaza` | `GIM_Jerold2026!Growth` | Operations Specialist | `Risewise` Only |
 | **Jane Caillio** | `jane.caillio` | `GIM_Jane2026!Lead` | Project Lead | `NoirLab` Only |
 | **Jedy Caillio** | `jedy.caillio` | `GIM_Jedy2026!Systems` | Operations Specialist | `InVogue Cleans` Only |
@@ -81,15 +81,14 @@ All accounts can be tested live at **`https://graceinmotion.vercel.app/login`**:
 | **Joy Fabular** | `joy.fabular` | `GIM_Joy2026!Clean` | Operations Assistant | `InVogue Cleans` Only |
 | **Aldwin** | `aldwin.ops` | `GIM_Aldwin2026!Ops` | Operations Assistant | `We Rock the Spectrum (WRTS)` Only |
 | **Hashim Saudi** | `hashim.saudi` | `GIM_Hashim2026!Tech` | Tech Specialist | `Studio Nets` Only |
-| **Kimberly Besa** | `kimberly.besa` | `GIM_Kimberly2026!GIM` | Operations Assistant | `Grace In Motion (Internal)` Only |
 
 ### Verified Client Principals (Single-Tenant Portal Isolation)
 | Personnel | Username | Password | Role | Client Portal Scope |
 | :--- | :--- | :--- | :--- | :--- |
-| **Zoe Horner** | `zoe.horner` | `Portal_Zoe2026!LTC` | Client User | `Little Treasures Company` Only |
 | **Aaron Ofosu** | `aaron.ofosu` | `Portal_Aaron2026!JB` | Client User | `Juvibolt Cybertech` Only |
 | **Matthew Robbins** | `matthew.robbins` | `Portal_Matthew2026!IVC` | Client User | `InVogue Cleans` Only |
 | **Nathan Blake** | `nathan.blake` | `Portal_Nathan2026!SN` | Client User | `Studio Nets` Only |
+| **Zoe Horner** | `zoe.horner` | `Portal_Zoe2026!LTC` | Client User (Paused) | `Little Treasures Company` (Paused) |
 
 ---
 

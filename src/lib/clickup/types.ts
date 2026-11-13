@@ -7,6 +7,12 @@ export interface ClickUpAssignee {
   avatar?: string | null;
 }
 
+export interface ClickUpTaskTag {
+  name: string;
+  tag_fg?: string;
+  tag_bg?: string;
+}
+
 export interface ClickUpTask {
   id: string;
   name: string;
@@ -28,6 +34,12 @@ export interface ClickUpTask {
   url: string;
   gateCode?: string | null; // e.g. "G5", "G7", "G18"
   isRadzTask?: boolean;
+  parent?: string | null;
+  subtasksCount?: number;
+  commentsCount?: number;
+  tags?: ClickUpTaskTag[];
+  timeSpentFormatted?: string | null;
+  subtasks?: ClickUpTask[];
   attachments?: {
     id: string;
     name: string;

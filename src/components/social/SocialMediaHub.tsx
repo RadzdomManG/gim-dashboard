@@ -613,7 +613,7 @@ export function SocialMediaHub({
                     </button>
 
                     <span className="text-[10px] text-[#65746C] italic">
-                      Matched to Camille's SMM Brand Voice
+                      Matched to GIM Brand Voice
                     </span>
                   </div>
                 </div>
@@ -758,7 +758,7 @@ export function SocialMediaHub({
                     <span>Live Platform Preview</span>
                   </CardTitle>
                   <span className="text-[10px] font-mono text-[#65746C]">
-                    Camille's SMM Engine
+                    Marketing AI Engine
                   </span>
                 </div>
                 {/* Platform Preview Selector Pills */}

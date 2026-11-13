@@ -209,7 +209,6 @@ const AVAILABLE_TEAM_MEMBERS = [
   { id: "radz", name: "Radzdom Gallego", role: "Admin" },
   { id: "ra", name: "Ma. Rose Anne Malinao", role: "Admin" },
   { id: "erwin", name: "Erwin Manaog", role: "Operations Manager" },
-  { id: "camille", name: "Camille Bautista", role: "Operations Manager" },
   { id: "bj", name: "BJ Ricafrente", role: "Specialist" },
   { id: "joy", name: "Joy Fabular", role: "Specialist" },
   { id: "kimberly", name: "Kimberly Besa", role: "Operations Assistant" },

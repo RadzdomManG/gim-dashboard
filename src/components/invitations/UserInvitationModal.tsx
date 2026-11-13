@@ -94,12 +94,12 @@ export function UserInvitationModal({
       } else {
         setUsersList([
           {
-            id: "u-camille",
-            username: "camille.smm",
-            full_name: "Camille Bautista",
-            password: "Camille_GIM2026!",
-            role: "Social Media Specialist",
-            assigned_clients: ["We Rock the Spectrum (WRTS)", "Juvibolt Cybertech"],
+            id: "u-kimberly",
+            username: "kimberly.besa",
+            full_name: "Kimberly Besa",
+            password: "Kimberly_GIM2026!",
+            role: "Operations Assistant",
+            assigned_clients: ["Juvibolt Cybertech", "InVogue Cleans", "Grace In Motion (Internal)"],
             created_at: new Date().toISOString(),
             is_revoked: false,
           },
@@ -390,7 +390,7 @@ export function UserInvitationModal({
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Camille Bautista"
+                      placeholder="e.g. Kimberly Besa"
                       value={fullName}
                       onChange={(e) => {
                         setFullName(e.target.value);
@@ -416,7 +416,7 @@ export function UserInvitationModal({
                     <input
                       type="text"
                       required
-                      placeholder="e.g. camille.smm"
+                      placeholder="e.g. kimberly.besa"
                       value={username}
                       onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, "."))}
                       className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-[#3D5249]/20 font-mono focus:outline-none focus:ring-2 focus:ring-[#518E6A]/30 focus:border-[#518E6A] bg-white text-[#242E29]"
@@ -437,7 +437,7 @@ export function UserInvitationModal({
                     <input
                       type={showPassword ? "text" : "password"}
                       required
-                      placeholder="e.g. Camille_2026!"
+                      placeholder="e.g. Kimberly_2026!"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-[#3D5249]/20 font-mono focus:outline-none focus:ring-2 focus:ring-[#518E6A]/30 focus:border-[#518E6A] bg-white text-[#242E29]"

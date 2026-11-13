@@ -145,10 +145,10 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       name: 'Erwin Manaog',
       nickname: 'Erwin',
       email: 'em.erwin011@gmail.com',
-      role: 'Project Owner',
+      role: 'Operations Manager (OM)',
       isCoreAdmin: false,
       avatarColor: 'bg-[#65746C]',
-      title: 'Project Owner & Delivery Specialist',
+      title: 'Operations Manager (OM) & Delivery Lead',
       clientScope: 'We Rock the Spectrum (WRTS), InVogue Cleans, Studio Nets, NoirLab, Grace In Motion (Internal)',
       assigned_clients: ['We Rock the Spectrum (WRTS)', 'InVogue Cleans', 'Studio Nets', 'NoirLab', 'Grace In Motion (Internal)'],
     },
@@ -167,54 +167,6 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       title: 'Operations Specialist',
       clientScope: 'We Rock the Spectrum (WRTS), Grace In Motion (Internal)',
       assigned_clients: ['We Rock the Spectrum (WRTS)', 'Grace In Motion (Internal)'],
-    },
-  },
-  'camille': {
-    password: 'GIM_Camille2026!Ops',
-    user: {
-      id: 'camille-001',
-      username: 'camille',
-      name: 'Camille Bautista',
-      nickname: 'Camille',
-      email: 'camille.bautista@graceinmotion.agency',
-      role: 'Operations Manager',
-      isCoreAdmin: false,
-      avatarColor: 'bg-[#518E6A]',
-      title: 'Operations Manager',
-      clientScope: 'All Active Clients (Operations Oversight)',
-      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Juvibolt Cybertech', 'InVogue Cleans', 'Studio Nets', 'NoirLab', 'Risewise', 'Grace In Motion (Internal)'],
-    },
-  },
-  'camille.bautista': {
-    password: 'GIM_Camille2026!Ops',
-    user: {
-      id: 'camille-001',
-      username: 'camille.bautista',
-      name: 'Camille Bautista',
-      nickname: 'Camille',
-      email: 'camille.bautista@graceinmotion.agency',
-      role: 'Operations Manager',
-      isCoreAdmin: false,
-      avatarColor: 'bg-[#518E6A]',
-      title: 'Operations Manager',
-      clientScope: 'All Active Clients (Operations Oversight)',
-      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Juvibolt Cybertech', 'InVogue Cleans', 'Studio Nets', 'NoirLab', 'Risewise', 'Grace In Motion (Internal)'],
-    },
-  },
-  'camille.smm': {
-    password: 'GIM_Camille2026!Ops',
-    user: {
-      id: 'camille-001',
-      username: 'camille.smm',
-      name: 'Camille Bautista',
-      nickname: 'Camille',
-      email: 'camille.bautista@graceinmotion.agency',
-      role: 'Operations Manager',
-      isCoreAdmin: false,
-      avatarColor: 'bg-[#518E6A]',
-      title: 'Operations Manager',
-      clientScope: 'All Active Clients (Operations Oversight)',
-      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Juvibolt Cybertech', 'InVogue Cleans', 'Studio Nets', 'NoirLab', 'Risewise', 'Grace In Motion (Internal)'],
     },
   },
   'jerold.recaplaza': {
@@ -462,8 +414,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Check built-in verified accounts first (strictly against new credentials)
     const builtIn = BUILT_IN_ACCOUNTS[cleanUsername];
-    const isCamilleMatch = cleanUsername.includes('camille') && (cleanPassword === 'GIM_Camille2026!Ops' || cleanPassword === 'GIM_Camille2026!Social');
-    if (builtIn && (builtIn.password === cleanPassword || isCamilleMatch)) {
+    if (builtIn && builtIn.password === cleanPassword) {
       // Check if Core Admins have updated this user's assigned clients in Supabase
       let liveAssignedClients = builtIn.user.assigned_clients;
       let liveRole = builtIn.user.role;

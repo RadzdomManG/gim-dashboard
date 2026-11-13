@@ -28,6 +28,15 @@ interface RawClickUpTask {
   date_updated?: string | number | null;
   description?: string;
   url?: string;
+  parent?: string | null;
+  tags?: {
+    name: string;
+    tag_fg?: string;
+    tag_bg?: string;
+  }[];
+  comments_count?: number;
+  time_spent?: number;
+  time_estimate?: number;
   attachments?: {
     id: string;
     title: string;
@@ -141,6 +150,16 @@ function normalizeTask(raw: RawClickUpTask, clientName?: string, listId?: string
     url: raw.url || `https://app.clickup.com/t/${raw.id}`,
     gateCode: extractGateCode(raw.name),
     isRadzTask,
+    parent: raw.parent || null,
+    subtasksCount: 0,
+    commentsCount: raw.comments_count || 0,
+    tags: (raw.tags || []).map((t) => ({
+      name: t.name,
+      tag_fg: t.tag_fg,
+      tag_bg: t.tag_bg,
+    })),
+    timeSpentFormatted: raw.time_spent ? `${(raw.time_spent / 3600000).toFixed(1)}h` : null,
+    subtasks: [],
     attachments: (raw.attachments || []).map((att) => ({
       id: att.id,
       name: att.title || 'Attachment',
@@ -230,6 +249,22 @@ export async function fetchClickUpTasks(): Promise<{
       seenIds.add(t.id);
       uniqueTasks.push(t);
     }
+  }
+
+  // Link subtasks to parent tasks
+  const parentMap = new Map<string, ClickUpTask[]>();
+  for (const t of uniqueTasks) {
+    if (t.parent) {
+      if (!parentMap.has(t.parent)) {
+        parentMap.set(t.parent, []);
+      }
+      parentMap.get(t.parent)!.push(t);
+    }
+  }
+  for (const t of uniqueTasks) {
+    const subs = parentMap.get(t.id) || [];
+    t.subtasks = subs;
+    t.subtasksCount = subs.length;
   }
 
   // Sort: Tasks needing review first, then in progress, then to do, then closed

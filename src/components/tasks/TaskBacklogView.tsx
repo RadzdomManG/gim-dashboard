@@ -23,12 +23,17 @@ import {
   LayoutGrid,
   List,
   KanbanSquare,
+  Table as TableIcon,
+  Sparkles,
+  Plus,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { ClickUpTask, ClickUpStats } from "@/lib/clickup/types";
 import { TaskDetailModal, TaskItem } from "@/components/tasks/TaskDetailModal";
+import { ClickUpGroupedTaskListView } from "@/components/tasks/ClickUpGroupedTaskListView";
+import { CreateTaskModal } from "@/components/tasks/CreateTaskModal";
 import { sound } from "@/lib/audio";
 
 interface TaskBacklogViewProps {
@@ -40,7 +45,19 @@ interface TaskBacklogViewProps {
   clientScope?: string | string[];
   selectedClientId?: string;
   onClientChange?: (clientId: string) => void;
+  onOpenKnowledgeHub?: (clientId: string) => void;
 }
+
+const CLIENT_SLUG_MAP: Record<string, { slug: string; name: string }> = {
+  "we-rock-the-spectrum": { slug: "we-rock-the-spectrum", name: "We Rock the Spectrum" },
+  "juvibolt-cybertech": { slug: "juvibolt-cybertech", name: "Juvibolt Cybertech" },
+  "studio-nets": { slug: "studio-nets", name: "Studio Nets" },
+  "invogue-cleans": { slug: "invogue-cleans", name: "InVogue Cleans" },
+  "risewise": { slug: "risewise", name: "Risewise" },
+  "noirlab": { slug: "noirlab", name: "NoirLab" },
+  "gim-internal": { slug: "gim-internal", name: "Grace In Motion" },
+  "all": { slug: "invogue-cleans", name: "InVogue Cleans" },
+};
 
 export function TaskBacklogView({
   initialStatusFilter = "active",
@@ -51,6 +68,7 @@ export function TaskBacklogView({
   clientScope = "all",
   selectedClientId = "all",
   onClientChange,
+  onOpenKnowledgeHub,
 }: TaskBacklogViewProps) {
   const [tasks, setTasks] = useState<ClickUpTask[]>([]);
   const [stats, setStats] = useState<ClickUpStats | null>(null);
@@ -65,7 +83,9 @@ export function TaskBacklogView({
   const [clientFilter, setClientFilter] = useState<string>(selectedClientId || "all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [myTasksOnly, setMyTasksOnly] = useState(false);
-  const [viewMode, setViewMode] = useState<"table" | "grid" | "board">("table");
+  const [viewMode, setViewMode] = useState<"list" | "table" | "grid" | "board">("list");
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [createTaskDefaultStatus, setCreateTaskDefaultStatus] = useState("To Do");
 
   // Sync client filter with prop selectedClientId
   useEffect(() => {
@@ -209,6 +229,17 @@ export function TaskBacklogView({
       });
     }).length;
   }, [tasks, currentUserNickname, currentUserName]);
+
+  // Active client metadata for ClickUp Views
+  const currentClientInfo = useMemo(() => {
+    const key = (clientFilter || selectedClientId || "invogue-cleans").toLowerCase();
+    for (const [mapKey, info] of Object.entries(CLIENT_SLUG_MAP)) {
+      if (key === mapKey || key.includes(mapKey) || mapKey.includes(key) || info.name.toLowerCase().includes(key)) {
+        return info;
+      }
+    }
+    return { slug: "invogue-cleans", name: "InVogue Cleans" };
+  }, [clientFilter, selectedClientId]);
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -668,63 +699,112 @@ export function TaskBacklogView({
         </CardContent>
       </Card>
 
-      {/* 4. TASK DATA TABLE */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between py-3.5 px-4 border-b border-[#E8E2DD]">
-          <div className="flex items-center space-x-2">
-            <CardTitle className="text-sm">All Deliverables</CardTitle>
-            <Badge variant="neutral">
-              Showing {paginatedTasks.length} of {filteredTasks.length}
-            </Badge>
-          </div>
-          <div className="flex items-center space-x-2">
-            {/* View Mode Toggle (Table vs Grid vs Board) */}
-            <div className="flex items-center space-x-0.5 bg-[#FBF6F3] p-0.5 rounded-xl border border-[#E8E2DD]">
-              <button
-                type="button"
-                onClick={() => setViewMode("table")}
-                className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1 transition-colors ${
-                  viewMode === "table"
-                    ? "bg-[#3D5249] text-white shadow-xs"
-                    : "text-[#65746C] hover:text-[#242E29]"
-                }`}
-                title="Table View"
-              >
-                <List className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline text-[10px]">Table</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("grid")}
-                className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1 transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-[#3D5249] text-white shadow-xs"
-                    : "text-[#65746C] hover:text-[#242E29]"
-                }`}
-                title="Card Grid View"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline text-[10px]">Grid</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("board")}
-                className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1 transition-colors ${
-                  viewMode === "board"
-                    ? "bg-[#3D5249] text-white shadow-xs"
-                    : "text-[#65746C] hover:text-[#242E29]"
-                }`}
-                title="ClickUp Kanban Board View"
-              >
-                <KanbanSquare className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline text-[10px]">Board</span>
-              </button>
+      {/* 4. VIEW MODE TOGGLE BAR */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center space-x-1 bg-[#FBF6F3] p-1 rounded-xl border border-[#E8E2DD]">
+          <button
+            type="button"
+            onClick={() => setViewMode("list")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all ${
+              viewMode === "list"
+                ? "bg-[#3D5249] text-white shadow-xs"
+                : "text-[#65746C] hover:text-[#242E29]"
+            }`}
+            title="ClickUp Grouped Status View (1:1)"
+          >
+            <List className="w-3.5 h-3.5" />
+            <span>Grouped List</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("board")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all ${
+              viewMode === "board"
+                ? "bg-[#3D5249] text-white shadow-xs"
+                : "text-[#65746C] hover:text-[#242E29]"
+            }`}
+            title="ClickUp Kanban Board View"
+          >
+            <KanbanSquare className="w-3.5 h-3.5" />
+            <span>Board</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("table")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all ${
+              viewMode === "table"
+                ? "bg-[#3D5249] text-white shadow-xs"
+                : "text-[#65746C] hover:text-[#242E29]"
+            }`}
+            title="Table View"
+          >
+            <TableIcon className="w-3.5 h-3.5" />
+            <span>Table</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("grid")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all ${
+              viewMode === "grid"
+                ? "bg-[#3D5249] text-white shadow-xs"
+                : "text-[#65746C] hover:text-[#242E29]"
+            }`}
+            title="Card Grid View"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>Grid</span>
+          </button>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => {
+              setCreateTaskDefaultStatus("To Do");
+              setIsCreateTaskOpen(true);
+            }}
+            className="text-xs flex items-center gap-1.5"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Create Task</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* 5. VIEW CONTENT (CLICKUP GROUPED LIST OR DATA TABLE/BOARD) */}
+      {viewMode === "list" && !loading && !error ? (
+        <ClickUpGroupedTaskListView
+          tasks={filteredTasks}
+          selectedClientName={currentClientInfo.name}
+          clientSlug={currentClientInfo.slug}
+          currentUserNickname={currentUserNickname}
+          onSelectTask={(task) => setSelectedTask(task)}
+          onQuickMoveTask={handleQuickMoveTask}
+          onOpenCreateTask={(defaultStatus) => {
+            setCreateTaskDefaultStatus(defaultStatus || "To Do");
+            setIsCreateTaskOpen(true);
+          }}
+          onOpenKnowledgeHub={() => {
+            if (onOpenKnowledgeHub) {
+              onOpenKnowledgeHub(currentClientInfo.slug);
+            }
+          }}
+          onSwitchViewMode={(mode) => setViewMode(mode)}
+        />
+      ) : (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between py-3.5 px-4 border-b border-[#E8E2DD]">
+            <div className="flex items-center space-x-2">
+              <CardTitle className="text-sm">All Deliverables</CardTitle>
+              <Badge variant="neutral">
+                Showing {paginatedTasks.length} of {filteredTasks.length}
+              </Badge>
             </div>
             <div className="text-xs text-[#65746C] hidden sm:block">
               Page {currentPage} of {totalPages}
             </div>
-          </div>
-        </CardHeader>
+          </CardHeader>
 
         {loading ? (
           <div className="p-12 text-center space-y-3">
@@ -1103,6 +1183,7 @@ export function TaskBacklogView({
           </div>
         )}
       </Card>
+      )}
 
       {/* ========================================================================= */}
       {/* 6. TASK DETAIL INSPECTION MODAL (UNIFIED GIM DETAIL MODAL) */}
@@ -1147,6 +1228,19 @@ export function TaskBacklogView({
           }}
         />
       )}
+
+      {/* ========================================================================= */}
+      {/* 7. CREATE TASK MODAL */}
+      {/* ========================================================================= */}
+      <CreateTaskModal
+        isOpen={isCreateTaskOpen}
+        onClose={() => setIsCreateTaskOpen(false)}
+        defaultClient={currentClientInfo.name}
+        onTaskCreated={() => {
+          loadTasks(true);
+        }}
+        currentUserName={currentUserName}
+      />
     </div>
   );
 }

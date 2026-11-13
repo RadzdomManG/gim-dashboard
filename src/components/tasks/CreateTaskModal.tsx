@@ -108,7 +108,7 @@ export function CreateTaskModal({
     { name: "Erwin Manaog", nickname: "Erwin" },
     { name: "BJ Ricafrente", nickname: "BJ" },
     { name: "Joy Fabular", nickname: "Joy" },
-    { name: "Camille Bautista", nickname: "Camille" },
+    { name: "Kimberly Besa", nickname: "Kimberly" },
     { name: "Jedy Caillio", nickname: "Jedy" },
   ]);
 

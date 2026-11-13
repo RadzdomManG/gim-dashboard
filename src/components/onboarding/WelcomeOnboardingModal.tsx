@@ -248,12 +248,12 @@ export function WelcomeOnboardingModal({
                     </div>
 
                     <div className="p-2 rounded-xl bg-[#FBF6F3] border border-[#E8E2DD] flex items-center space-x-2">
-                      <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-[9px]">
-                        CB
+                      <div className="w-6 h-6 rounded-full bg-[#3D5249] text-white flex items-center justify-center font-bold text-[9px]">
+                        KB
                       </div>
                       <div>
-                        <div className="font-bold text-[11px] text-[#242E29]">Camille Bautista</div>
-                        <div className="text-[10px] text-[#65746C]">Social Media Specialist · SMM & Growth</div>
+                        <div className="font-bold text-[11px] text-[#242E29]">Kimberly Besa</div>
+                        <div className="text-[10px] text-[#65746C]">Operations Assistant · Juvibolt &amp; InVogue</div>
                       </div>
                     </div>
 
