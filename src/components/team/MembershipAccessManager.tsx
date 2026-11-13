@@ -67,7 +67,8 @@ export function MembershipAccessManager({
   // Granular staff limits state (Admins can toggle live)
   const [staffLimits, setStaffLimits] = useState<Record<string, StaffLimitState>>({
     erwin: { limitGoals: false, limitFinancials: true, limitUnassignedClients: false, isSuspended: false },
-    smm: { limitGoals: true, limitFinancials: true, limitUnassignedClients: true, isSuspended: false },
+    camille: { limitGoals: false, limitFinancials: true, limitUnassignedClients: false, isSuspended: false },
+    smm: { limitGoals: false, limitFinancials: true, limitUnassignedClients: false, isSuspended: false },
     bj: { limitGoals: false, limitFinancials: true, limitUnassignedClients: false, isSuspended: false },
     jerold: { limitGoals: false, limitFinancials: true, limitUnassignedClients: false, isSuspended: false },
     jane: { limitGoals: false, limitFinancials: true, limitUnassignedClients: false, isSuspended: false },
@@ -124,13 +125,13 @@ export function MembershipAccessManager({
         avatarBg: "bg-[#65746C]",
       },
       {
-        key: "smm",
+        key: "camille",
         name: "Camille Bautista",
         nickname: "Camille",
-        email: "camille.smm@graceinmotion.agency",
-        role: "Social Media Specialist",
-        scope: "WRTS, Juvibolt & Studio Nets",
-        focus: "30-Day Campaign Batches & Growth",
+        email: "camille.bautista@graceinmotion.agency",
+        role: "Operations Manager",
+        scope: "All Clients (Operations Oversight)",
+        focus: "Cross-Squad Alignment & Operations Runbooks",
         avatarBg: "bg-[#518E6A]",
       },
       {
@@ -227,10 +228,10 @@ export function MembershipAccessManager({
         key: "kimberly",
         name: "Kimberly Besa",
         nickname: "Kimberly",
-        email: "kimberly@graceinmotion.agency",
+        email: "kimberlybesa80@gmail.com",
         role: "Operations Assistant",
-        scope: "Grace In Motion (Internal)",
-        focus: "Agency Operations & Scorecards",
+        scope: "Juvibolt, InVogue Cleans & GIM",
+        focus: "Account Operations & Client Deliverables",
         avatarBg: "bg-[#3D5249]",
       },
     ],
@@ -565,9 +566,15 @@ export function MembershipAccessManager({
                                   Revoked
                                 </Badge>
                               ) : (
-                                <Badge variant="active" dot>
-                                  Active
-                                </Badge>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                  </span>
+                                  <Badge variant="active" className="text-[10px]">
+                                    Online
+                                  </Badge>
+                                </div>
                               )}
                             </td>
 
@@ -645,9 +652,16 @@ export function MembershipAccessManager({
                     </div>
                     <div>
                       <h4 className="font-bold text-sm text-[#242E29]">Divine Origines</h4>
-                      <Badge variant="dark" className="mt-0.5">
-                        Owner
-                      </Badge>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Badge variant="dark">Owner</Badge>
+                        <span className="flex items-center gap-1 text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                          </span>
+                          Online
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <p className="text-xs text-[#242E29] font-medium">Founder &amp; Strategy Lead</p>
@@ -674,9 +688,18 @@ export function MembershipAccessManager({
                     </div>
                     <div>
                       <h4 className="font-bold text-sm text-[#242E29]">Radzdom Gallego (Radz)</h4>
-                      <Badge variant="brand" className="mt-0.5 bg-[#518E6A] text-white">
-                        Core Admin
-                      </Badge>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Badge variant="brand" className="bg-[#518E6A] text-white">
+                          Core Admin
+                        </Badge>
+                        <span className="flex items-center gap-1 text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                          </span>
+                          Online
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <p className="text-xs text-[#242E29] font-medium">Chief Automation Architect &amp; Tech Lead</p>
@@ -703,9 +726,18 @@ export function MembershipAccessManager({
                     </div>
                     <div>
                       <h4 className="font-bold text-sm text-[#242E29]">Ma. Rose Anne Malinao (RA)</h4>
-                      <Badge variant="brand" className="mt-0.5">
-                        Core Admin
-                      </Badge>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Badge variant="brand">
+                          Core Admin
+                        </Badge>
+                        <span className="flex items-center gap-1 text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                          </span>
+                          Online
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <p className="text-xs text-[#242E29] font-medium">Head of Operations &amp; Invoicing Lead</p>

@@ -916,9 +916,6 @@ export default function GimDashboard() {
         { id: "messaging", label: "Team Messaging", icon: MessageSquare, badge: "Live" },
         { id: "social" as NavTab, label: "Social Hub & Auto-Post", icon: Share2, badge: "New" },
         { id: "timesheet", label: "Timesheets & EOS", icon: Clock },
-        ...(hasAdminAccess || currentUser.nickname.toLowerCase() === "ra"
-          ? [{ id: "invoicing" as NavTab, label: "Invoicing & Billing", icon: DollarSign, badge: "RA Lead" }]
-          : []),
         { id: "library", label: "SOP & Playbooks", icon: FolderKanban },
       ],
     },
@@ -1556,9 +1553,9 @@ export default function GimDashboard() {
               <span className="hidden sm:inline">New Task</span>
             </Button>
 
-            {/* Clean User Presence Pill */}
+            {/* Clean User Presence Pill with Live Online Indicator */}
             {activeTab !== "settings" && (
-              <div className="flex items-center space-x-1.5 px-2 py-1 bg-white border border-[#E8E2DD] rounded-xl text-xs shadow-xs shrink-0">
+              <div className="flex items-center space-x-2 px-2.5 py-1 bg-white border border-[#E8E2DD] rounded-xl text-xs shadow-xs shrink-0">
                 <div className="relative">
                   {currentUser.avatarUrl ? (
                     <img
@@ -1573,11 +1570,20 @@ export default function GimDashboard() {
                       {getMemberInitials(currentUser.name, currentUser.nickname)}
                     </div>
                   )}
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 absolute -bottom-0.5 -right-0.5 ring-1 ring-white"></span>
+                  <span className="relative flex h-2 w-2 absolute -bottom-0.5 -right-0.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 ring-1 ring-white"></span>
+                  </span>
                 </div>
-                <span className="font-semibold text-[#242E29] truncate max-w-[65px] sm:max-w-none hidden xs:inline">
-                  {currentUser.nickname || currentUser.name}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-[#242E29] truncate max-w-[65px] sm:max-w-none hidden xs:inline">
+                    {currentUser.nickname || currentUser.name}
+                  </span>
+                  <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-700 text-[9px] font-bold border border-emerald-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Online
+                  </span>
+                </div>
                 {currentUser.role === "Owner" ? (
                   <span className="hidden md:inline-block text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#3D5249] text-white">
                     Owner
@@ -1712,6 +1718,7 @@ export default function GimDashboard() {
                     isCoreAdmin={currentUser.isCoreAdmin}
                     clientScope={currentUser.clientScope}
                     selectedClientId={selectedPortfolioClientId}
+                    onClientChange={(id) => setSelectedPortfolioClientId(id)}
                   />
                 </div>
                 <div className="lg:col-span-5">

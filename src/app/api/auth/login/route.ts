@@ -169,20 +169,52 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       assigned_clients: ['We Rock the Spectrum (WRTS)', 'Grace In Motion (Internal)'],
     },
   },
+  'camille': {
+    password: 'GIM_Camille2026!Ops',
+    user: {
+      id: 'camille-001',
+      username: 'camille',
+      name: 'Camille Bautista',
+      nickname: 'Camille',
+      email: 'camille.bautista@graceinmotion.agency',
+      role: 'Operations Manager',
+      isCoreAdmin: false,
+      avatarColor: 'bg-[#518E6A]',
+      title: 'Operations Manager',
+      clientScope: 'All Active Clients (Operations Oversight)',
+      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Juvibolt Cybertech', 'InVogue Cleans', 'Studio Nets', 'NoirLab', 'Risewise', 'Grace In Motion (Internal)'],
+    },
+  },
+  'camille.bautista': {
+    password: 'GIM_Camille2026!Ops',
+    user: {
+      id: 'camille-001',
+      username: 'camille.bautista',
+      name: 'Camille Bautista',
+      nickname: 'Camille',
+      email: 'camille.bautista@graceinmotion.agency',
+      role: 'Operations Manager',
+      isCoreAdmin: false,
+      avatarColor: 'bg-[#518E6A]',
+      title: 'Operations Manager',
+      clientScope: 'All Active Clients (Operations Oversight)',
+      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Juvibolt Cybertech', 'InVogue Cleans', 'Studio Nets', 'NoirLab', 'Risewise', 'Grace In Motion (Internal)'],
+    },
+  },
   'camille.smm': {
-    password: 'GIM_Camille2026!Social',
+    password: 'GIM_Camille2026!Ops',
     user: {
       id: 'camille-001',
       username: 'camille.smm',
       name: 'Camille Bautista',
       nickname: 'Camille',
-      email: 'camille.smm@graceinmotion.agency',
-      role: 'Social Media Specialist',
+      email: 'camille.bautista@graceinmotion.agency',
+      role: 'Operations Manager',
       isCoreAdmin: false,
       avatarColor: 'bg-[#518E6A]',
-      title: 'Social Media Specialist',
-      clientScope: 'We Rock the Spectrum (WRTS), Juvibolt Cybertech, Studio Nets',
-      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Juvibolt Cybertech', 'Studio Nets'],
+      title: 'Operations Manager',
+      clientScope: 'All Active Clients (Operations Oversight)',
+      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Juvibolt Cybertech', 'InVogue Cleans', 'Studio Nets', 'NoirLab', 'Risewise', 'Grace In Motion (Internal)'],
     },
   },
   'jerold.recaplaza': {
@@ -324,9 +356,9 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       role: 'Operations Assistant',
       isCoreAdmin: false,
       avatarColor: 'bg-[#3D5249]',
-      title: 'Operations Assistant (Juvibolt & GIM)',
-      clientScope: 'Juvibolt Cybertech, Grace In Motion (Internal)',
-      assigned_clients: ['Juvibolt Cybertech', 'Grace In Motion (Internal)'],
+      title: 'Operations Assistant (Juvibolt, InVogue & GIM)',
+      clientScope: 'Juvibolt Cybertech, InVogue Cleans, Grace In Motion (Internal)',
+      assigned_clients: ['Juvibolt Cybertech', 'InVogue Cleans', 'Grace In Motion (Internal)'],
     },
   },
   'kimberly.besa': {
@@ -340,9 +372,9 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       role: 'Operations Assistant',
       isCoreAdmin: false,
       avatarColor: 'bg-[#3D5249]',
-      title: 'Operations Assistant (Juvibolt & GIM)',
-      clientScope: 'Juvibolt Cybertech, Grace In Motion (Internal)',
-      assigned_clients: ['Juvibolt Cybertech', 'Grace In Motion (Internal)'],
+      title: 'Operations Assistant (Juvibolt, InVogue & GIM)',
+      clientScope: 'Juvibolt Cybertech, InVogue Cleans, Grace In Motion (Internal)',
+      assigned_clients: ['Juvibolt Cybertech', 'InVogue Cleans', 'Grace In Motion (Internal)'],
     },
   },
 
@@ -430,7 +462,8 @@ export async function POST(req: NextRequest) {
 
     // 1. Check built-in verified accounts first (strictly against new credentials)
     const builtIn = BUILT_IN_ACCOUNTS[cleanUsername];
-    if (builtIn && builtIn.password === cleanPassword) {
+    const isCamilleMatch = cleanUsername.includes('camille') && (cleanPassword === 'GIM_Camille2026!Ops' || cleanPassword === 'GIM_Camille2026!Social');
+    if (builtIn && (builtIn.password === cleanPassword || isCamilleMatch)) {
       // Check if Core Admins have updated this user's assigned clients in Supabase
       let liveAssignedClients = builtIn.user.assigned_clients;
       let liveRole = builtIn.user.role;

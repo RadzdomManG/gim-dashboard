@@ -208,10 +208,11 @@ const AVAILABLE_TEAM_MEMBERS = [
   { id: "divine", name: "Divine Origines", role: "Owner" },
   { id: "radz", name: "Radzdom Gallego", role: "Admin" },
   { id: "ra", name: "Ma. Rose Anne Malinao", role: "Admin" },
-  { id: "erwin", name: "Erwin Manaog", role: "Senior Specialist" },
+  { id: "erwin", name: "Erwin Manaog", role: "Operations Manager" },
+  { id: "camille", name: "Camille Bautista", role: "Operations Manager" },
   { id: "bj", name: "BJ Ricafrente", role: "Specialist" },
   { id: "joy", name: "Joy Fabular", role: "Specialist" },
-  { id: "camille", name: "Camille Bautista", role: "Social Media Specialist" },
+  { id: "kimberly", name: "Kimberly Besa", role: "Operations Assistant" },
   { id: "jedy", name: "Jedy Caillio", role: "Creative Specialist" },
 ];
 
@@ -1273,8 +1274,11 @@ export function MessagingCenter({
                           }`}
                         >
                           <div className="flex items-center space-x-2 truncate min-w-0">
-                            <div className="w-5 h-5 rounded-full bg-[#466B53] text-white flex items-center justify-center text-[9px] font-bold shrink-0">
-                              {channel.name.slice(0, 2).toUpperCase()}
+                            <div className="relative shrink-0">
+                              <div className="w-5 h-5 rounded-full bg-[#466B53] text-white flex items-center justify-center text-[9px] font-bold">
+                                {channel.name.slice(0, 2).toUpperCase()}
+                              </div>
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 absolute -bottom-0.5 -right-0.5 ring-1 ring-white"></span>
                             </div>
                             <span className="truncate">{channel.name}</span>
                           </div>
@@ -1295,15 +1299,24 @@ export function MessagingCenter({
 
             {/* User Presence Footer */}
             <div className="p-3 border-t border-[#E8E2DD] bg-white flex items-center justify-between">
-              <div className="flex items-center space-x-2 min-w-0">
-                <div className={`w-7 h-7 rounded-full ${avatarColor} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
-                  {currentUserNickname.slice(0, 2).toUpperCase()}
+              <div className="flex items-center space-x-2.5 min-w-0">
+                <div className="relative shrink-0">
+                  <div className={`w-7 h-7 rounded-full ${avatarColor} text-white flex items-center justify-center font-bold text-xs`}>
+                    {currentUserNickname.slice(0, 2).toUpperCase()}
+                  </div>
+                  <span className="relative flex h-2 w-2 absolute -bottom-0.5 -right-0.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 ring-1 ring-white"></span>
+                  </span>
                 </div>
                 <div className="min-w-0">
                   <p className="font-semibold text-xs text-[#242E29] truncate leading-tight">
                     {currentUserName} ({currentUserNickname})
                   </p>
-                  <p className="text-[10px] text-[#466B53] font-medium">{currentUserRole}</p>
+                  <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Online &bull; {currentUserRole}
+                  </p>
                 </div>
               </div>
             </div>

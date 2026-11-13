@@ -23,6 +23,10 @@ import {
   AlertTriangle,
   User,
   Lock,
+  BookOpen,
+  Bot,
+  Sparkles,
+  Globe,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -30,6 +34,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { ClientReportExportModal } from "@/components/reports/ClientReportExportModal";
 import { ClientOnboardingModal } from "@/components/clients/ClientOnboardingModal";
 import { ClientCalendarView } from "@/components/clients/ClientCalendarView";
+import { ClientKnowledgeHubView } from "@/components/clients/ClientKnowledgeHubView";
 import { TaskItem, TaskDetailModal } from "@/components/tasks/TaskDetailModal";
 import { CreateTaskModal } from "@/components/tasks/CreateTaskModal";
 import { createClient } from "@/lib/supabase/client";
@@ -40,6 +45,9 @@ export interface ClientProfile {
   code: string;
   industry: string;
   location: string;
+  timezone: string;
+  timezoneCity: string;
+  aiBotName: string;
   contactName: string;
   contactRole: string;
   accountLead: string;
@@ -66,6 +74,9 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     code: "WRTS-US",
     industry: "Sensory Gym Franchise Operations",
     location: "Clovis, California, United States",
+    timezone: "PST",
+    timezoneCity: "California (UTC-8)",
+    aiBotName: "Rocky",
     contactName: "Chris & Niko",
     contactRole: "Franchise Owners & CFO",
     accountLead: "Erwin Manaog",
@@ -92,6 +103,9 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     code: "JB-US",
     industry: "Cybersecurity Bootcamp & Technical LMS",
     location: "Columbus, Ohio, US",
+    timezone: "EST",
+    timezoneCity: "South Carolina, US (UTC-5)",
+    aiBotName: "Jarvis",
     contactName: "Aaron Ofosu",
     contactRole: "Founder & Lead Security Specialist",
     accountLead: "Radzdom-Man Gallego",
@@ -120,6 +134,9 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     code: "RW-GLOBAL",
     industry: "Business Operations & Executive Coaching",
     location: "Australia / Global",
+    timezone: "AEST",
+    timezoneCity: "Australia / Global (UTC+10)",
+    aiBotName: "Riva",
     contactName: "Joel & Team",
     contactRole: "Founders",
     accountLead: "Divine Origines",
@@ -147,6 +164,9 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     code: "NL-GLOBAL",
     industry: "Creative Media & Production Agency",
     location: "Global",
+    timezone: "AEST",
+    timezoneCity: "Australia / Global (UTC+10)",
+    aiBotName: "Neo",
     contactName: "Malik & Atefa",
     contactRole: "Agency Principals",
     accountLead: "Jane Caillio",
@@ -174,10 +194,13 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     code: "IVC-AU",
     industry: "Premium Residential & Commercial Cleaning",
     location: "Brisbane, Queensland, AU",
+    timezone: "CST",
+    timezoneCity: "Texas, US (UTC-6)",
+    aiBotName: "Ivy",
     contactName: "Matthew Robbins",
     contactRole: "Founder & Managing Director",
     accountLead: "Ma. Rose Anne (RA) Malinao",
-    specialist: "Jedy Caillio & Ellyka Claire Pama",
+    specialist: "Kimberly Besa & Jedy Caillio",
     status: "Active Sprint",
     statusVariant: "active",
     retainer: "USD $1,700 / month",
@@ -201,6 +224,9 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     code: "SN-AU",
     industry: "Digital Creative & Design Systems",
     location: "Sydney, NSW, AU",
+    timezone: "AEST",
+    timezoneCity: "Sydney, NSW (UTC+10)",
+    aiBotName: "StudioBot",
     contactName: "Nathan Blake",
     contactRole: "Creative Director",
     accountLead: "Ma. Rose Anne (RA) Malinao",
@@ -228,6 +254,9 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     code: "GIM-HQ",
     industry: "Agency Operating Architecture & Tech Systems",
     location: "Manila / Global",
+    timezone: "AEST / PHT",
+    timezoneCity: "Sydney & Manila (UTC+10/+8)",
+    aiBotName: "Gia",
     contactName: "Executive Leadership",
     contactRole: "Divine Origines (Owner) & Radz Gallego (Tech Lead)",
     accountLead: "Ma. Rose Anne (RA) Malinao",
@@ -255,6 +284,9 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     code: "T2T-US",
     industry: "Education & Teacher Development",
     location: "California, United States",
+    timezone: "PST",
+    timezoneCity: "California, US (UTC-8)",
+    aiBotName: "ThriveBot",
     contactName: "Kimberly Daniels",
     contactRole: "Executive Director",
     accountLead: "Ma. Rose Anne (RA) Malinao",
@@ -283,7 +315,7 @@ interface ClientPortfolioViewProps {
   currentUserNickname?: string;
   isCoreAdmin?: boolean;
   initialClientId?: string;
-  initialSubTab?: "calendar" | "board" | "dossier";
+  initialSubTab?: "calendar" | "board" | "dossier" | "knowledge";
 }
 
 export function ClientPortfolioView({
@@ -328,7 +360,7 @@ export function ClientPortfolioView({
   const [selectedClientId, setSelectedClientId] = useState<string>(
     initialClientId || (isCoreAdmin ? "all" : (accessibleClients[0]?.id || "juvibolt-cybertech"))
   );
-  const [activeSubTab, setActiveSubTab] = useState<"calendar" | "board" | "dossier">(
+  const [activeSubTab, setActiveSubTab] = useState<"calendar" | "board" | "dossier" | "knowledge">(
     initialSubTab || "calendar"
   );
 
@@ -360,13 +392,16 @@ export function ClientPortfolioView({
 
   const isAllClients = isCoreAdmin && selectedClientId === "all";
 
-  const selectedClient = isAllClients
+  const selectedClient: ClientProfile = isAllClients
     ? {
         id: "all",
         name: "All Clients",
         code: "ALL",
         industry: "Unified Agency Operations",
         location: "Global",
+        timezone: "Multi-Zone",
+        timezoneCity: "Global (US & AU)",
+        aiBotName: "Gia / Multi-Agent",
         contactName: "All Stakeholders",
         contactRole: "Portfolio Overview",
         accountLead: "Divine Origines & Radz",
@@ -619,6 +654,21 @@ export function ClientPortfolioView({
         >
           <Building2 className="w-4 h-4 text-[#518E6A]" />
           Client Dossier &amp; Retainer
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab("knowledge")}
+          className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 ${
+            activeSubTab === "knowledge"
+              ? "border-[#518E6A] text-[#3D5249]"
+              : "border-transparent text-[#65746C] hover:text-[#242E29]"
+          }`}
+        >
+          <BookOpen className="w-4 h-4 text-[#518E6A]" />
+          Knowledge Hub &amp; Evidence
+          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-100 text-purple-900 font-bold">
+            13
+          </span>
         </button>
       </div>
 
@@ -918,13 +968,23 @@ export function ClientPortfolioView({
         <Card>
           <div className="p-5 border-b border-[#E8E2DD] bg-[#FBF6F3]/50">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                 <span className="font-bold text-[#3D5249] text-xs bg-[#466B53]/20 px-2 py-0.5 rounded border border-[#466B53]/30">
                   {selectedClient.code}
                 </span>
                 <Badge variant={selectedClient.statusVariant} dot>
                   {selectedClient.status}
                 </Badge>
+                {selectedClient.timezone && (
+                  <Badge variant="brand" className="text-[10px] font-mono flex items-center gap-1">
+                    <Clock className="w-2.5 h-2.5" /> {selectedClient.timezone} ({selectedClient.timezoneCity})
+                  </Badge>
+                )}
+                {selectedClient.aiBotName && (
+                  <span className="text-[10px] font-mono bg-purple-100 text-purple-900 px-2 py-0.5 rounded font-bold border border-purple-200 flex items-center gap-1">
+                    <Bot className="w-3 h-3 text-purple-700" /> Bot: {selectedClient.aiBotName}
+                  </span>
+                )}
               </div>
               <span className="text-xs font-bold text-[#466B53]">
                 {selectedClient.retainer}
@@ -968,7 +1028,7 @@ export function ClientPortfolioView({
                 <p className="font-bold text-xs text-[#242E29] mt-0.5">
                   {selectedClient.accountLead}
                 </p>
-                <p className="text-[10px] text-[#518E6A] font-medium">Project Owner</p>
+                <p className="text-[10px] text-[#518E6A] font-medium">Operations Manager</p>
               </div>
 
               <div>
@@ -1056,6 +1116,15 @@ export function ClientPortfolioView({
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* SUB-TAB 4: KNOWLEDGE HUB & EVIDENCE REGISTER (SECTIONS 01-13) */}
+      {activeSubTab === "knowledge" && (
+        <ClientKnowledgeHubView
+          client={selectedClient}
+          isCoreAdmin={isCoreAdmin}
+          currentUserNickname={currentUserNickname}
+        />
       )}
 
       {/* Task Detail Modal */}

@@ -91,6 +91,33 @@ I don't answer general non-work questions, but I'm ready to help you plan your d
       });
     }
 
+    if (
+      cleanMsg.includes("knowledge hub") ||
+      cleanMsg.includes("evidence") ||
+      cleanMsg.includes("timezone") ||
+      cleanMsg.includes("jarvis") ||
+      cleanMsg.includes("ivy") ||
+      cleanMsg.includes("neo") ||
+      cleanMsg.includes("riva") ||
+      cleanMsg.includes("rocky")
+    ) {
+      return NextResponse.json({
+        reply: `🤖 **GIM Grounded Knowledge Hub & Evidence Roster**\n\nEvery client account has a standardized 13-section Knowledge Hub and grounded AI bot persona to ensure zero hallucinations:\n\n` +
+          `• 🛡️ **Juvibolt Cybertech:** Bot **Jarvis** &bull; Timezone: **EST** (South Carolina, UTC-5) &bull; Lead: Radzdom Gallego\n` +
+          `• 🌿 **InVogue Cleans:** Bot **Ivy** &bull; Timezone: **CST** (Texas, UTC-6) &bull; Lead: RA Malinao &amp; Kim Besa\n` +
+          `• 🎯 **NoirLab:** Bot **Neo** &bull; Timezone: **AEST** (Australia, UTC+10) &bull; Lead: Jane Caillio\n` +
+          `• 📈 **Risewise:** Bot **Riva** &bull; Timezone: **AEST** (Australia, UTC+10) &bull; Lead: Divine Origines\n` +
+          `• 🏋️ **We Rock the Spectrum:** Bot **Rocky** &bull; Timezone: **PST** (California, UTC-8) &bull; Lead: Erwin Manaog\n` +
+          `• ⚡ **Grace In Motion (HQ):** Bot **Gia** &bull; Timezone: **AEST / PHT** &bull; Lead: Core Leadership\n\n` +
+          `All verified assets, WhatsApp directives, and evidence are indexed in the 13-section Knowledge Hub under Client Portfolio!`,
+        suggestedActions: [
+          "Open Client Knowledge Hub 📘",
+          "Show my active deliverables 📋",
+          "Draft an End of Shift note 📝",
+        ],
+      });
+    }
+
     const clientKeywords: Record<string, string> = {
       "spectrum": "We Rock the Spectrum (WRTS)",
       "wrts": "We Rock the Spectrum (WRTS)",

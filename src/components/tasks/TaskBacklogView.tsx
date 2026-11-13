@@ -39,6 +39,7 @@ interface TaskBacklogViewProps {
   isCoreAdmin?: boolean;
   clientScope?: string | string[];
   selectedClientId?: string;
+  onClientChange?: (clientId: string) => void;
 }
 
 export function TaskBacklogView({
@@ -49,6 +50,7 @@ export function TaskBacklogView({
   isCoreAdmin = true,
   clientScope = "all",
   selectedClientId = "all",
+  onClientChange,
 }: TaskBacklogViewProps) {
   const [tasks, setTasks] = useState<ClickUpTask[]>([]);
   const [stats, setStats] = useState<ClickUpStats | null>(null);
@@ -60,16 +62,14 @@ export function TaskBacklogView({
   // Filters
   const [search, setSearch] = useState(initialSearch);
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
-  const [clientFilter, setClientFilter] = useState<string>("all");
+  const [clientFilter, setClientFilter] = useState<string>(selectedClientId || "all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [myTasksOnly, setMyTasksOnly] = useState(false);
   const [viewMode, setViewMode] = useState<"table" | "grid" | "board">("table");
 
   // Sync client filter with prop selectedClientId
   useEffect(() => {
-    if (selectedClientId && selectedClientId !== "all") {
-      setClientFilter(selectedClientId);
-    }
+    setClientFilter(selectedClientId || "all");
   }, [selectedClientId]);
 
   // Sync initial search and status filter props
@@ -259,8 +259,9 @@ export function TaskBacklogView({
         return false;
       }
 
-      // Global client context filter from header
-      if (selectedClientId && selectedClientId !== "all") {
+      // Unified Client Filter (Prioritizes local clientFilter, falls back to selectedClientId)
+      const activeClientFilter = clientFilter !== "all" ? clientFilter : selectedClientId;
+      if (activeClientFilter && activeClientFilter !== "all") {
         const clientKeyMap: Record<string, string> = {
           "we-rock-the-spectrum": "we rock the spectrum",
           "wrts": "we rock the spectrum",
@@ -273,28 +274,7 @@ export function TaskBacklogView({
           "tch2thrive": "tch2thrive",
           "gim-internal": "grace in motion",
         };
-        const targetPattern = clientKeyMap[selectedClientId] || selectedClientId.toLowerCase();
-        const matches =
-          task.client.toLowerCase().includes(targetPattern) ||
-          task.listName.toLowerCase().includes(targetPattern);
-        if (!matches) return false;
-      }
-
-      // Client filter
-      if (clientFilter !== "all") {
-        const clientKeyMap: Record<string, string> = {
-          "we-rock-the-spectrum": "we rock the spectrum",
-          "wrts": "we rock the spectrum",
-          "juvibolt-cybertech": "juvibolt",
-          "aaron-ofosu": "juvibolt",
-          "risewise": "risewise",
-          "noirlab": "noirlab",
-          "studio-nets": "studio nets",
-          "invogue-cleans": "invogue cleans",
-          "tch2thrive": "tch2thrive",
-          "gim-internal": "grace in motion",
-        };
-        const targetPattern = clientKeyMap[clientFilter] || clientFilter.toLowerCase();
+        const targetPattern = clientKeyMap[activeClientFilter] || activeClientFilter.toLowerCase();
         const matches =
           task.client.toLowerCase().includes(targetPattern) ||
           task.listName.toLowerCase().includes(targetPattern);
@@ -635,7 +615,9 @@ export function TaskBacklogView({
               <select
                 value={clientFilter}
                 onChange={(e) => {
-                  setClientFilter(e.target.value);
+                  const val = e.target.value;
+                  setClientFilter(val);
+                  if (onClientChange) onClientChange(val);
                   sound.playClick();
                 }}
                 className="px-3 py-2 bg-white border border-[#E8E2DD] rounded-lg text-xs font-semibold text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
