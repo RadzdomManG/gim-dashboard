@@ -59,6 +59,8 @@ import {
   Volume2,
   VolumeX,
   LogOut,
+  Share2,
+  Columns,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -80,6 +82,8 @@ import { TaskDetailModal, TaskItem } from "@/components/tasks/TaskDetailModal";
 import { CreateTaskModal } from "@/components/tasks/CreateTaskModal";
 import { GimCopilotDrawer } from "@/components/copilot/GimCopilotDrawer";
 import { SystemUpgradesModal } from "@/components/upgrades/SystemUpgradesModal";
+import { SocialMediaHub } from "@/components/social/SocialMediaHub";
+import { sound } from "@/lib/audio";
 import { soundManager } from "@/lib/audio/sounds";
 
 function getMemberInitials(name?: string, nickname?: string): string {
@@ -103,6 +107,7 @@ type NavTab =
   | "overview"
   | "clients"
   | "tasks"
+  | "social"
   | "messaging"
   | "timesheet"
   | "invoicing"
@@ -168,6 +173,29 @@ export default function GimDashboard() {
   const [selectedPortfolioSubTab, setSelectedPortfolioSubTab] = useState<"calendar" | "board" | "dossier">("calendar");
   const [isGlobalCreateTaskOpen, setIsGlobalCreateTaskOpen] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [isDualSplitView, setIsDualSplitView] = useState(false);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [socialDraftFromTask, setSocialDraftFromTask] = useState<{
+    title?: string;
+    description?: string;
+    client?: string;
+    taskId?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    setIsSoundEnabled(sound.isEnabled());
+  }, []);
+
+  const handleConvertToSocialPost = (task: TaskItem) => {
+    setSocialDraftFromTask({
+      title: task.title,
+      description: task.description,
+      client: task.client,
+      taskId: task.id,
+    });
+    setActiveTab("social");
+    sound.playSuccessChime();
+  };
 
   // Global Ctrl+K / Cmd+K listener
   useEffect(() => {
@@ -886,6 +914,7 @@ export default function GimDashboard() {
       title: "Collaboration & Operations",
       items: [
         { id: "messaging", label: "Team Messaging", icon: MessageSquare, badge: "Live" },
+        { id: "social" as NavTab, label: "Social Hub & Auto-Post", icon: Share2, badge: "New" },
         { id: "timesheet", label: "Timesheets & EOS", icon: Clock },
         ...(hasAdminAccess || currentUser.nickname.toLowerCase() === "ra"
           ? [{ id: "invoicing" as NavTab, label: "Invoicing & Billing", icon: DollarSign, badge: "RA Lead" }]
@@ -902,22 +931,8 @@ export default function GimDashboard() {
     },
   ];
 
-  // Client Delivery Pipeline (Verified from GIM Operating System folder: Studio Nets, Little Treasures, etc.)
+  // Client Delivery Pipeline (Verified from GIM Operating System folder: WRTS, Juvibolt, Studio Nets, etc.)
   const clientsData = [
-    {
-      id: "little-treasures",
-      name: "Little Treasures Company",
-      code: "LT-AU",
-      lead: "Erwin Manaog",
-      contact: "Zoe Horner (Founder)",
-      currentSprint: "Website v2, summit pages, G19 Australian text number, course downloads",
-      status: "Active Sprint",
-      statusVariant: "active" as const,
-      milestone: "Summit Ready: Fri 11 Dec 2026",
-      tasksCount: "47 active tasks",
-      retainer: "AUD $4,500 / mo",
-      progress: 75,
-    },
     {
       id: "we-rock-the-spectrum",
       name: "We Rock the Spectrum (WRTS)",
@@ -945,6 +960,34 @@ export default function GimDashboard() {
       tasksCount: "89 active tasks",
       retainer: "USD $4,000 / mo",
       progress: 65,
+    },
+    {
+      id: "studio-nets",
+      name: "Studio Nets",
+      code: "SN-AU",
+      lead: "Ma. Rose Anne (RA) Malinao",
+      contact: "Nathan Blake (Creative Lead)",
+      currentSprint: "Complete & test Leadly GHL updates, PO onboarding, winning creatives SOP",
+      status: "Active Sprint",
+      statusVariant: "active" as const,
+      milestone: "SOP Standardization Complete",
+      tasksCount: "9 active tasks",
+      retainer: "USD $2,800 / mo",
+      progress: 60,
+    },
+    {
+      id: "invogue-cleans",
+      name: "InVogue Cleans",
+      code: "IVC-AU",
+      lead: "Ma. Rose Anne (RA) Malinao",
+      contact: "Matthew Robbins (Founder)",
+      currentSprint: "Weekly cleaner shift checklists, cleaner pay policy review, second lead source",
+      status: "Active Sprint",
+      statusVariant: "active" as const,
+      milestone: "90-Day Retention Roadmap",
+      tasksCount: "38 active tasks",
+      retainer: "USD $1,700 / mo",
+      progress: 55,
     },
     {
       id: "risewise",
@@ -975,34 +1018,6 @@ export default function GimDashboard() {
       progress: 60,
     },
     {
-      id: "invogue-cleans",
-      name: "InVogue Cleans",
-      code: "IVC-AU",
-      lead: "Ma. Rose Anne (RA) Malinao",
-      contact: "Matthew Robbins (Founder)",
-      currentSprint: "Weekly cleaner shift checklists, cleaner pay policy review, second lead source",
-      status: "Active Sprint",
-      statusVariant: "active" as const,
-      milestone: "90-Day Retention Roadmap",
-      tasksCount: "38 active tasks",
-      retainer: "USD $1,700 / mo",
-      progress: 55,
-    },
-    {
-      id: "studio-nets",
-      name: "Studio Nets",
-      code: "SN-AU",
-      lead: "Ma. Rose Anne (RA) Malinao",
-      contact: "Nathan Blake (Creative Lead)",
-      currentSprint: "Complete & test Leadly GHL updates, PO onboarding, winning creatives SOP",
-      status: "Active Sprint",
-      statusVariant: "active" as const,
-      milestone: "SOP Standardization Complete",
-      tasksCount: "9 active tasks",
-      retainer: "USD $2,800 / mo",
-      progress: 60,
-    },
-    {
       id: "gim-internal",
       name: "Grace In Motion (Internal)",
       code: "GIM-HQ",
@@ -1030,10 +1045,28 @@ export default function GimDashboard() {
       retainer: "USD $2,500 / mo",
       progress: 40,
     },
+    {
+      id: "little-treasures",
+      name: "Little Treasures Company",
+      code: "LT-AU",
+      lead: "Erwin Manaog",
+      contact: "Zoe Horner (Founder)",
+      currentSprint: "Paused by client request (historical ClickUp tasks archived)",
+      status: "Paused (Archive)",
+      statusVariant: "upcoming" as const,
+      milestone: "Historical Archive",
+      tasksCount: "47 archived tasks",
+      retainer: "AUD $4,500 / mo (Paused)",
+      progress: 100,
+      isPaused: true,
+    },
   ];
 
-  // Filter clients based on user scope
+  const [showPausedClients, setShowPausedClients] = useState(false);
+
+  // Filter clients based on user scope and paused state
   const visibleClients = clientsData.filter((client) => {
+    if ((client as any).isPaused && !showPausedClients) return false;
     if (currentUser.clientScope === "all") return true;
     const allowed = currentUser.clientScope.split(",").map((s) => s.trim().toLowerCase());
     return allowed.some((s) => client.name.toLowerCase().includes(s) || s.includes(client.name.toLowerCase()));
@@ -1042,26 +1075,6 @@ export default function GimDashboard() {
   // Critical delivery checkpoints across active clients
   const urgentTasks = [
     {
-      code: "W3",
-      title: "Website v2, summit pages, emails and downloads ready for Zoe",
-      assignee: "Erwin",
-      reviewer: userProfiles.radz.nickname,
-      status: "In Progress",
-      account: "Little Treasures",
-      priority: "Critical",
-      deadline: "Mon Nov 09",
-    },
-    {
-      code: "G19",
-      title: "Text number: GoHighLevel's business check, then the Australian number",
-      assignee: userProfiles.radz.nickname,
-      reviewer: "Erwin",
-      status: "In Progress",
-      account: "Little Treasures",
-      priority: "High",
-      deadline: "Fri Nov 13",
-    },
-    {
       code: "J6",
       title: "Launch Dry Run: Synthetic 5-Student Verification before First Class",
       assignee: userProfiles.radz.nickname,
@@ -1069,7 +1082,7 @@ export default function GimDashboard() {
       status: "In Progress",
       account: "Juvibolt Cybertech",
       priority: "Critical",
-      deadline: "Sun Nov 08",
+      deadline: "Sun Nov 15",
     },
     {
       code: "WRTS",
@@ -1078,28 +1091,28 @@ export default function GimDashboard() {
       reviewer: "BJ",
       status: "In Progress",
       account: "We Rock the Spectrum",
-      priority: "High",
+      priority: "Critical",
       deadline: "Mon Nov 16",
     },
     {
-      code: "G5",
-      title: "Website: Six pages in Zoe's brand (copy & styling)",
-      assignee: userProfiles.radz.nickname,
-      reviewer: "Erwin",
-      status: "For Review",
-      account: "Little Treasures",
+      code: "SN-SOP",
+      title: "Complete & test Leadly GHL updates, PO onboarding, winning creatives SOP",
+      assignee: "RA",
+      reviewer: userProfiles.radz.nickname,
+      status: "In Progress",
+      account: "Studio Nets",
       priority: "High",
-      deadline: "Today",
+      deadline: "Tue Nov 17",
     },
     {
-      code: "G7",
-      title: "Enquiry workflow and Zoe's phone SMS alert",
-      assignee: userProfiles.radz.nickname,
-      reviewer: "Erwin",
-      status: "Approved",
-      account: "Little Treasures",
-      priority: "High",
-      deadline: "Completed",
+      code: "IVC-90",
+      title: "Weekly cleaner shift checklists, cleaner pay policy review, second lead source",
+      assignee: "RA",
+      reviewer: "Camille",
+      status: "In Progress",
+      account: "InVogue Cleans",
+      priority: "Normal",
+      deadline: "Wed Nov 18",
     },
   ];
 
@@ -1468,16 +1481,15 @@ export default function GimDashboard() {
                   className="bg-transparent text-[10px] sm:text-xs font-bold text-[#242E29] focus:outline-none cursor-pointer pr-1 leading-tight mt-0.5 truncate max-w-[85px] xs:max-w-[120px] sm:max-w-none"
                   title="Switch client account instantly"
                 >
-                  <option value="all">All Clients (Unified)</option>
-                  <option value="little-treasures">Little Treasures (AU)</option>
+                  <option value="all">All Active Clients</option>
                   <option value="we-rock-the-spectrum">We Rock the Spectrum (US)</option>
                   <option value="juvibolt-cybertech">Juvibolt Cybertech (US)</option>
-                  <option value="risewise">Risewise (Global)</option>
-                  <option value="noirlab">NoirLab (Global)</option>
                   <option value="studio-nets">Studio Nets (AU)</option>
                   <option value="invogue-cleans">InVogue Cleans (AU)</option>
+                  <option value="risewise">Risewise (Global)</option>
+                  <option value="noirlab">NoirLab (Global)</option>
                   <option value="gim-internal">Grace In Motion (Internal)</option>
-                  <option value="tch2thrive">Tch2Thrive (US)</option>
+                  <option value="little-treasures">📁 Paused Archive (Little Treasures)</option>
                 </select>
               </div>
             </div>
@@ -1492,6 +1504,8 @@ export default function GimDashboard() {
                   ? "Client Workspaces & Calendar"
                   : activeTab === "tasks"
                   ? "Tasks & Pipeline"
+                  : activeTab === "social"
+                  ? "Social Hub & Auto-Post"
                   : activeTab === "messaging"
                   ? "Team Messaging"
                   : activeTab === "timesheet"
@@ -1509,6 +1523,41 @@ export default function GimDashboard() {
 
           {/* Right Header Controls */}
           <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
+            {/* Dual View Toggle (Tasks + Chat) */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsDualSplitView(!isDualSplitView);
+                sound.playClick();
+              }}
+              className={`p-1.5 h-8 px-2.5 rounded-xl border flex items-center space-x-1.5 text-xs font-bold transition-all shadow-2xs shrink-0 btn-3d ${
+                isDualSplitView
+                  ? "bg-[#3D5249] text-white border-[#3D5249]"
+                  : "bg-white text-[#242E29] border-[#E8E2DD] hover:bg-[#FBF6F3]"
+              }`}
+              title="Toggle Split Dual View: Tasks on Left, Chat on Right"
+            >
+              <Columns className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden md:inline">Dual View</span>
+            </button>
+
+            {/* Sound FX Mechanical Audio Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                const enabled = sound.toggleSound();
+                setIsSoundEnabled(enabled);
+              }}
+              className="p-1.5 h-8 w-8 rounded-xl bg-white border border-[#E8E2DD] text-[#65746C] hover:text-[#242E29] flex items-center justify-center text-xs shadow-2xs shrink-0 btn-3d"
+              title={isSoundEnabled ? "Mute Mechanical Audio Clicks" : "Unmute Mechanical Audio Clicks"}
+            >
+              {isSoundEnabled ? (
+                <Volume2 className="w-3.5 h-3.5 text-[#518E6A]" />
+              ) : (
+                <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+              )}
+            </button>
+
             {/* Top 10 Upgrades Release Notes Pill */}
             <button
               type="button"
@@ -1675,6 +1724,53 @@ export default function GimDashboard() {
         <main className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6">
           {isClientUser ? (
             <ClientPortalView onExitPreview={() => setCurrentUserKey("radz")} />
+          ) : isDualSplitView ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between bg-white px-4 py-2.5 rounded-2xl border border-[#3D5249]/15 shadow-2xs">
+                <div className="flex items-center space-x-2">
+                  <Columns className="w-4 h-4 text-[#518E6A]" />
+                  <span className="text-xs font-bold text-[#242E29]">
+                    Dual View Active: ClickUp Kanban Tasks + Slack Channels
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playClick();
+                    setIsDualSplitView(false);
+                  }}
+                  className="text-xs text-[#65746C] hover:text-[#242E29] underline"
+                >
+                  Exit Dual View
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                <div className="lg:col-span-7">
+                  <TaskBacklogView
+                    initialStatusFilter={taskStatusFilter}
+                    initialSearch={taskSearchQuery}
+                    currentUserNickname={currentUser.nickname}
+                    currentUserName={currentUser.name}
+                    isCoreAdmin={currentUser.isCoreAdmin}
+                    clientScope={currentUser.clientScope}
+                    selectedClientId={selectedPortfolioClientId}
+                  />
+                </div>
+                <div className="lg:col-span-5">
+                  <MessagingCenter
+                    currentUserId={currentUser.id}
+                    currentUserName={currentUser.name}
+                    currentUserNickname={currentUser.nickname}
+                    currentUserRole={currentUser.role}
+                    isCoreAdmin={currentUser.isCoreAdmin}
+                    avatarColor={currentUser.avatarColor}
+                    selectedClientId={selectedPortfolioClientId}
+                    clientScope={currentUser.clientScope}
+                  />
+                </div>
+              </div>
+            </div>
           ) : (
             <>
               {/* ========================================================================= */}
@@ -2127,6 +2223,20 @@ export default function GimDashboard() {
               isCoreAdmin={currentUser.isCoreAdmin}
               clientScope={currentUser.clientScope}
               selectedClientId={selectedPortfolioClientId}
+            />
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB: SOCIAL MEDIA AUTOMATION & OAUTH CONNECTORS */}
+          {/* ========================================================================= */}
+          {activeTab === "social" && (
+            <SocialMediaHub
+              currentUserName={currentUser.name}
+              currentUserNickname={currentUser.nickname}
+              currentUserRole={currentUser.role}
+              selectedClientId={selectedPortfolioClientId}
+              initialPostDraft={socialDraftFromTask}
+              onClearInitialDraft={() => setSocialDraftFromTask(null)}
             />
           )}
 
@@ -2994,6 +3104,7 @@ export default function GimDashboard() {
           onClose={() => setModalTask(null)}
           currentUserNickname={currentUser.nickname}
           currentUserName={currentUser.name}
+          onConvertToSocialPost={handleConvertToSocialPost}
           onTaskUpdated={(updated) => {
             setModalTask(updated);
           }}

@@ -22,12 +22,14 @@ import {
   MessageSquare,
   LayoutGrid,
   List,
+  KanbanSquare,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { ClickUpTask, ClickUpStats } from "@/lib/clickup/types";
 import { TaskDetailModal, TaskItem } from "@/components/tasks/TaskDetailModal";
+import { sound } from "@/lib/audio";
 
 interface TaskBacklogViewProps {
   initialStatusFilter?: string;
@@ -61,7 +63,7 @@ export function TaskBacklogView({
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [myTasksOnly, setMyTasksOnly] = useState(false);
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+  const [viewMode, setViewMode] = useState<"table" | "grid" | "board">("table");
 
   // Sync client filter with prop selectedClientId
   useEffect(() => {
@@ -274,7 +276,12 @@ export function TaskBacklogView({
       }
 
       // Client filter
-      if (clientFilter !== "all") {
+      if (clientFilter === "all") {
+        // Zoe / Little Treasures is paused: omit from active sprint views, keep historical accessible via "little-treasures"
+        if (task.client.toLowerCase().includes("little treasures")) {
+          return false;
+        }
+      } else if (clientFilter !== "all-with-paused") {
         const clientKeyMap: Record<string, string> = {
           "little-treasures": "little treasures",
           "we-rock-the-spectrum": "we rock the spectrum",
@@ -349,6 +356,62 @@ export function TaskBacklogView({
     const start = (currentPage - 1) * pageSize;
     return filteredTasks.slice(start, start + pageSize);
   }, [filteredTasks, currentPage, pageSize]);
+
+  const handleQuickMoveTask = (taskId: string, targetStatus: string, taskName: string, client: string) => {
+    if (
+      targetStatus.toLowerCase().includes("closed") ||
+      targetStatus.toLowerCase().includes("done") ||
+      targetStatus.toLowerCase().includes("approved")
+    ) {
+      sound.playSuccessChime();
+    } else {
+      sound.playClick();
+    }
+
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, status: targetStatus } : t))
+    );
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("gim_task_status_changed", {
+          detail: {
+            taskId,
+            newStatus: targetStatus,
+            taskName,
+            client,
+            author: currentUserNickname || "Radz",
+          },
+        })
+      );
+    }
+  };
+
+  const boardColumns = useMemo(() => {
+    const todo = filteredTasks.filter((t) => {
+      const s = t.status.toLowerCase();
+      return s === "to do" || s === "open" || s === "pending";
+    });
+    const inProgress = filteredTasks.filter((t) => {
+      const s = t.status.toLowerCase();
+      return s === "in progress" || s === "doing" || s === "active";
+    });
+    const forReview = filteredTasks.filter((t) => {
+      const s = t.status.toLowerCase();
+      return s.includes("review");
+    });
+    const closed = filteredTasks.filter((t) => {
+      const s = t.status.toLowerCase();
+      return s === "closed" || s === "complete" || s === "completed" || s === "approved" || s === "done";
+    });
+
+    return [
+      { id: "todo", title: "To Do", tasks: todo, topBorder: "border-t-slate-400", badgeColor: "bg-slate-100 text-slate-700", targetStatus: "In Progress", actionLabel: "Start ➔", actionColor: "bg-[#518E6A] hover:bg-[#43795A]" },
+      { id: "inProgress", title: "In Progress", tasks: inProgress, topBorder: "border-t-[#518E6A]", badgeColor: "bg-[#518E6A]/15 text-[#3D5249]", targetStatus: "For Review", actionLabel: "Review ➔", actionColor: "bg-amber-600 hover:bg-amber-700" },
+      { id: "forReview", title: "For Review", tasks: forReview, topBorder: "border-t-amber-500", badgeColor: "bg-amber-100 text-amber-800", targetStatus: "Closed", actionLabel: "Approve ➔", actionColor: "bg-emerald-600 hover:bg-emerald-700" },
+      { id: "closed", title: "Closed / Done", tasks: closed, topBorder: "border-t-emerald-600", badgeColor: "bg-emerald-100 text-emerald-800", targetStatus: "To Do", actionLabel: "Reopen ↺", actionColor: "bg-slate-600 hover:bg-slate-700" },
+    ];
+  }, [filteredTasks]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -572,18 +635,22 @@ export function TaskBacklogView({
               {/* Client Workspace Filter */}
               <select
                 value={clientFilter}
-                onChange={(e) => setClientFilter(e.target.value)}
-                className="px-3 py-2 bg-white border border-[#E8E2DD] rounded-lg text-xs font-medium text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
+                onChange={(e) => {
+                  setClientFilter(e.target.value);
+                  sound.playClick();
+                }}
+                className="px-3 py-2 bg-white border border-[#E8E2DD] rounded-lg text-xs font-semibold text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
               >
-                <option value="all">All Clients ({tasks.length})</option>
-                <option value="little-treasures">Little Treasures Company</option>
+                <option value="all">All Active Clients</option>
                 <option value="we-rock-the-spectrum">We Rock the Spectrum (WRTS)</option>
                 <option value="juvibolt-cybertech">Juvibolt Cybertech</option>
-                <option value="risewise">Risewise</option>
-                <option value="noirlab">NoirLab</option>
                 <option value="studio-nets">Studio Nets</option>
                 <option value="invogue-cleans">InVogue Cleans</option>
+                <option value="risewise">Risewise</option>
+                <option value="noirlab">NoirLab</option>
                 <option value="gim-internal">Grace In Motion (Internal)</option>
+                <option value="little-treasures">📁 Paused Archive (Little Treasures)</option>
+                <option value="all-with-paused">All Clients (Incl. Paused)</option>
               </select>
 
               {/* Assignee Filter */}
@@ -632,7 +699,7 @@ export function TaskBacklogView({
             </Badge>
           </div>
           <div className="flex items-center space-x-2">
-            {/* View Mode Toggle (Table vs Grid) */}
+            {/* View Mode Toggle (Table vs Grid vs Board) */}
             <div className="flex items-center space-x-0.5 bg-[#FBF6F3] p-0.5 rounded-xl border border-[#E8E2DD]">
               <button
                 type="button"
@@ -659,6 +726,19 @@ export function TaskBacklogView({
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline text-[10px]">Grid</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("board")}
+                className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1 transition-colors ${
+                  viewMode === "board"
+                    ? "bg-[#3D5249] text-white shadow-xs"
+                    : "text-[#65746C] hover:text-[#242E29]"
+                }`}
+                title="ClickUp Kanban Board View"
+              >
+                <KanbanSquare className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[10px]">Board</span>
               </button>
             </div>
             <div className="text-xs text-[#65746C] hidden sm:block">
@@ -754,8 +834,108 @@ export function TaskBacklogView({
               ))}
             </div>
 
-            {/* Desktop View (>= 768px): Choice of Card Grid View or Dense Data Table */}
-            {viewMode === "grid" ? (
+            {/* Desktop View (>= 768px): Choice of Kanban Board View, Card Grid View, or Dense Data Table */}
+            {viewMode === "board" ? (
+              <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-[#FBF6F3]/40 min-h-[520px]">
+                {boardColumns.map((col) => (
+                  <div
+                    key={col.id}
+                    className="flex flex-col bg-white/90 rounded-2xl border border-[#3D5249]/15 shadow-xs overflow-hidden"
+                  >
+                    {/* Column Header */}
+                    <div className={`p-3 border-t-4 ${col.topBorder} border-b border-[#E8E2DD] bg-[#FBF6F3] flex items-center justify-between`}>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-xs text-[#242E29]">{col.title}</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${col.badgeColor}`}>
+                          {col.tasks.length}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-[#65746C] font-mono">
+                        {filteredTasks.length > 0 ? Math.round((col.tasks.length / filteredTasks.length) * 100) : 0}%
+                      </span>
+                    </div>
+
+                    {/* Column Cards Container */}
+                    <div className="p-2.5 flex-1 overflow-y-auto space-y-2.5 max-h-[640px]">
+                      {col.tasks.length === 0 ? (
+                        <div className="p-6 text-center text-[#65746C]/60 text-[11px] italic">
+                          No tasks in {col.title}
+                        </div>
+                      ) : (
+                        col.tasks.map((task) => {
+                          const cleanTitle = task.name.replace(
+                            /\s*\|\s*(Juvibolt Cybertech|Little Treasures Company|We Rock the Spectrum|Risewise|NoirLab|Studio Nets|InVogue Cleans|Grace in Motion).*$/i,
+                            ""
+                          );
+                          return (
+                            <div
+                              key={task.id}
+                              onClick={() => {
+                                sound.playPop();
+                                setSelectedTask(task);
+                              }}
+                              className="card-3d p-3 rounded-xl bg-white border border-[#3D5249]/15 hover:border-[#518E6A] shadow-xs cursor-pointer space-y-2 group"
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <div className="flex items-center gap-1 min-w-0">
+                                  {task.gateCode && (
+                                    <span className="font-bold text-[#3D5249] text-[9px] bg-[#466B53]/15 px-1.5 py-0.2 rounded border border-[#466B53]/25 shrink-0">
+                                      {task.gateCode}
+                                    </span>
+                                  )}
+                                  <span className="text-[9px] font-semibold text-[#3D5249] bg-[#FBF6F3] px-1.5 py-0.2 rounded border border-[#E8E2DD] truncate max-w-[120px]">
+                                    {task.client}
+                                  </span>
+                                </div>
+                                <span className="text-[9px] font-mono text-[#65746C]">#{task.id}</span>
+                              </div>
+
+                              <h5 className="font-bold text-xs text-[#242E29] line-clamp-2 leading-snug group-hover:text-[#466B53] transition-colors">
+                                {cleanTitle}
+                              </h5>
+
+                              <div className="pt-2 border-t border-[#E8E2DD]/60 flex items-center justify-between text-[10px] text-[#65746C]">
+                                <div className="flex items-center space-x-1 truncate max-w-[110px]">
+                                  {task.assignees && task.assignees.length > 0 ? (
+                                    <span className="font-medium text-[#242E29] truncate">
+                                      👤 {task.assignees[0].username.split(" ")[0]}
+                                    </span>
+                                  ) : (
+                                    <span className="italic text-[#65746C]/60">Unassigned</span>
+                                  )}
+                                </div>
+
+                                {task.dueDateFormatted && (
+                                  <span className="flex items-center gap-0.5 text-[9px] font-medium text-[#65746C]">
+                                    <Clock className="w-2.5 h-2.5 text-[#518E6A]" />
+                                    {task.dueDateFormatted}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Quick Move Action Button */}
+                              <div className="pt-1 flex items-center justify-end">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleQuickMoveTask(task.id, col.targetStatus, task.name, task.client);
+                                  }}
+                                  className={`btn-3d text-[10px] font-bold px-2 py-0.5 rounded-lg text-white shadow-2xs ${col.actionColor}`}
+                                  title={`Advance task to ${col.targetStatus}`}
+                                >
+                                  {col.actionLabel}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : viewMode === "grid" ? (
               <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4 bg-[#FBF6F3]/30">
                 {paginatedTasks.map((task) => (
                   <div
@@ -912,7 +1092,7 @@ export function TaskBacklogView({
       )}
 
         {/* 5. PAGINATION CONTROLS */}
-        {!loading && filteredTasks.length > pageSize && (
+        {!loading && viewMode !== "board" && filteredTasks.length > pageSize && (
           <div className="p-3.5 border-t border-[#E8E2DD] bg-[#FBF6F3]/40 flex items-center justify-between">
             <span className="text-xs text-[#65746C]">
               Showing {(currentPage - 1) * pageSize + 1} to{" "}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { TaskItem, TaskDetailModal } from "@/components/tasks/TaskDetailModal";
 import { CreateTaskModal } from "@/components/tasks/CreateTaskModal";
+import { sound } from "@/lib/audio";
 
 interface ClientCalendarViewProps {
   clientName: string;
@@ -47,11 +48,33 @@ export function ClientCalendarView({
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createTaskDate, setCreateTaskDate] = useState<string>("");
 
-  // Dynamic Real-Time Today State
-  const realNow = new Date();
-  const todayDayNum = realNow.getDate();
-  const todayMonthName = realNow.toLocaleString("en-US", { month: "short" });
-  const todayLabel = `Today (${todayMonthName} ${String(todayDayNum).padStart(2, "0")})`;
+  // Dynamic Real-Time Today State (Hydrated on client mount to always show actual today)
+  const [todayInfo, setTodayInfo] = useState(() => {
+    const now = new Date();
+    return {
+      dayNum: now.getDate(),
+      monthName: now.toLocaleString("en-US", { month: "short" }),
+      monthIndex: now.getMonth(),
+      year: now.getFullYear(),
+    };
+  });
+
+  useEffect(() => {
+    const updateToday = () => {
+      const now = new Date();
+      setTodayInfo({
+        dayNum: now.getDate(),
+        monthName: now.toLocaleString("en-US", { month: "short" }),
+        monthIndex: now.getMonth(),
+        year: now.getFullYear(),
+      });
+    };
+    updateToday();
+    const interval = setInterval(updateToday, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const todayLabel = `Today (${todayInfo.monthName} ${String(todayInfo.dayNum).padStart(2, "0")})`;
 
   // Day Tasks Pop-up Modal State
   const [selectedDayData, setSelectedDayData] = useState<{
@@ -275,11 +298,10 @@ export function ClientCalendarView({
           {Array.from({ length: daysInMonth }).map((_, i) => {
             const dayNum = i + 1;
             const dayTasks = tasksByDay[dayNum] || [];
-            const now = new Date();
             const isToday =
-              dayNum === now.getDate() &&
-              month === now.getMonth() &&
-              year === now.getFullYear();
+              dayNum === todayInfo.dayNum &&
+              month === todayInfo.monthIndex &&
+              year === todayInfo.year;
 
             const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
 

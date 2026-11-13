@@ -150,21 +150,109 @@ Let's stick to your assigned client goals — how can I help with **${assignedCl
     });
 
     // =========================================================================
+    // SKILL-MATCHED AI COMPANION PERSONA ENGINE
+    // Tailored to each specialist's verified operational role & superpowers
+    // =========================================================================
+    const getSkillGreeting = (nickname: string, role: string) => {
+      const nick = nickname.toLowerCase();
+      if (nick.includes("camille")) {
+        return {
+          greeting: `Hey Camille! 📱 Ready to crush our social content today! We've got scheduled broadcasts and campaigns across WRTS, Juvibolt, and Studio Nets. 
+
+Want me to draft viral TikTok hooks, adapt a LinkedIn carousel, or check pending audience comments? 🚀✨`,
+          actions: [
+            "Generate AI copy for TikTok 📱",
+            "Review scheduled social posts 📅",
+            "Draft today's EOS note 📝",
+          ],
+        };
+      }
+      if (nick.includes("erwin")) {
+        return {
+          greeting: `Hey Erwin! 🛡️ Ready for sprint verification and release gating. How are the G5/G7 quality checks looking across our active sprints? 
+
+Let me know what tickets need inspection or approval today! 🎯`,
+          actions: [
+            "Review open QA deliverables 📋",
+            "Check sprint burndown 🎯",
+            "Draft today's EOS note 📝",
+          ],
+        };
+      }
+      if (nick.includes("bj") || nick.includes("hashim")) {
+        return {
+          greeting: `Hey ${userNick}! ⚡ Ready to inspect webhooks, n8n automations, or GHL API integrations. What are we building or debugging today? 💻`,
+          actions: [
+            "Check automation tasks ⚡",
+            "Inspect webhook pipeline 📋",
+            "Draft today's EOS note 📝",
+          ],
+        };
+      }
+      if (nick.includes("jerold") || nick.includes("jane")) {
+        return {
+          greeting: `Hey ${userNick}! 🚀 Ready to drive conversions on our landing pages and email sequences. What client funnels are we optimizing today? 📈`,
+          actions: [
+            "Review CRO & funnel deliverables 📋",
+            "Check client conversion goals 🎯",
+            "Draft today's EOS note 📝",
+          ],
+        };
+      }
+      if (nick.includes("jedy") || nick.includes("joy") || nick.includes("ellyka")) {
+        return {
+          greeting: `Hey ${userNick}! 💼 Ready to keep our client communications, hourly sweeps, and team deliverables running smoothly! How can I support your shift? ✨`,
+          actions: [
+            "Review hourly comms check SOP 📘",
+            "Show my assigned tasks 📋",
+            "Draft today's EOS note 📝",
+          ],
+        };
+      }
+      if (nick.includes("radz")) {
+        return {
+          greeting: `Hey Radz! 👑 Agency systems are live and all client sprint pipelines are humming. What do you want to inspect, advance, or approve? 🚀`,
+          actions: [
+            "What are my active deliverables? 📋",
+            "Check active client sprints 🎯",
+            "Draft End of Shift note 📝",
+          ],
+        };
+      }
+      return {
+        greeting: `Hey ${userNick}! 👋 Ready to help you knock out today's deliverables, update tasks, or prep your EOS report. What are we tackling first? 🚀✨`,
+        actions: [
+          "What are my active deliverables? 📋",
+          "Draft today's EOS note 📝",
+          "Check client sprint goals 🎯",
+        ],
+      };
+    };
+
+    // =========================================================================
     // 4. NATURAL HUMAN GREETINGS ("hi", "hello", "hey", "good morning", "yo")
     // =========================================================================
-    const greetingWords = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "yo", "sup", "kumusta", "howdy"];
-    const isPureGreeting = greetingWords.some((g) => cleanMsg === g || cleanMsg === `${g}!` || cleanMsg.startsWith(`${g} `));
+    const greetingWords = [
+      "hi",
+      "hello",
+      "hey",
+      "good morning",
+      "good afternoon",
+      "good evening",
+      "yo",
+      "sup",
+      "kumusta",
+      "howdy",
+    ];
+    const isPureGreeting = greetingWords.some(
+      (g) => cleanMsg === g || cleanMsg === `${g}!` || cleanMsg.startsWith(`${g} `)
+    );
 
     if (isPureGreeting) {
+      const skillPersona = getSkillGreeting(userNick, userRole);
       return NextResponse.json({
-        reply: `Hey ${userNick}! 👋 Good to see you. How's your shift going? 
-
-I'm ready whenever you need me — want to check your active tasks for today, move a ticket to In Progress, or get your EOS report ready? Let me know! 🚀✨`,
-        suggestedActions: [
-          "What are my tasks for today? 📋",
-          "Draft today's End of Shift note 📝",
-          "Check client sprint milestones 🎯",
-        ],
+        reply: skillPersona.greeting,
+        suggestedActions: skillPersona.actions,
       });
     }
 
@@ -348,11 +436,6 @@ Let me know if you need clarification on anything! 😊`,
       const milestones: string[] = [];
       const scopeStr = assignedClients.join(" ").toLowerCase();
 
-      if (isCoreAdmin || scopeStr.includes("little treasure")) {
-        milestones.push(
-          "• **Little Treasures Company:** Fri 11 Dec 2026 Global Autism Summit Ticket Funnel Launch, $99 Course Build & GHL Payment Automation."
-        );
-      }
       if (isCoreAdmin || scopeStr.includes("spectrum") || scopeStr.includes("wrts")) {
         milestones.push(
           "• **We Rock the Spectrum (WRTS):** 21 n8n automation workflows, franchise webhook triggers, and Leadly error handling."
@@ -378,9 +461,14 @@ Let me know if you need clarification on anything! 😊`,
           "• **InVogue Cleans:** 30-60-90 Day Retention Funnel, cleaner SMS alerts, and weekly subcontractor billing audits."
         );
       }
+      if (isCoreAdmin || scopeStr.includes("noirlab")) {
+        milestones.push(
+          "• **NoirLab:** Weekly plan to Malik, order board monitoring, and production QA stabilization."
+        );
+      }
 
       return NextResponse.json({
-        reply: `Here are our active Q4 client targets, ${userNick}! 🎯🚀
+        reply: `Here are our active client sprint targets, ${userNick}! 🎯🚀
 
 ${milestones.join("\n\n")}
 
@@ -394,24 +482,12 @@ Our delivery SLA target is 100% on-time sprint completions. Want me to pull up y
     }
 
     // =========================================================================
-    // 10. DEFAULT FRIENDLY RESPONSE
+    // 10. DEFAULT SKILL-MATCHED RESPONSE
     // =========================================================================
+    const defaultPersona = getSkillGreeting(userNick, userRole);
     return NextResponse.json({
-      reply: `Hey ${userNick}! 😊 I'm here to support you with our agency deliverables.
-
-Here's what I can help you with:
-• 📋 View your assigned tasks and deliverables
-• 🚀 Move or update a task status
-• 📝 Draft your End of Shift (EOS) report in seconds
-• 🎯 Check client sprint goals and milestones
-• 📘 Review our communication & shift SOPs
-
-What do you want to work on right now? ✨`,
-      suggestedActions: [
-        "What are my active deliverables? 📋",
-        "Draft today's End of Shift note 📝",
-        "Check client sprint milestones 🎯",
-      ],
+      reply: defaultPersona.greeting,
+      suggestedActions: defaultPersona.actions,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal error";

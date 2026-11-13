@@ -236,3 +236,73 @@ html[data-theme="emerald"] textarea {
   color: #ECFDF5 !important;
   border-color: #1B694F !important;
 }
+
+/* ========================================================================= */
+/* TACTILE 3D BUTTONS & MICRO-INTERACTION UTILITIES                          */
+/* ========================================================================= */
+.btn-3d {
+  position: relative;
+  transition: all 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform, box-shadow;
+  user-select: none;
+}
+
+.btn-3d:active {
+  transform: translateY(2px) !important;
+}
+
+.btn-3d-primary {
+  background-color: #3D5249;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-top-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 3px 0 0 #24322C, 0 6px 12px rgba(36, 46, 41, 0.18);
+}
+.btn-3d-primary:hover {
+  background-color: #466B53;
+  box-shadow: 0 4px 0 0 #24322C, 0 8px 16px rgba(36, 46, 41, 0.22);
+}
+.btn-3d-primary:active {
+  box-shadow: 0 1px 0 0 #24322C, 0 2px 4px rgba(36, 46, 41, 0.15) !important;
+}
+
+.btn-3d-accent {
+  background-color: #518E6A;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-top-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 3px 0 0 #366349, 0 6px 14px rgba(81, 142, 106, 0.25);
+}
+.btn-3d-accent:hover {
+  background-color: #457B5B;
+  box-shadow: 0 4px 0 0 #366349, 0 8px 18px rgba(81, 142, 106, 0.3);
+}
+.btn-3d-accent:active {
+  box-shadow: 0 1px 0 0 #366349, 0 2px 4px rgba(81, 142, 106, 0.2) !important;
+}
+
+.btn-3d-secondary {
+  background-color: #FFFFFF;
+  color: #242E29;
+  border: 1px solid #E8E2DD;
+  box-shadow: 0 3px 0 0 #D5CFC9, 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+.btn-3d-secondary:hover {
+  background-color: #FBF6F3;
+  border-color: #D5CFC9;
+  box-shadow: 0 4px 0 0 #C5BFB9, 0 6px 12px rgba(0, 0, 0, 0.07);
+}
+.btn-3d-secondary:active {
+  box-shadow: 0 1px 0 0 #D5CFC9, 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+.card-3d {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  will-change: transform, box-shadow;
+}
+
+.card-3d:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(61, 82, 73, 0.10), 0 4px 6px -2px rgba(61, 82, 73, 0.04);
+}
+

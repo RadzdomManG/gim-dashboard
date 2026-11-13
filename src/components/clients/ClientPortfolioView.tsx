@@ -44,7 +44,7 @@ export interface ClientProfile {
   contactRole: string;
   accountLead: string;
   specialist: string;
-  status: "Active Sprint" | "Proposal Staged" | "Discovery Intake";
+  status: "Active Sprint" | "Proposal Staged" | "Discovery Intake" | "Paused (Archive)";
   statusVariant: "active" | "review" | "upcoming";
   retainer: string;
   progress: number;
@@ -60,34 +60,6 @@ export interface ClientProfile {
 }
 
 const CLIENT_PORTFOLIO: ClientProfile[] = [
-  {
-    id: "little-treasures",
-    name: "Little Treasures Company",
-    code: "LT-AU",
-    industry: "Paediatric Therapy & Sensory Education",
-    location: "Perth / Brisbane, Australia",
-    contactName: "Zoe Horner",
-    contactRole: "Founder & Lead Paediatric OT",
-    accountLead: "Radzdom Gallego",
-    specialist: "Erwin Manaog",
-    status: "Active Sprint",
-    statusVariant: "active",
-    retainer: "AUD $4,500 / month",
-    progress: 75,
-    currentSprint: "Website v2, summit pages, G19 Australian text number, course downloads",
-    targetMilestone: "Dec 11 Clinical Summit Launch",
-    description:
-      "Clinical paediatric occupational therapy clinic delivery system. Powers automated parent enquiry routing, GoHighLevel multi-step funnels, ClassReach patient scheduling, AUD Stripe payments, and online sensory regulation courses.",
-    deliverables: [
-      { code: "W3", title: "Website v2, summit pages, emails and downloads ready for Zoe", status: "In Progress" },
-      { code: "G19", title: "Text number: GoHighLevel's business check, then the Australian number", status: "In Progress" },
-      { code: "G18", title: "Dry run fixes and the summit-ready check", status: "Queued" },
-      { code: "G5", title: "Website: Six Brand Pages in Zoe's Palette", status: "In Review" },
-      { code: "G7", title: "Enquiry Workflow & Zoe Mobile Alert", status: "Completed" },
-      { code: "G4", title: "Therapy Intake Forms with AU Disclosures", status: "Completed" },
-    ],
-    keyTechStack: ["GoHighLevel (AU)", "Stripe Payments (AUD)", "Wix DNS", "Vimeo Enterprise", "Make.com"],
-  },
   {
     id: "we-rock-the-spectrum",
     name: "We Rock the Spectrum (WRTS)",
@@ -108,12 +80,11 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
       "Sensory gym franchise operations management. Manages Central Valley Regional Center (CVRC) child approval tracking, daily attendance reporting, Roller system cross-referencing, and staff emergency SOPs.",
     deliverables: [
       { code: "WRTS-01", title: "Renew the 147 CVRC approvals that end Nov 30 (play or pay from Dec 1)", status: "In Progress" },
-      { code: "WRTS-02", title: "Access CVRC Portal and Extract Daily Reports", status: "In Progress" },
-      { code: "WRTS-03", title: "Niko's CFO pack: CVRC sheet by service month & Roller visits", status: "In Progress" },
-      { code: "WRTS-04", title: "Draft SOP 24: Someone is hurt at gym (first aid, 911, accident report)", status: "In Review" },
-      { code: "WRTS-05", title: "WRTS Shift Desk: answer the team's questions during shift", status: "Completed" },
+      { code: "WRTS-02", title: "Daily portal report: CVRC approved count, renewals due, unbilled count", status: "In Progress" },
+      { code: "WRTS-03", title: "Niko CFO data pack: CVRC authorization status and child days attended", status: "Completed" },
+      { code: "WRTS-04", title: "Staff emergency contacts SOP check in Clovis folder", status: "Completed" },
     ],
-    keyTechStack: ["ClickUp", "CVRC State Portal", "Roller Gym POS", "Google Workspace", "n8n Workflows"],
+    keyTechStack: ["n8n Workflows (21 active)", "Google Sheets DB", "Roller Gym POS", "Slack Alerts", "CVRC State Portal"],
   },
   {
     id: "juvibolt-cybertech",
@@ -124,7 +95,7 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     contactName: "Aaron Ofosu",
     contactRole: "Founder & Lead Security Specialist",
     accountLead: "Radzdom-Man Gallego",
-    specialist: "Divine Origines",
+    specialist: "Radzdom-Man Gallego",
     status: "Active Sprint",
     statusVariant: "active",
     retainer: "USD $4,000 / month",
@@ -303,6 +274,32 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
     ],
     keyTechStack: ["ClickUp", "Google Docs / Drive API", "Stripe Invoicing", "Airtable"],
   },
+  {
+    id: "little-treasures",
+    name: "Little Treasures Company",
+    code: "LT-AU",
+    industry: "Paediatric Therapy & Sensory Education",
+    location: "Perth / Brisbane, Australia",
+    contactName: "Zoe Horner",
+    contactRole: "Founder & Lead Paediatric OT",
+    accountLead: "Radzdom Gallego",
+    specialist: "Erwin Manaog",
+    status: "Paused (Archive)",
+    statusVariant: "upcoming",
+    retainer: "AUD $4,500 / month (Paused)",
+    progress: 100,
+    currentSprint: "Paused by client request (historical ClickUp tasks preserved in archive)",
+    targetMilestone: "Historical Archive",
+    description:
+      "Clinical paediatric occupational therapy clinic delivery system. Powers automated parent enquiry routing, GoHighLevel multi-step funnels, and ClassReach patient scheduling (Archived).",
+    deliverables: [
+      { code: "W3", title: "Website v2, summit pages, emails and downloads ready for Zoe", status: "Completed" },
+      { code: "G19", title: "Text number: GoHighLevel's business check, then the Australian number", status: "Completed" },
+      { code: "G5", title: "Website: Six Brand Pages in Zoe's Palette", status: "Completed" },
+      { code: "G7", title: "Enquiry Workflow & Zoe Mobile Alert", status: "Completed" },
+    ],
+    keyTechStack: ["GoHighLevel (AU)", "Stripe Payments (AUD)", "Make.com"],
+  },
 ];
 
 interface ClientPortfolioViewProps {
@@ -355,7 +352,7 @@ export function ClientPortfolioView({
   });
 
   const [selectedClientId, setSelectedClientId] = useState<string>(
-    initialClientId || accessibleClients[0]?.id || "little-treasures"
+    initialClientId || accessibleClients[0]?.id || "we-rock-the-spectrum"
   );
   const [activeSubTab, setActiveSubTab] = useState<"calendar" | "board" | "dossier">(
     initialSubTab || "calendar"

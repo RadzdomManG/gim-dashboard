@@ -31,6 +31,13 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { sound } from "@/lib/audio";
+
+export interface SubtaskItem {
+  id: string;
+  title: string;
+  completed: boolean;
+}
 
 export interface TaskItem {
   id: string;
@@ -71,6 +78,7 @@ interface TaskDetailModalProps {
   onBack?: () => void;
   backLabel?: string;
   onTaskUpdated?: (updated: TaskItem) => void;
+  onConvertToSocialPost?: (task: TaskItem) => void;
   currentUserName?: string;
   currentUserNickname?: string;
   isCoreAdmin?: boolean;
@@ -94,6 +102,7 @@ export function TaskDetailModal({
   onBack,
   backLabel = "Back to Day Schedule",
   onTaskUpdated,
+  onConvertToSocialPost,
   currentUserName = "Radzdom Gallego",
   currentUserNickname = "Radz",
   isCoreAdmin = false,
@@ -101,6 +110,53 @@ export function TaskDetailModal({
   const [currentTask, setCurrentTask] = useState<TaskItem | null>(task);
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [subtasks, setSubtasks] = useState<SubtaskItem[]>([]);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+
+  // Load and persist subtasks per task ID
+  useEffect(() => {
+    if (!task) return;
+    const stored = localStorage.getItem(`gim_subtasks_${task.id}`);
+    if (stored) {
+      try {
+        setSubtasks(JSON.parse(stored));
+        return;
+      } catch {}
+    }
+    // Default seeded subtasks
+    setSubtasks([
+      { id: "sub-1", title: "Review requirements & client SOP runbook", completed: true },
+      { id: "sub-2", title: "Execute deliverable & synthetic test run", completed: task.status === "Approved" || task.status === "Closed" },
+      { id: "sub-3", title: "Quality assurance sign-off & peer verification", completed: false },
+    ]);
+  }, [task]);
+
+  const handleToggleSubtask = (subId: string) => {
+    sound.playPop();
+    setSubtasks((prev) => {
+      const updated = prev.map((s) => (s.id === subId ? { ...s, completed: !s.completed } : s));
+      if (task) {
+        localStorage.setItem(`gim_subtasks_${task.id}`, JSON.stringify(updated));
+      }
+      return updated;
+    });
+  };
+
+  const handleAddSubtask = () => {
+    if (!newSubtaskTitle.trim() || !task) return;
+    sound.playClick();
+    const newSub: SubtaskItem = {
+      id: `sub-${Date.now()}`,
+      title: newSubtaskTitle.trim(),
+      completed: false,
+    };
+    setSubtasks((prev) => {
+      const updated = [...prev, newSub];
+      localStorage.setItem(`gim_subtasks_${task.id}`, JSON.stringify(updated));
+      return updated;
+    });
+    setNewSubtaskTitle("");
+  };
   const [attachmentUrl, setAttachmentUrl] = useState("");
   const [attachmentName, setAttachmentName] = useState("");
   const [attachmentType, setAttachmentType] = useState<"image" | "video" | "document" | "link">("link");
@@ -505,6 +561,114 @@ export function TaskDetailModal({
               </div>
             </div>
           )}
+
+          {/* Subtasks & Quality Checklist with Progress Bar */}
+          <div className="p-3.5 rounded-2xl bg-[#FBF6F3] border border-[#3D5249]/15 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <CheckCircle2 className="w-4 h-4 text-[#518E6A]" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#3D5249]">
+                  Subtasks & Quality Checklist
+                </span>
+              </div>
+              <span className="text-xs font-bold text-[#518E6A] font-mono">
+                {subtasks.filter((s) => s.completed).length} of {subtasks.length} (
+                {subtasks.length > 0
+                  ? Math.round((subtasks.filter((s) => s.completed).length / subtasks.length) * 100)
+                  : 0}
+                %)
+              </span>
+            </div>
+
+            {/* Visual Progress Bar */}
+            <div className="w-full bg-[#E8E2DD] h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-[#518E6A] h-full transition-all duration-300 rounded-full"
+                style={{
+                  width: `${
+                    subtasks.length > 0
+                      ? (subtasks.filter((s) => s.completed).length / subtasks.length) * 100
+                      : 0
+                  }%`,
+                }}
+              />
+            </div>
+
+            {/* Subtask Items */}
+            <div className="space-y-1.5 pt-1">
+              {subtasks.map((sub) => (
+                <div
+                  key={sub.id}
+                  onClick={() => handleToggleSubtask(sub.id)}
+                  className="flex items-center space-x-2.5 p-2 rounded-xl bg-white border border-[#E8E2DD] hover:border-[#518E6A] cursor-pointer transition-all"
+                >
+                  <input
+                    type="checkbox"
+                    checked={sub.completed}
+                    onChange={() => {}} // Controlled by row click
+                    className="w-4 h-4 text-[#518E6A] rounded border-gray-300 focus:ring-[#518E6A] cursor-pointer"
+                  />
+                  <span
+                    className={`text-xs ${
+                      sub.completed
+                        ? "line-through text-[#65746C] font-normal"
+                        : "text-[#242E29] font-medium"
+                    }`}
+                  >
+                    {sub.title}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Add Subtask Input */}
+            <div className="flex items-center space-x-2 pt-1">
+              <input
+                type="text"
+                value={newSubtaskTitle}
+                onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddSubtask();
+                }}
+                placeholder="Add subtask or acceptance check..."
+                className="flex-1 text-xs p-2 rounded-xl border border-[#3D5249]/20 bg-white text-[#242E29] focus:outline-none focus:ring-1 focus:ring-[#518E6A]"
+              />
+              <button
+                type="button"
+                onClick={handleAddSubtask}
+                disabled={!newSubtaskTitle.trim()}
+                className="btn-3d btn-3d-secondary px-3 py-2 rounded-xl text-xs font-bold text-[#242E29] disabled:opacity-50"
+              >
+                + Add
+              </button>
+            </div>
+          </div>
+
+          {/* 1-Click Convert Task to Social Post Banner */}
+          <div className="p-3.5 bg-gradient-to-r from-[#3D5249]/10 via-[#518E6A]/10 to-[#FBF6F3] rounded-2xl border border-[#518E6A]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div>
+              <span className="text-xs font-bold text-[#3D5249] flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[#518E6A]" />
+                <span>Broadcast on Social Media</span>
+              </span>
+              <p className="text-[11px] text-[#65746C] mt-0.5">
+                Push this deliverable directly to Facebook, TikTok, LinkedIn, or YouTube with AI copy adapted in 1 click.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                sound.playSuccessChime();
+                if (onConvertToSocialPost && currentTask) {
+                  onConvertToSocialPost(currentTask);
+                  onClose();
+                }
+              }}
+              className="btn-3d btn-3d-accent px-3.5 py-2 rounded-xl text-xs font-bold text-white shrink-0 flex items-center gap-1.5 shadow-sm"
+            >
+              <span>⚡ Convert to Social Post</span>
+            </button>
+          </div>
 
           {/* Task-Level Attachments (ClickUp & GIM uploads) */}
           {currentTask.attachments && currentTask.attachments.length > 0 && (
