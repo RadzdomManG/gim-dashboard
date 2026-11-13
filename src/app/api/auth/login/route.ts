@@ -347,6 +347,22 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
   },
 
   // 3. Verified Client Principals (Single-Tenant Portal Isolation)
+  'aaron': {
+    password: 'Portal_Aaron2026!JB',
+    user: {
+      id: 'aaron-001',
+      username: 'aaron.ofosu',
+      name: 'Aaron Ofosu',
+      nickname: 'Aaron',
+      email: 'aaron@juviboltcybertech.com',
+      role: 'Client User',
+      isCoreAdmin: false,
+      avatarColor: 'bg-[#466B53]',
+      title: 'Founder, Juvibolt Cybertech',
+      clientScope: 'Juvibolt Cybertech',
+      assigned_clients: ['Juvibolt Cybertech'],
+    },
+  },
   'aaron.ofosu': {
     password: 'Portal_Aaron2026!JB',
     user: {
