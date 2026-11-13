@@ -43,6 +43,7 @@ __MACOSX/
 
 
 # typescript
+clickup_*.json
 *.tsbuildinfo
 next-env.d.ts
 

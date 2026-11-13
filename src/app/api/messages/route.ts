@@ -24,7 +24,24 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ messages: [] });
     }
 
-    return NextResponse.json({ messages: messages || [] });
+    const mappedMessages = (messages || []).map((m: any) => ({
+      id: m.id,
+      channelId: m.channel_id,
+      senderId: m.sender_id,
+      senderName: m.sender_name,
+      senderNickname: m.sender_nickname,
+      senderAvatar: m.sender_avatar,
+      senderRole: m.sender_role,
+      isCoreAdmin: m.is_core_admin,
+      content: m.content,
+      timestamp: m.created_at
+        ? new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        : "Just now",
+      attachments: m.attachments || [],
+      reactions: m.reactions || [],
+    }));
+
+    return NextResponse.json({ messages: mappedMessages });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal error";
     return NextResponse.json({ error: message }, { status: 500 });
@@ -83,7 +100,7 @@ export async function POST(req: NextRequest) {
       }, { onConflict: "id" });
     } catch {}
 
-    const payload = {
+    const payload: Record<string, any> = {
       id: id || `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       channel_id: targetChannelId,
       sender_id: targetSenderId,
@@ -93,10 +110,8 @@ export async function POST(req: NextRequest) {
       sender_role: sender_role || senderRole || "Specialist",
       is_core_admin: is_core_admin ?? isCoreAdmin ?? false,
       content: content.trim(),
-      timestamp: timestamp || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      reply_to: reply_to || replyTo || null,
-      attachments: attachments || null,
-      reactions: reactions || null,
+      attachments: attachments || [],
+      reactions: reactions || [],
     };
 
     const { data, error } = await supabase

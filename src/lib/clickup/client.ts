@@ -173,7 +173,7 @@ export async function fetchClickUpTasks(): Promise<{
     return cachedClickupData;
   }
 
-  const token = process.env.CLICKUP_API_TOKEN || 'pk_106916383_IE6ZH7P1316N9K34ZN65RBXJURJ9FMDD';
+  const token = process.env.CLICKUP_API_TOKEN || 'pk_270815645_M7Z1GM9GB02FN6KUCOXIJ2KHP37LN82G';
   const headers = {
     Authorization: token,
     'Content-Type': 'application/json',
