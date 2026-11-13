@@ -24,23 +24,23 @@ export async function GET() {
 
     const membersMap = new Map<string, any>();
 
-    // Base verified GIM leadership, specialists & client founders
+    // Base verified GIM leadership, specialists & client founders mapped to real ClickUp assignments
     const baseMembers = [
       { id: 'usr-divine', email: 'divine.origines', full_name: 'Divine Origines', nickname: 'Divine', role: 'Owner', is_core_admin: true, assigned_clients: ['All Accounts'], is_active: true, title: 'Owner & Strategy Lead', avatar_color: '#3D5249' },
       { id: 'usr-radz', email: 'rdzgllgo', full_name: 'Radzdom Gallego', nickname: 'Radz', role: 'Admin', is_core_admin: true, assigned_clients: ['All Accounts'], is_active: true, title: 'Chief Automation Architect & Tech Lead', avatar_color: '#466B53' },
       { id: 'usr-ra', email: 'aneweraa.ai@gmail.com', full_name: 'Ma. Rose Anne (RA) Malinao', nickname: 'RA', role: 'Admin', is_core_admin: true, assigned_clients: ['All Accounts'], is_active: true, title: 'Head of Operations & Billing Lead', avatar_color: '#518E6A' },
-      { id: 'usr-erwin', email: 'erwin@gim.com', full_name: 'Erwin Manaog', nickname: 'Erwin', role: 'Specialist', is_core_admin: false, assigned_clients: ['Little Treasures Company', 'We Rock the Spectrum (WRTS)'], is_active: true, title: 'Project Owner & Delivery Specialist', avatar_color: '#65746C' },
-      { id: 'usr-bj', email: 'bj@gim.com', full_name: 'BJ Ricafrente', nickname: 'BJ', role: 'Specialist', is_core_admin: false, assigned_clients: ['We Rock the Spectrum (WRTS)', 'Grace In Motion (Internal)'], is_active: true, title: 'Operations Specialist', avatar_color: '#3D5249' },
-      { id: 'usr-jerold', email: 'jerold@gim.com', full_name: 'Jerold Recaplaza', nickname: 'Jerold', role: 'Specialist', is_core_admin: false, assigned_clients: ['Risewise'], is_active: true, title: 'Operations Specialist', avatar_color: '#466B53' },
-      { id: 'usr-jane', email: 'jane@gim.com', full_name: 'Jane Caillio', nickname: 'Jane', role: 'Specialist', is_core_admin: false, assigned_clients: ['NoirLab'], is_active: true, title: 'Project Lead', avatar_color: '#518E6A' },
-      { id: 'usr-jedy', email: 'jedy@gim.com', full_name: 'Jedy Caillio', nickname: 'Jedy', role: 'Specialist', is_core_admin: false, assigned_clients: ['InVogue Cleans'], is_active: true, title: 'Operations Specialist', avatar_color: '#466B53' },
-      { id: 'usr-ellyka', email: 'ellyka@gim.com', full_name: 'Ellyka Claire Pama', nickname: 'Ellyka', role: 'Specialist', is_core_admin: false, assigned_clients: ['InVogue Cleans', 'Studio Nets'], is_active: true, title: 'Operations Assistant', avatar_color: '#65746C' },
-      { id: 'usr-joyce', email: 'joyce@gim.com', full_name: 'Joyce Roble', nickname: 'Joyce', role: 'Specialist', is_core_admin: false, assigned_clients: ['Studio Nets'], is_active: true, title: 'Project Specialist', avatar_color: '#3D5249' },
-      { id: 'usr-joy', email: 'joy@gim.com', full_name: 'Joy Fabular', nickname: 'Joy', role: 'Specialist', is_core_admin: false, assigned_clients: ['InVogue Cleans'], is_active: true, title: 'Operations Assistant', avatar_color: '#518E6A' },
-      { id: 'usr-aldwin', email: 'aldwin@gim.com', full_name: 'Aldwin', nickname: 'Aldwin', role: 'Specialist', is_core_admin: false, assigned_clients: ['We Rock the Spectrum (WRTS)'], is_active: true, title: 'Operations Assistant', avatar_color: '#65746C' },
-      { id: 'usr-camille', email: 'camille@gim.com', full_name: 'Camille Bautista', nickname: 'Camille', role: 'Social Media Specialist', is_core_admin: false, assigned_clients: ['Little Treasures Company'], is_active: true, title: 'Social Media Manager', avatar_color: '#518E6A' },
-      { id: 'usr-hashim', email: 'hashim@gim.com', full_name: 'Hashim Saudi', nickname: 'Hashim', role: 'Specialist', is_core_admin: false, assigned_clients: ['Studio Nets'], is_active: true, title: 'Tech Specialist', avatar_color: '#466B53' },
-      { id: 'usr-kimberly', email: 'kimberly@gim.com', full_name: 'Kimberly Besa', nickname: 'Kimberly', role: 'Specialist', is_core_admin: false, assigned_clients: ['Juvibolt Cybertech', 'Grace In Motion (Internal)'], is_active: true, title: 'Operations Assistant', avatar_color: '#3D5249' },
+      { id: 'usr-erwin', email: 'em.erwin011@gmail.com', full_name: 'Erwin Manaog', nickname: 'Erwin', role: 'Specialist', is_core_admin: false, assigned_clients: ['We Rock the Spectrum (WRTS)', 'Little Treasures Company', 'InVogue Cleans', 'Studio Nets', 'NoirLab', 'Grace In Motion (Internal)'], is_active: true, title: 'Project Owner & Delivery Specialist', avatar_color: '#65746C' },
+      { id: 'usr-bj', email: 'ricafrente.bjl@gmail.com', full_name: 'BJ Ricafrente', nickname: 'BJ', role: 'Specialist', is_core_admin: false, assigned_clients: ['We Rock the Spectrum (WRTS)', 'Little Treasures Company', 'Grace In Motion (Internal)'], is_active: true, title: 'Operations Specialist', avatar_color: '#3D5249' },
+      { id: 'usr-jerold', email: 'recaplazajerold@gmail.com', full_name: 'Jerold Recaplaza', nickname: 'Jerold', role: 'Specialist', is_core_admin: false, assigned_clients: ['Risewise', 'NoirLab', 'Studio Nets', 'Grace In Motion (Internal)'], is_active: true, title: 'Operations Specialist', avatar_color: '#466B53' },
+      { id: 'usr-jane', email: 'hello@theprocessease.com', full_name: 'Jane Caillio', nickname: 'Jane', role: 'Specialist', is_core_admin: false, assigned_clients: ['NoirLab', 'Studio Nets', 'Grace In Motion (Internal)'], is_active: true, title: 'Project Lead', avatar_color: '#518E6A' },
+      { id: 'usr-jedy', email: 'jedy@theprocessease.com', full_name: 'Jedy Caillio', nickname: 'Jedy', role: 'Specialist', is_core_admin: false, assigned_clients: ['InVogue Cleans', 'Grace In Motion (Internal)'], is_active: true, title: 'Operations Specialist', avatar_color: '#466B53' },
+      { id: 'usr-ellyka', email: 'ellykaclairepama@gmail.com', full_name: 'Ellyka Claire Pama', nickname: 'Ellyka', role: 'Specialist', is_core_admin: false, assigned_clients: ['InVogue Cleans', 'Studio Nets'], is_active: true, title: 'Operations Assistant', avatar_color: '#65746C' },
+      { id: 'usr-joyce', email: 'joyceroblevaservices@gmail.com', full_name: 'Joyce Roble', nickname: 'Joyce', role: 'Specialist', is_core_admin: false, assigned_clients: ['Studio Nets'], is_active: true, title: 'Project Specialist', avatar_color: '#3D5249' },
+      { id: 'usr-joy', email: 'baluyotjoy89@gmail.com', full_name: 'Joy Fabular', nickname: 'Joy', role: 'Specialist', is_core_admin: false, assigned_clients: ['InVogue Cleans', 'Grace In Motion (Internal)'], is_active: true, title: 'Operations Assistant', avatar_color: '#518E6A' },
+      { id: 'usr-aldwin', email: 'charlesaldwinlim@gmail.com', full_name: 'Aldwin', nickname: 'Aldwin', role: 'Specialist', is_core_admin: false, assigned_clients: ['We Rock the Spectrum (WRTS)', 'Grace In Motion (Internal)'], is_active: true, title: 'Operations Assistant', avatar_color: '#65746C' },
+      { id: 'usr-camille', email: 'camille.smm@graceinmotion.agency', full_name: 'Camille Bautista', nickname: 'Camille', role: 'Social Media Specialist', is_core_admin: false, assigned_clients: ['We Rock the Spectrum (WRTS)', 'Juvibolt Cybertech', 'Studio Nets'], is_active: true, title: 'Social Media Manager', avatar_color: '#518E6A' },
+      { id: 'usr-hashim', email: 'hashim3898@gmail.com', full_name: 'Hashim Saudi', nickname: 'Hashim', role: 'Specialist', is_core_admin: false, assigned_clients: ['Studio Nets'], is_active: true, title: 'Tech Specialist', avatar_color: '#466B53' },
+      { id: 'usr-kimberly', email: 'kimberlybesa80@gmail.com', full_name: 'Kimberly Besa', nickname: 'Kimberly', role: 'Specialist', is_core_admin: false, assigned_clients: ['Juvibolt Cybertech', 'Grace In Motion (Internal)'], is_active: true, title: 'Operations Assistant', avatar_color: '#3D5249' },
       { id: 'usr-zoe', email: 'zoe@littletreasures.com.au', full_name: 'Zoe Horner', nickname: 'Zoe', role: 'Client User', is_core_admin: false, assigned_clients: ['Little Treasures Company'], is_active: true, title: 'Founder, Little Treasures', avatar_color: '#518E6A' },
       { id: 'usr-aaron', email: 'aaron@juviboltcybertech.com', full_name: 'Aaron Ofosu', nickname: 'Aaron', role: 'Client User', is_core_admin: false, assigned_clients: ['Juvibolt Cybertech'], is_active: true, title: 'Founder, Juvibolt Cybertech', avatar_color: '#466B53' },
       { id: 'usr-matthew', email: 'matthew@invoguecleans.com', full_name: 'Matthew Robbins', nickname: 'Matthew', role: 'Client User', is_core_admin: false, assigned_clients: ['InVogue Cleans'], is_active: true, title: 'Founder, InVogue Cleans', avatar_color: '#3D5249' },
@@ -119,31 +119,62 @@ export async function PATCH(req: NextRequest) {
     }
 
     const supabase = createAdminClient();
-    const updates: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
-    };
+    const clientList = Array.isArray(assigned_clients) ? assigned_clients : [];
+    const targetEmail = (email || '').toLowerCase().trim();
 
-    if (Array.isArray(assigned_clients)) {
-      updates.assigned_clients = assigned_clients;
-    }
-    if (role) {
-      updates.role = role;
-    }
-
-    let query = supabase.from('profiles').update(updates);
-    if (userId) {
-      query = query.eq('id', userId);
-    } else {
-      query = query.eq('email', email);
+    // 1. Update invitations table (if previously invited/provisioned)
+    if (targetEmail) {
+      await supabase
+        .from('invitations')
+        .update({
+          assigned_clients: clientList,
+          ...(role ? { role } : {}),
+        })
+        .ilike('email', targetEmail);
     }
 
-    const { data, error } = await query.select().single();
+    // 2. Check and update Supabase Auth User metadata (so cloud login reflects the new scope)
+    const { data: userList } = await supabase.auth.admin.listUsers();
+    const matchedAuthUser = userList?.users?.find(
+      (u) =>
+        u.id === userId ||
+        (targetEmail && u.email?.toLowerCase() === targetEmail) ||
+        (targetEmail && u.email?.toLowerCase().startsWith(targetEmail.split('@')[0])) ||
+        (u.user_metadata?.username && targetEmail.includes(u.user_metadata.username.toLowerCase()))
+    );
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (matchedAuthUser) {
+      await supabase.auth.admin.updateUserById(matchedAuthUser.id, {
+        user_metadata: {
+          ...matchedAuthUser.user_metadata,
+          assigned_clients: clientList,
+          clientScope: clientList.join(', '),
+          ...(role ? { role } : {}),
+        },
+      });
+
+      // Upsert into profiles table
+      await supabase.from('profiles').upsert({
+        id: matchedAuthUser.id,
+        email: matchedAuthUser.email,
+        full_name: matchedAuthUser.user_metadata?.full_name || matchedAuthUser.email?.split('@')[0],
+        role: (role || matchedAuthUser.user_metadata?.role || 'team_member') as any,
+        is_core_admin: role === 'admin' || role === 'owner' || matchedAuthUser.user_metadata?.isCoreAdmin,
+        assigned_clients: clientList,
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      });
     }
 
-    return NextResponse.json({ success: true, member: data });
+    return NextResponse.json({
+      success: true,
+      member: {
+        id: userId || matchedAuthUser?.id || `usr-${Date.now()}`,
+        email: targetEmail || matchedAuthUser?.email,
+        assigned_clients: clientList,
+        role: role || matchedAuthUser?.user_metadata?.role,
+      },
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown server error';
     return NextResponse.json({ error: message }, { status: 500 });

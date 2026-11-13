@@ -45,11 +45,14 @@ export function UserInvitationModal({
   isOpen,
   onClose,
   clientsList = [
-    { id: "ltc-01", name: "Little Treasures Company", code: "LTC" },
+    { id: "wrts-01", name: "We Rock the Spectrum (WRTS)", code: "WRTS" },
+    { id: "jb-02", name: "Juvibolt Cybertech", code: "JB" },
     { id: "sn-03", name: "Studio Nets", code: "SN" },
     { id: "ivc-04", name: "InVogue Cleans", code: "IVC" },
-    { id: "ao-05", name: "Aaron Ofosu Bootcamp", code: "AO" },
-    { id: "t2t-06", name: "Tch2Thrive", code: "T2T" },
+    { id: "rw-05", name: "Risewise", code: "RW" },
+    { id: "nl-06", name: "NoirLab", code: "NL" },
+    { id: "gim-07", name: "Grace In Motion (Internal)", code: "GIM" },
+    { id: "ltc-08", name: "Little Treasures Company", code: "LTC" },
   ],
   onUserProvisioned,
 }: UserInvitationModalProps) {

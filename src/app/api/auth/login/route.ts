@@ -72,7 +72,7 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
     },
   },
 
-  // 2. Delivery Squad & Client Specialists (Scoped Isolation)
+  // 2. Delivery Squad & Client Specialists (Scoped Isolation - Verified ClickUp Mirrors)
   'erwin.manaog': {
     password: 'GIM_Erwin2026!Sprint',
     user: {
@@ -80,13 +80,13 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       username: 'erwin.manaog',
       name: 'Erwin Manaog',
       nickname: 'Erwin',
-      email: 'erwin@graceinmotion.agency',
+      email: 'em.erwin011@gmail.com',
       role: 'Project Owner',
       isCoreAdmin: false,
       avatarColor: 'bg-[#65746C]',
       title: 'Project Owner & Delivery Specialist',
-      clientScope: 'Little Treasures Company, We Rock the Spectrum (WRTS)',
-      assigned_clients: ['Little Treasures Company', 'We Rock the Spectrum (WRTS)'],
+      clientScope: 'We Rock the Spectrum (WRTS), Little Treasures Company, InVogue Cleans, Studio Nets, NoirLab, Grace In Motion (Internal)',
+      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Little Treasures Company', 'InVogue Cleans', 'Studio Nets', 'NoirLab', 'Grace In Motion (Internal)'],
     },
   },
   'bj.ricafrente': {
@@ -96,13 +96,13 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       username: 'bj.ricafrente',
       name: 'BJ Ricafrente',
       nickname: 'BJ',
-      email: 'bj@graceinmotion.agency',
+      email: 'ricafrente.bjl@gmail.com',
       role: 'Operations Specialist',
       isCoreAdmin: false,
       avatarColor: 'bg-[#3D5249]',
       title: 'Operations Specialist',
-      clientScope: 'We Rock the Spectrum (WRTS), Grace In Motion (Internal)',
-      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Grace In Motion (Internal)'],
+      clientScope: 'We Rock the Spectrum (WRTS), Little Treasures Company, Grace In Motion (Internal)',
+      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Little Treasures Company', 'Grace In Motion (Internal)'],
     },
   },
   'camille.smm': {
@@ -128,13 +128,13 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       username: 'jerold.recaplaza',
       name: 'Jerold Recaplaza',
       nickname: 'Jerold',
-      email: 'jerold@graceinmotion.agency',
+      email: 'recaplazajerold@gmail.com',
       role: 'Operations Specialist',
       isCoreAdmin: false,
       avatarColor: 'bg-[#466B53]',
       title: 'Operations Specialist',
-      clientScope: 'Risewise',
-      assigned_clients: ['Risewise'],
+      clientScope: 'Risewise, NoirLab, Studio Nets, Grace In Motion (Internal)',
+      assigned_clients: ['Risewise', 'NoirLab', 'Studio Nets', 'Grace In Motion (Internal)'],
     },
   },
   'jane.caillio': {
@@ -144,13 +144,13 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       username: 'jane.caillio',
       name: 'Jane Caillio',
       nickname: 'Jane',
-      email: 'jane@graceinmotion.agency',
+      email: 'hello@theprocessease.com',
       role: 'Project Lead',
       isCoreAdmin: false,
       avatarColor: 'bg-[#518E6A]',
       title: 'Project Lead',
-      clientScope: 'NoirLab',
-      assigned_clients: ['NoirLab'],
+      clientScope: 'NoirLab, Studio Nets, Grace In Motion (Internal)',
+      assigned_clients: ['NoirLab', 'Studio Nets', 'Grace In Motion (Internal)'],
     },
   },
   'jedy.caillio': {
@@ -160,13 +160,13 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       username: 'jedy.caillio',
       name: 'Jedy Caillio',
       nickname: 'Jedy',
-      email: 'jedy@graceinmotion.agency',
+      email: 'jedy@theprocessease.com',
       role: 'Operations Specialist',
       isCoreAdmin: false,
       avatarColor: 'bg-[#466B53]',
       title: 'Operations Specialist',
-      clientScope: 'InVogue Cleans',
-      assigned_clients: ['InVogue Cleans'],
+      clientScope: 'InVogue Cleans, Grace In Motion (Internal)',
+      assigned_clients: ['InVogue Cleans', 'Grace In Motion (Internal)'],
     },
   },
   'ellyka.pama': {
@@ -176,7 +176,7 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       username: 'ellyka.pama',
       name: 'Ellyka Claire Pama',
       nickname: 'Ellyka',
-      email: 'ellyka@graceinmotion.agency',
+      email: 'ellykaclairepama@gmail.com',
       role: 'Operations Assistant',
       isCoreAdmin: false,
       avatarColor: 'bg-[#65746C]',
@@ -192,7 +192,7 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       username: 'joyce.roble',
       name: 'Joyce Roble',
       nickname: 'Joyce',
-      email: 'joyce@graceinmotion.agency',
+      email: 'joyceroblevaservices@gmail.com',
       role: 'Project Specialist',
       isCoreAdmin: false,
       avatarColor: 'bg-[#3D5249]',
@@ -208,13 +208,13 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       username: 'joy.fabular',
       name: 'Joy Fabular',
       nickname: 'Joy',
-      email: 'joy@graceinmotion.agency',
+      email: 'baluyotjoy89@gmail.com',
       role: 'Operations Assistant',
       isCoreAdmin: false,
       avatarColor: 'bg-[#518E6A]',
       title: 'Operations Assistant',
-      clientScope: 'InVogue Cleans',
-      assigned_clients: ['InVogue Cleans'],
+      clientScope: 'InVogue Cleans, Grace In Motion (Internal)',
+      assigned_clients: ['InVogue Cleans', 'Grace In Motion (Internal)'],
     },
   },
   'aldwin.ops': {
@@ -224,13 +224,13 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       username: 'aldwin.ops',
       name: 'Aldwin',
       nickname: 'Aldwin',
-      email: 'aldwin@graceinmotion.agency',
+      email: 'charlesaldwinlim@gmail.com',
       role: 'Operations Assistant',
       isCoreAdmin: false,
       avatarColor: 'bg-[#65746C]',
       title: 'Operations Assistant',
-      clientScope: 'We Rock the Spectrum (WRTS)',
-      assigned_clients: ['We Rock the Spectrum (WRTS)'],
+      clientScope: 'We Rock the Spectrum (WRTS), Grace In Motion (Internal)',
+      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Grace In Motion (Internal)'],
     },
   },
   'hashim.saudi': {
@@ -240,7 +240,7 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       username: 'hashim.saudi',
       name: 'Hashim Saudi',
       nickname: 'Hashim',
-      email: 'hashim@graceinmotion.agency',
+      email: 'hashim3898@gmail.com',
       role: 'Tech Specialist',
       isCoreAdmin: false,
       avatarColor: 'bg-[#466B53]',
@@ -256,7 +256,7 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       username: 'kimberly.besa',
       name: 'Kimberly Besa',
       nickname: 'Kimberly',
-      email: 'kimberly@graceinmotion.agency',
+      email: 'kimberlybesa80@gmail.com',
       role: 'Operations Assistant',
       isCoreAdmin: false,
       avatarColor: 'bg-[#3D5249]',
@@ -351,9 +351,45 @@ export async function POST(req: NextRequest) {
     // 1. Check built-in verified accounts first (strictly against new credentials)
     const builtIn = BUILT_IN_ACCOUNTS[cleanUsername];
     if (builtIn && builtIn.password === cleanPassword) {
+      // Check if Core Admins have updated this user's assigned clients in Supabase
+      let liveAssignedClients = builtIn.user.assigned_clients;
+      let liveRole = builtIn.user.role;
+      try {
+        const supabaseAdmin = createAdminClient();
+        const { data: prof } = await supabaseAdmin
+          .from('profiles')
+          .select('assigned_clients, role')
+          .or(`email.ilike.${builtIn.user.email},email.ilike.${cleanUsername}`)
+          .maybeSingle();
+
+        if (prof?.assigned_clients && prof.assigned_clients.length > 0) {
+          liveAssignedClients = prof.assigned_clients;
+          if (prof.role) liveRole = prof.role;
+        } else {
+          const { data: inv } = await supabaseAdmin
+            .from('invitations')
+            .select('assigned_clients, role')
+            .or(`email.ilike.${builtIn.user.email},email.ilike.${cleanUsername}`)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (inv?.assigned_clients && inv.assigned_clients.length > 0) {
+            liveAssignedClients = inv.assigned_clients;
+            if (inv.role) liveRole = inv.role;
+          }
+        }
+      } catch {
+        // Fall back to built-in defaults
+      }
+
       return NextResponse.json({
         success: true,
-        user: builtIn.user,
+        user: {
+          ...builtIn.user,
+          role: liveRole,
+          assigned_clients: liveAssignedClients,
+          clientScope: builtIn.user.isCoreAdmin ? 'all' : liveAssignedClients.join(', '),
+        },
       });
     }
 

@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, status, priority, due_date, description, title } = body;
+    const { id, status, priority, due_date, description, title, assignee_name, assignee_id, client } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'id is required.' }, { status: 400 });
@@ -187,11 +187,14 @@ export async function PATCH(req: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
-    if (status) updates.status = status;
-    if (priority) updates.priority = priority;
+    if (status !== undefined) updates.status = status;
+    if (priority !== undefined) updates.priority = priority;
     if (due_date !== undefined) updates.due_date = due_date;
     if (description !== undefined) updates.description = description;
-    if (title) updates.title = title;
+    if (title !== undefined) updates.title = title;
+    if (assignee_name !== undefined) updates.assignee_name = assignee_name;
+    if (assignee_id !== undefined) updates.assignee_id = assignee_id;
+    if (client !== undefined) updates.client = client;
 
     // Check if task exists in Supabase
     const { data: existing } = await supabase.from('client_tasks').select('id').eq('id', id).maybeSingle();
@@ -207,19 +210,19 @@ export async function PATCH(req: NextRequest) {
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       taskData = task;
     } else {
-      // Upsert ClickUp mirrored task into Supabase so overrides persist
+      // Upsert ClickUp mirrored task into Supabase so overrides and assignments persist
       const { data: task, error } = await supabase
         .from('client_tasks')
         .insert({
           id,
           title: title || 'Task',
-          client: body.client || 'Little Treasures Company',
+          client: client || body.client || 'Grace In Motion (Internal)',
           status: status || 'To Do',
           priority: priority || 'Normal',
           due_date: due_date || null,
           description: description || '',
-          assignee_name: body.assignee_name || 'Unassigned',
-          assignee_id: body.assignee_id || '',
+          assignee_name: assignee_name || body.assignee_name || 'Unassigned',
+          assignee_id: assignee_id || body.assignee_id || '',
           created_by: 'GIM Dashboard',
         })
         .select()

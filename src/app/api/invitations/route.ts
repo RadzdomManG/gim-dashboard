@@ -123,6 +123,22 @@ export async function POST(req: NextRequest) {
         authUserRecord = createRes.data.user;
       }
 
+      // Upsert into public.profiles for persistent RBAC & team roster sync
+      try {
+        await supabase.from('profiles').upsert({
+          id: authUserRecord.id,
+          email: trimmedEmail,
+          full_name: displayName,
+          role: assignedRole as any,
+          is_core_admin: assignedRole === 'admin' || assignedRole === 'owner',
+          assigned_clients: clientList,
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        });
+      } catch (profErr) {
+        console.error('Failed to upsert profile record:', profErr);
+      }
+
       // Record in public.invitations for audit history
       const uniqueToken = `gim_usr_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       const expiresAt = new Date();
