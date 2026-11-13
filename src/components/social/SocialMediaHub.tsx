@@ -40,6 +40,8 @@ import {
   ClientSocialAccount,
   generatePlatformCopy,
 } from "@/lib/social/connectors";
+import { SocialOAuthLoginModal } from "./SocialOAuthLoginModal";
+import { AiSocialMediaAssistant } from "./AiSocialMediaAssistant";
 
 interface SocialMediaHubProps {
   currentUserName?: string;
@@ -63,8 +65,9 @@ export function SocialMediaHub({
   initialPostDraft,
   onClearInitialDraft,
 }: SocialMediaHubProps) {
-  // Navigation sub-views: "composer" | "queue" | "connectors" | "comments"
-  const [activeSubView, setActiveSubView] = useState<"composer" | "queue" | "connectors" | "comments">("composer");
+  // Navigation sub-views: "composer" | "ai_assistant" | "queue" | "connectors" | "comments"
+  const [activeSubView, setActiveSubView] = useState<"composer" | "ai_assistant" | "queue" | "connectors" | "comments">("composer");
+  const [oauthModalPlatform, setOauthModalPlatform] = useState<"facebook" | "tiktok" | "linkedin" | "youtube" | null>(null);
   
   // Selected client for social media scope (WRTS, Juvibolt, Studio Nets, InVogue, Risewise, NoirLab, GIM Internal)
   const [activeClient, setActiveClient] = useState<string>(selectedClientId || "we-rock-the-spectrum");
@@ -296,7 +299,7 @@ export function SocialMediaHub({
     }, 1800);
   };
 
-  // Toggle Connector Connection (Simulated OAuth flow)
+  // Toggle Connector Connection (Authentic OAuth Login Dialog)
   const handleToggleConnector = (platform: "facebook" | "tiktok" | "linkedin" | "youtube") => {
     sound.playClick();
     const existing = clientAccounts.find((a) => a.clientId === activeClient && a.platform === platform);
@@ -311,37 +314,40 @@ export function SocialMediaHub({
         )
       );
       sound.playPop();
+      setSuccessToast(`Disconnected ${platform.toUpperCase()} from ${currentClientData.name}.`);
+      setTimeout(() => setSuccessToast(null), 2500);
     } else {
-      // Connect with default client handle
-      const defaultHandles: Record<string, { handle: string; name: string }> = {
-        facebook: { handle: `@${activeClient.replace(/-/g, "_")}`, name: `${currentClientData.name} Official Page` },
-        tiktok: { handle: `@${activeClient.replace(/-/g, "")}`, name: `${currentClientData.name} Video Channel` },
-        linkedin: { handle: `${activeClient}-global`, name: `${currentClientData.name} Company Page` },
-        youtube: { handle: `@${currentClientData.code}Channel`, name: `${currentClientData.name} Media HQ` },
-      };
-
-      const info = defaultHandles[platform];
-      setClientAccounts((prev) => {
-        const without = prev.filter((a) => !(a.clientId === activeClient && a.platform === platform));
-        return [
-          ...without,
-          {
-            clientId: activeClient,
-            clientName: currentClientData.name,
-            platform,
-            isConnected: true,
-            accountHandle: info.handle,
-            accountName: info.name,
-            connectedAt: "Just now",
-            connectedBy: `${currentUserNickname} (${currentUserRole})`,
-            tokenExpires: "90 Days Active",
-          },
-        ];
-      });
-      sound.playSuccessChime();
-      setConnectedModalPlatform(platform);
-      setTimeout(() => setConnectedModalPlatform(null), 2500);
+      // Open Official OAuth Login Dialog (Enter credentials, password, select page/channel)
+      setOauthModalPlatform(platform);
     }
+  };
+
+  const handleOAuthSuccess = (data: {
+    platform: "facebook" | "tiktok" | "linkedin" | "youtube";
+    accountHandle: string;
+    accountName: string;
+    connectedBy: string;
+    tokenExpires: string;
+  }) => {
+    setClientAccounts((prev) => {
+      const without = prev.filter((a) => !(a.clientId === activeClient && a.platform === data.platform));
+      return [
+        ...without,
+        {
+          clientId: activeClient,
+          clientName: currentClientData.name,
+          platform: data.platform,
+          isConnected: true,
+          accountHandle: data.accountHandle,
+          accountName: data.accountName,
+          connectedAt: "Just now",
+          connectedBy: data.connectedBy,
+          tokenExpires: data.tokenExpires,
+        },
+      ];
+    });
+    setSuccessToast(`✓ Valid OAuth login verified for ${data.accountName} (${data.accountHandle})!`);
+    setTimeout(() => setSuccessToast(null), 3000);
   };
 
   // Filter posts by client
@@ -426,7 +432,23 @@ export function SocialMediaHub({
           }`}
         >
           <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-          <span>Post Composer & AI Copywriter</span>
+          <span>Post Composer</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveSubView("ai_assistant");
+            sound.playClick();
+          }}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all btn-3d ${
+            activeSubView === "ai_assistant"
+              ? "bg-[#518E6A] text-white shadow-xs"
+              : "text-[#3D5249] bg-[#518E6A]/10 hover:bg-[#518E6A]/20 border border-[#518E6A]/30"
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+          <span>⚡ AI GDrive Campaign Autopilot</span>
         </button>
 
         <button
@@ -477,6 +499,26 @@ export function SocialMediaHub({
           <span>Live Comments & AI Replies</span>
         </button>
       </div>
+
+      {/* ========================================================================= */}
+      {/* AI GDRIVE CAMPAIGN AUTOPILOT SUB-VIEW                                     */}
+      {/* ========================================================================= */}
+      {activeSubView === "ai_assistant" && (
+        <AiSocialMediaAssistant
+          clientName={currentClientData.name}
+          clientId={activeClient}
+          currentUserName={currentUserName}
+          currentUserNickname={currentUserNickname}
+          onBatchScheduled={(newPosts) => {
+            setPosts((prev) => [...newPosts, ...prev]);
+            setSuccessToast(`✓ Scheduled ${newPosts.length} campaign posts for ${currentClientData.name}!`);
+            setTimeout(() => {
+              setSuccessToast(null);
+              setActiveSubView("queue");
+            }, 1800);
+          }}
+        />
+      )}
 
       {/* ========================================================================= */}
       {/* 1. POST COMPOSER & AI MULTI-PLATFORM COPYWRITER                           */}
@@ -1095,6 +1137,21 @@ export function SocialMediaHub({
             )}
           </div>
         </div>
+      )}
+
+      {/* AUTHENTIC OAUTH LOGIN DIALOG MODAL */}
+      {oauthModalPlatform && (
+        <SocialOAuthLoginModal
+          isOpen={!!oauthModalPlatform}
+          onClose={() => setOauthModalPlatform(null)}
+          platform={oauthModalPlatform}
+          clientName={currentClientData.name}
+          clientId={activeClient}
+          currentUserName={currentUserName}
+          currentUserNickname={currentUserNickname}
+          currentUserRole={currentUserRole}
+          onSuccess={handleOAuthSuccess}
+        />
       )}
     </div>
   );
