@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { sound } from "@/lib/audio";
 
 interface GimCopilotDrawerProps {
   currentUser: {
@@ -47,8 +48,13 @@ interface ChatMessage {
   timestamp: string;
   action?: {
     type: string;
-    taskId: string;
-    status: string;
+    taskId?: string;
+    taskTitle?: string;
+    client?: string;
+    status?: string;
+    platforms?: string[];
+    posts?: any[];
+    cloudLink?: string;
   };
   suggestedActions?: string[];
 }
@@ -82,7 +88,69 @@ export function GimCopilotDrawer({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [internalTasks, setInternalTasks] = useState<any[]>(tasks);
+  const [appliedActions, setAppliedActions] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleConfirmTaskMove = async (msgId: string, taskId: string, status: string, taskTitle: string) => {
+    sound.playSuccessChime();
+    setAppliedActions((prev) => ({ ...prev, [msgId]: true }));
+    try {
+      await fetch("/api/tasks", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: taskId, status: status }),
+      });
+      if (onUpdateTaskStatus) {
+        onUpdateTaskStatus(taskId, status);
+      }
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `msg-${Date.now()}`,
+          sender: "copilot",
+          content: `✅ Task **#${taskId}** (${taskTitle}) status has been moved to **${status}**! Great job — ready for the next milestone. 🚀`,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          suggestedActions: ["What should I do next? 📋", "Draft today's EOS note 📝"],
+        },
+      ]);
+    } catch (e) {
+      console.error("Failed to update task status:", e);
+    }
+  };
+
+  const handleApproveSocialSchedule = (msgId: string, action: any) => {
+    sound.playSuccessChime();
+    setAppliedActions((prev) => ({ ...prev, [msgId]: true }));
+    try {
+      const stored = localStorage.getItem("gim_social_posts");
+      const existing = stored ? JSON.parse(stored) : [];
+      const newPosts = (action.posts || []).map((p: any, idx: number) => ({
+        id: `post-ai-${Date.now()}-${idx}`,
+        client: action.client,
+        clientId: (action.client || "").toLowerCase().replace(/[^a-z0-9]/g, "-"),
+        platform: p.platform,
+        content: p.copy,
+        status: "scheduled",
+        scheduledFor: new Date(Date.now() + (idx + 1) * 86400000).toISOString(),
+        author: currentUser.name,
+        attachments: action.cloudLink ? [action.cloudLink] : [],
+      }));
+      localStorage.setItem("gim_social_posts", JSON.stringify([...existing, ...newPosts]));
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `msg-${Date.now()}`,
+          sender: "copilot",
+          content: `🎉 **${newPosts.length} posts have been approved & scheduled** into the live calendar for **${action.client}**! You can view them anytime under the **Social Hub & Auto-Post** tab. 🚀📅`,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          suggestedActions: ["View Scheduled Queue 📅", "Show my active deliverables 📋"],
+        },
+      ]);
+    } catch (e) {
+      console.error("Failed to schedule posts:", e);
+    }
+  };
 
   useEffect(() => {
     if (tasks && tasks.length > 0) {
@@ -172,11 +240,6 @@ What would you like to work on right now?`,
           suggestedActions: data.suggestedActions,
         };
         setMessages((prev) => [...prev, copilotMsg]);
-
-        // Auto execute status change if triggered
-        if (data.action?.type === "UPDATE_TASK_STATUS" && onUpdateTaskStatus) {
-          onUpdateTaskStatus(data.action.taskId, data.action.status);
-        }
       } else {
         const errorMsg: ChatMessage = {
           id: `msg-${Date.now() + 1}`,
@@ -355,24 +418,94 @@ What would you like to work on right now?`,
                         })}
                       </div>
 
-                      {/* Interactive Task Update Action Button */}
-                      {msg.action && (
-                        <div className="mt-2.5 pt-2 border-t border-[#3D5249]/10 flex items-center justify-between">
-                          <span className="text-[10px] font-mono text-[#65746C]">
-                            Target: Task #{msg.action.taskId}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (onUpdateTaskStatus && msg.action) {
-                                onUpdateTaskStatus(msg.action.taskId, msg.action.status);
-                              }
-                            }}
-                            className="px-2.5 py-1 rounded-lg bg-[#518E6A] text-white text-[10px] font-bold hover:bg-[#427457] flex items-center gap-1 shadow-xs transition-colors"
-                          >
-                            <CheckCircle2 className="w-3 h-3" />
-                            <span>Confirm Status: {msg.action.status}</span>
-                          </button>
+                      {/* Interactive Task Update Action Card (Option B: Confirmation First) */}
+                      {msg.action && msg.action.type === "CONFIRM_TASK_MOVE" && (
+                        <div className="mt-3 p-2.5 rounded-xl bg-[#EBF3EF] border border-[#518E6A]/30 space-y-2">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="font-bold text-[#242E29]">
+                              Task #{msg.action.taskId}: {msg.action.taskTitle}
+                            </span>
+                            <Badge variant="brand" className="text-[10px]">
+                              {msg.action.status}
+                            </Badge>
+                          </div>
+
+                          {appliedActions[msg.id] ? (
+                            <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-bold">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                              <span>Status updated to {msg.action.status}!</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 pt-1">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleConfirmTaskMove(
+                                    msg.id,
+                                    msg.action?.taskId || "",
+                                    msg.action?.status || "In Progress",
+                                    msg.action?.taskTitle || "Deliverable"
+                                  )
+                                }
+                                className="px-3 py-1.5 rounded-lg bg-[#518E6A] text-white text-xs font-bold hover:bg-[#427457] flex items-center gap-1.5 shadow-xs transition-all hover:scale-102 active:scale-98"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>⚡ Confirm: Move to {msg.action.status}</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Interactive Social Media Staging Preview Card */}
+                      {msg.action && msg.action.type === "SCHEDULE_SOCIAL_PREVIEW" && (
+                        <div className="mt-3 p-3 rounded-xl bg-[#FBF6F3] border border-[#3D5249]/20 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-[#242E29]">
+                              📱 Campaign Staging ({msg.action.client})
+                            </span>
+                            <span className="text-[10px] text-[#518E6A] font-bold">
+                              4 Platform Variants Ready
+                            </span>
+                          </div>
+
+                          {/* Post Snippet Cards */}
+                          <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                            {(msg.action.posts || []).map((p: any, pIdx: number) => (
+                              <div
+                                key={pIdx}
+                                className="p-2 rounded-lg bg-white border border-[#E8E2DD] text-[10px] space-y-1"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-bold text-[#3D5249] capitalize">
+                                    {p.platformName || p.platform}
+                                  </span>
+                                  <span className="text-[9px] font-mono text-[#65746C]">Day {pIdx + 1} • 10:00 AM</span>
+                                </div>
+                                <p className="text-[#65746C] line-clamp-2 leading-relaxed font-sans">
+                                  {p.copy}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+
+                          {appliedActions[msg.id] ? (
+                            <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-bold pt-1">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                              <span>Approved & scheduled into live calendar!</span>
+                            </div>
+                          ) : (
+                            <div className="pt-1">
+                              <button
+                                type="button"
+                                onClick={() => handleApproveSocialSchedule(msg.id, msg.action)}
+                                className="w-full py-2 rounded-xl bg-[#518E6A] text-white text-xs font-bold hover:bg-[#427457] flex items-center justify-center gap-1.5 shadow-sm transition-all hover:scale-101 active:scale-99"
+                              >
+                                <Sparkles className="w-3.5 h-3.5" />
+                                <span>⚡ Approve & Schedule All 4 Posts into Queue</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

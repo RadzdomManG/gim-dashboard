@@ -260,9 +260,9 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       role: 'Operations Assistant',
       isCoreAdmin: false,
       avatarColor: 'bg-[#3D5249]',
-      title: 'Operations Assistant',
-      clientScope: 'Grace In Motion (Internal)',
-      assigned_clients: ['Grace In Motion (Internal)'],
+      title: 'Operations Assistant (Juvibolt & GIM)',
+      clientScope: 'Juvibolt Cybertech, Grace In Motion (Internal)',
+      assigned_clients: ['Juvibolt Cybertech', 'Grace In Motion (Internal)'],
     },
   },
 

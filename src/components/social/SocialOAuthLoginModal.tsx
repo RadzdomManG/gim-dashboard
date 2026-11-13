@@ -48,44 +48,13 @@ export function SocialOAuthLoginModal({
 }: SocialOAuthLoginModalProps) {
   const cfg = SOCIAL_PLATFORMS[platform];
 
-  // Default suggested credentials and handles based on the active client
-  const defaultCredentials: Record<
-    string,
-    { email: string; defaultHandle: string; defaultPageName: string }
-  > = {
-    facebook: {
-      email: `${clientId.replace(/-/g, ".")}@gmail.com`,
-      defaultHandle: `@${clientId.replace(/-/g, "_")}`,
-      defaultPageName: `${clientName} Official Facebook Page`,
-    },
-    tiktok: {
-      email: `tiktok.${clientId.replace(/-/g, "")}@gmail.com`,
-      defaultHandle: `@${clientId.replace(/-/g, "")}`,
-      defaultPageName: `${clientName} TikTok Creator Account`,
-    },
-    linkedin: {
-      email: `admin@${clientId.replace(/-/g, "")}.com`,
-      defaultHandle: `${clientId}-agency`,
-      defaultPageName: `${clientName} LinkedIn Organization`,
-    },
-    youtube: {
-      email: `${clientId.replace(/-/g, "")}.channel@gmail.com`,
-      defaultHandle: `@${clientName.replace(/[^a-zA-Z0-9]/g, "")}HQ`,
-      defaultPageName: `${clientName} Official YouTube Channel`,
-    },
-  };
-
-  const initial = defaultCredentials[platform] || {
-    email: "manager@graceinmotion.com",
-    defaultHandle: `@${clientId}`,
-    defaultPageName: `${clientName} Channel`,
-  };
-
-  const [emailOrPhone, setEmailOrPhone] = useState(initial.email);
-  const [password, setPassword] = useState("••••••••••••");
+  const [connectMethod, setConnectMethod] = useState<"oauth" | "token">("oauth");
+  const [emailOrPhone, setEmailOrPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [apiToken, setApiToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [accountHandle, setAccountHandle] = useState(initial.defaultHandle);
-  const [accountName, setAccountName] = useState(initial.defaultPageName);
+  const [accountHandle, setAccountHandle] = useState("");
+  const [accountName, setAccountName] = useState("");
   const [accountType, setAccountType] = useState<"business" | "creator" | "organization">("business");
   const [rememberToken, setRememberToken] = useState(true);
   const [isAuthorizing, setIsAuthorizing] = useState(false);
@@ -96,10 +65,18 @@ export function SocialOAuthLoginModal({
 
   const handleAuthenticate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailOrPhone.trim() || !accountHandle.trim()) {
-      setErrorMessage("Please enter a valid email/username and account handle.");
-      sound.playPop();
-      return;
+    if (connectMethod === "oauth") {
+      if (!emailOrPhone.trim() || !password.trim() || !accountHandle.trim()) {
+        setErrorMessage("Please enter your account email, password, and official handle.");
+        sound.playPop();
+        return;
+      }
+    } else {
+      if (!apiToken.trim() || !accountHandle.trim()) {
+        setErrorMessage("Please enter your official developer API token and account handle.");
+        sound.playPop();
+        return;
+      }
     }
     setErrorMessage(null);
     sound.playClick();
@@ -221,8 +198,30 @@ export function SocialOAuthLoginModal({
           <form onSubmit={handleAuthenticate} className="p-5 sm:p-6 space-y-4">
             <div>
               <p className="text-xs text-[#65746C] leading-relaxed">
-                Connect the official {cfg.name} account for <strong>{clientName}</strong>. Enter your credentials or management handle below to grant publishing permissions to Grace In Motion.
+                Connect the official {cfg.name} account for <strong>{clientName}</strong>. Choose direct account authorization or supply official developer tokens from Meta, TikTok, LinkedIn, or Google Cloud.
               </p>
+            </div>
+
+            {/* Connection Mode Toggle */}
+            <div className="flex rounded-xl bg-[#FBF6F3] p-1 border border-[#3D5249]/15">
+              <button
+                type="button"
+                onClick={() => setConnectMethod("oauth")}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  connectMethod === "oauth" ? "bg-[#3D5249] text-white shadow-2xs" : "text-[#65746C] hover:text-[#242E29]"
+                }`}
+              >
+                🔐 Direct Account Handshake
+              </button>
+              <button
+                type="button"
+                onClick={() => setConnectMethod("token")}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  connectMethod === "token" ? "bg-[#3D5249] text-white shadow-2xs" : "text-[#65746C] hover:text-[#242E29]"
+                }`}
+              >
+                ⚡ Developer Token / API Key
+              </button>
             </div>
 
             {errorMessage && (
@@ -232,45 +231,70 @@ export function SocialOAuthLoginModal({
               </div>
             )}
 
-            {/* Email / Username Input */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-[#242E29]">
-                Email Address, Username or Phone:
-              </label>
-              <input
-                type="text"
-                required
-                value={emailOrPhone}
-                onChange={(e) => setEmailOrPhone(e.target.value)}
-                placeholder="e.g. social@clientbrand.com or +1 (555) 019-2831"
-                className="w-full text-xs p-2.5 rounded-xl border border-[#3D5249]/20 bg-[#FBF6F3] text-[#242E29] focus:outline-none focus:ring-2 focus:ring-[#518E6A]"
-              />
-            </div>
+            {connectMethod === "oauth" ? (
+              <>
+                {/* Email / Username Input */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-[#242E29]">
+                    Email Address, Username or Phone:
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={emailOrPhone}
+                    onChange={(e) => setEmailOrPhone(e.target.value)}
+                    placeholder="e.g. social@clientbrand.com or +1 (555) 019-2831"
+                    className="w-full text-xs p-2.5 rounded-xl border border-[#3D5249]/20 bg-[#FBF6F3] text-[#242E29] focus:outline-none focus:ring-2 focus:ring-[#518E6A]"
+                  />
+                </div>
 
-            {/* Password Input */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-[#242E29]">
-                  Account Password:
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-[10px] text-[#518E6A] font-semibold hover:underline flex items-center gap-0.5"
-                >
-                  {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                  <span>{showPassword ? "Hide" : "Show"}</span>
-                </button>
+                {/* Password Input */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-[#242E29]">
+                      Account Password:
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-[10px] text-[#518E6A] font-semibold hover:underline flex items-center gap-0.5"
+                    >
+                      {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      <span>{showPassword ? "Hide" : "Show"}</span>
+                    </button>
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password..."
+                    className="w-full text-xs p-2.5 rounded-xl border border-[#3D5249]/20 bg-[#FBF6F3] text-[#242E29] focus:outline-none focus:ring-2 focus:ring-[#518E6A]"
+                  />
+                </div>
+              </>
+            ) : (
+              /* Developer Token Input */
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-[#242E29]">
+                    Developer Access Token / API Key:
+                  </label>
+                  <span className="text-[10px] text-[#518E6A] font-mono">256-bit Encrypted</span>
+                </div>
+                <textarea
+                  rows={2}
+                  required
+                  value={apiToken}
+                  onChange={(e) => setApiToken(e.target.value)}
+                  placeholder={`Paste official ${cfg.name} access token, page token, or API secret...`}
+                  className="w-full text-xs p-2.5 rounded-xl border border-[#3D5249]/20 bg-[#FBF6F3] font-mono text-[#242E29] focus:outline-none focus:ring-2 focus:ring-[#518E6A]"
+                />
+                <p className="text-[10px] text-[#65746C]">
+                  Generated via Meta for Developers, TikTok Developer Portal, LinkedIn Developers, or Google Cloud Console.
+                </p>
               </div>
-              <input
-                type={showPassword ? "text" : "password"}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password..."
-                className="w-full text-xs p-2.5 rounded-xl border border-[#3D5249]/20 bg-[#FBF6F3] text-[#242E29] focus:outline-none focus:ring-2 focus:ring-[#518E6A]"
-              />
-            </div>
+            )}
 
             {/* Client Handle & Official Page Name */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">

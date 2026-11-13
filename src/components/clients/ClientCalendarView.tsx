@@ -112,7 +112,14 @@ export function ClientCalendarView({
   // Filter tasks for this client (or client matching)
   const isAllClients = !clientName || clientName === "All Clients" || clientName.toLowerCase() === "all";
   const clientTasks = tasks.filter((t) => {
-    if (isAllClients) return true;
+    if (isAllClients) {
+      if (availableClients && availableClients.length > 0) {
+        const allowed = availableClients.map((c) => c.toLowerCase());
+        const tc = (t.client || "").toLowerCase();
+        return allowed.some((ac) => tc.includes(ac) || ac.includes(tc));
+      }
+      return true;
+    }
     if (!t.client) return false;
     return (
       t.client.toLowerCase().includes(clientName.toLowerCase()) ||

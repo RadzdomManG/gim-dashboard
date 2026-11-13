@@ -1,26 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const channelId = req.nextUrl.searchParams.get('channelId');
-    const supabase = createAdminClient();
-
-    let query = supabase.from('messages').select('*').order('created_at', { ascending: true });
-    if (channelId) {
-      query = query.eq('channel_id', channelId);
+    const channelId = req.nextUrl.searchParams.get("channelId");
+    if (!channelId) {
+      return NextResponse.json({ error: "channelId is required" }, { status: 400 });
     }
 
-    const { data: messages, error } = await query;
+    const supabase = createAdminClient();
+
+    const { data: messages, error } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("channel_id", channelId)
+      .order("created_at", { ascending: true })
+      .limit(200);
+
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("Failed to fetch messages:", error.message);
+      return NextResponse.json({ messages: [] });
     }
 
     return NextResponse.json({ messages: messages || [] });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown server error';
+    const message = err instanceof Error ? err.message : "Internal error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -28,76 +34,85 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const channel_id = body.channel_id || body.channelId;
-    const sender_id = body.sender_id || body.senderId;
-    const sender_name = body.sender_name || body.senderName;
-    const sender_nickname = body.sender_nickname || body.senderNickname;
-    const sender_avatar = body.sender_avatar || body.senderAvatar || '#3D5249';
-    const sender_role = body.sender_role || body.senderRole || 'team_member';
-    const is_core_admin = body.is_core_admin ?? body.isCoreAdmin ?? false;
-    const content = body.content;
-    const attachments = body.attachments || [];
-    const reply_to = body.reply_to || body.replyTo || null;
+    const {
+      id,
+      channel_id,
+      channelId,
+      sender_id,
+      senderId,
+      sender_name,
+      senderName,
+      sender_nickname,
+      senderNickname,
+      sender_avatar,
+      senderAvatar,
+      sender_role,
+      senderRole,
+      is_core_admin,
+      isCoreAdmin,
+      content,
+      timestamp,
+      reply_to,
+      replyTo,
+      attachments,
+      reactions,
+    } = body;
 
-    if (!channel_id || (!content && (!attachments || attachments.length === 0))) {
-      return NextResponse.json({ error: 'channel_id and content or attachments required.' }, { status: 400 });
+    const targetChannelId = channel_id || channelId;
+    const targetSenderId = sender_id || senderId;
+    const targetSenderName = sender_name || senderName;
+    const targetSenderNickname = sender_nickname || senderNickname;
+
+    if (!targetChannelId || !targetSenderId || !content) {
+      return NextResponse.json(
+        { error: "channel_id, sender_id, and content are required." },
+        { status: 400 }
+      );
     }
 
-    const messageId = body.id || `msg-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const supabase = createAdminClient();
+
+    // Ensure target channel exists in public.channels
+    try {
+      await supabase.from("channels").upsert({
+        id: targetChannelId,
+        name: targetChannelId,
+        type: "channel",
+        description: `Operational channel for ${targetChannelId}`,
+        is_private: false,
+      }, { onConflict: "id" });
+    } catch {}
+
+    const payload = {
+      id: id || `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      channel_id: targetChannelId,
+      sender_id: targetSenderId,
+      sender_name: targetSenderName || "Team Member",
+      sender_nickname: targetSenderNickname || "Member",
+      sender_avatar: sender_avatar || senderAvatar || "bg-[#3D5249]",
+      sender_role: sender_role || senderRole || "Specialist",
+      is_core_admin: is_core_admin ?? isCoreAdmin ?? false,
+      content: content.trim(),
+      timestamp: timestamp || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      reply_to: reply_to || replyTo || null,
+      attachments: attachments || null,
+      reactions: reactions || null,
+    };
+
     const { data, error } = await supabase
-      .from('messages')
-      .insert({
-        id: messageId,
-        channel_id,
-        sender_id: sender_id || 'radz-001',
-        sender_name: sender_name || 'Radzdom Gallego',
-        sender_nickname: sender_nickname || 'Radz',
-        sender_avatar,
-        sender_role,
-        is_core_admin,
-        content: content || '',
-        attachments: attachments || [],
-      })
+      .from("messages")
+      .upsert(payload, { onConflict: "id" })
       .select()
       .single();
 
     if (error) {
+      console.error("Failed to insert message:", error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, message: data });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown server error';
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
-}
-
-export async function DELETE(req: NextRequest) {
-  try {
-    let id = req.nextUrl.searchParams.get('id');
-    if (!id) {
-      try {
-        const body = await req.json();
-        id = body?.id;
-      } catch {
-        // no body provided
-      }
-    }
-    if (!id) {
-      return NextResponse.json({ error: 'Message ID is required' }, { status: 400 });
-    }
-
-    const supabase = createAdminClient();
-    const { error } = await supabase.from('messages').delete().eq('id', id);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, deletedId: id });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown server error';
+    const message = err instanceof Error ? err.message : "Internal error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -105,16 +120,21 @@ export async function DELETE(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, reactions } = body;
+    const { id, reactions, content } = body;
+
     if (!id) {
-      return NextResponse.json({ error: 'Message ID is required' }, { status: 400 });
+      return NextResponse.json({ error: "Message id is required" }, { status: 400 });
     }
 
     const supabase = createAdminClient();
+    const updates: Record<string, any> = {};
+    if (reactions !== undefined) updates.reactions = reactions;
+    if (content !== undefined) updates.content = content;
+
     const { data, error } = await supabase
-      .from('messages')
-      .update({ reactions: reactions || [] })
-      .eq('id', id)
+      .from("messages")
+      .update(updates)
+      .eq("id", id)
       .select()
       .single();
 
@@ -124,8 +144,28 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ success: true, message: data });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown server error';
+    const message = err instanceof Error ? err.message : "Internal error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
+export async function DELETE(req: NextRequest) {
+  try {
+    const id = req.nextUrl.searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ error: "Message id is required" }, { status: 400 });
+    }
+
+    const supabase = createAdminClient();
+    const { error } = await supabase.from("messages").delete().eq("id", id);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Internal error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

@@ -420,12 +420,14 @@ export function SopPlaybookLibrary({ clientScope = "all", isCoreAdmin = true }: 
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [copied, setCopied] = useState(false);
 
-  // Client scoping rule: Admins see all. Members only see general SOPs + their assigned clients.
+  // Client scoping rule: Admins see all. Members only see general internal SOPs + their specifically assigned clients.
   const accessibleDocs = SOP_DOCS.filter((doc) => {
     if (isCoreAdmin) return true;
-    if (!doc.clientScope || doc.category === "Internal Operations" || doc.category === "Strategy") {
+    // General agency ops are accessible to all verified team members
+    if (!doc.clientScope || doc.category === "Internal Operations") {
       return true;
     }
+    // Client-specific SOPs must match the member's assigned clients
     if (clientScope && clientScope !== "all") {
       const allowed = Array.isArray(clientScope)
         ? clientScope
@@ -436,7 +438,7 @@ export function SopPlaybookLibrary({ clientScope = "all", isCoreAdmin = true }: 
           scope.toLowerCase().includes(doc.clientScope?.toLowerCase() || "")
       );
     }
-    return true;
+    return false;
   });
 
   const filteredDocs = accessibleDocs.filter((d) => {

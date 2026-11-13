@@ -644,32 +644,6 @@ export function TaskDetailModal({
             </div>
           </div>
 
-          {/* 1-Click Convert Task to Social Post Banner */}
-          <div className="p-3.5 bg-gradient-to-r from-[#3D5249]/10 via-[#518E6A]/10 to-[#FBF6F3] rounded-2xl border border-[#518E6A]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-            <div>
-              <span className="text-xs font-bold text-[#3D5249] flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-[#518E6A]" />
-                <span>Broadcast on Social Media</span>
-              </span>
-              <p className="text-[11px] text-[#65746C] mt-0.5">
-                Push this deliverable directly to Facebook, TikTok, LinkedIn, or YouTube with AI copy adapted in 1 click.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                sound.playSuccessChime();
-                if (onConvertToSocialPost && currentTask) {
-                  onConvertToSocialPost(currentTask);
-                  onClose();
-                }
-              }}
-              className="btn-3d btn-3d-accent px-3.5 py-2 rounded-xl text-xs font-bold text-white shrink-0 flex items-center gap-1.5 shadow-sm"
-            >
-              <span>⚡ Convert to Social Post</span>
-            </button>
-          </div>
-
           {/* Task-Level Attachments (ClickUp & GIM uploads) */}
           {currentTask.attachments && currentTask.attachments.length > 0 && (
             <div className="space-y-2">

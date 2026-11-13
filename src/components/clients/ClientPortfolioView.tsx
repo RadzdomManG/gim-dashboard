@@ -352,7 +352,7 @@ export function ClientPortfolioView({
   });
 
   const [selectedClientId, setSelectedClientId] = useState<string>(
-    initialClientId || accessibleClients[0]?.id || "we-rock-the-spectrum"
+    initialClientId || (isCoreAdmin ? "all" : (accessibleClients[0]?.id || "juvibolt-cybertech"))
   );
   const [activeSubTab, setActiveSubTab] = useState<"calendar" | "board" | "dossier">(
     initialSubTab || "calendar"
@@ -361,8 +361,10 @@ export function ClientPortfolioView({
   useEffect(() => {
     if (initialClientId) {
       setSelectedClientId(initialClientId);
+    } else if (!isCoreAdmin && selectedClientId === "all" && accessibleClients.length > 0) {
+      setSelectedClientId(accessibleClients[0].id);
     }
-  }, [initialClientId]);
+  }, [initialClientId, isCoreAdmin, accessibleClients, selectedClientId]);
 
   useEffect(() => {
     if (initialSubTab) {
@@ -382,7 +384,7 @@ export function ClientPortfolioView({
   const [boardPriorityFilter, setBoardPriorityFilter] = useState("All");
   const [mobileBoardColumnFilter, setMobileBoardColumnFilter] = useState<string>("all");
 
-  const isAllClients = selectedClientId === "all";
+  const isAllClients = isCoreAdmin && selectedClientId === "all";
 
   const selectedClient = isAllClients
     ? {
@@ -440,11 +442,24 @@ export function ClientPortfolioView({
   const fetchTasks = async () => {
     setIsLoadingTasks(true);
     try {
-      const clientQuery = isAllClients ? "all" : selectedClient.name;
+      const clientQuery = isAllClients
+        ? "all"
+        : (!isCoreAdmin && accessibleClients.length > 0)
+        ? (selectedClientId === "all" ? accessibleClients.map((c) => c.name).join(",") : selectedClient.name)
+        : selectedClient.name;
       const res = await fetch(`/api/tasks?client=${encodeURIComponent(clientQuery)}`);
       if (res.ok) {
         const data = await res.json();
-        setTasks(data.tasks || []);
+        let loadedTasks: TaskItem[] = data.tasks || [];
+        // Strict client isolation check for non-admins
+        if (!isCoreAdmin && accessibleClients.length > 0) {
+          const allowedNames = accessibleClients.map((c) => c.name.toLowerCase());
+          loadedTasks = loadedTasks.filter((t) => {
+            const tc = (t.client || "").toLowerCase();
+            return allowedNames.some((an) => tc.includes(an) || an.includes(tc));
+          });
+        }
+        setTasks(loadedTasks);
       }
     } catch (e) {
       console.error("Failed to fetch tasks:", e);
@@ -535,25 +550,27 @@ export function ClientPortfolioView({
             Active Client:
           </span>
 
-          {/* ALL CLIENTS PILL */}
-          <button
-            onClick={() => setSelectedClientId("all")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 border ${
-              isAllClients
-                ? "bg-[#3D5249] text-white border-[#3D5249] shadow-xs"
-                : "bg-[#FBF6F3] text-[#65746C] border-[#3D5249]/15 hover:border-[#3D5249]/40 hover:text-[#242E29]"
-            }`}
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            <span>All Clients</span>
-            <span
-              className={`text-[10px] font-mono px-1 py-0.2 rounded ${
-                isAllClients ? "bg-white/20 text-white" : "bg-[#3D5249]/10 text-[#3D5249]"
+          {/* ALL CLIENTS PILL (Admins Only) */}
+          {isCoreAdmin && (
+            <button
+              onClick={() => setSelectedClientId("all")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 border ${
+                isAllClients
+                  ? "bg-[#3D5249] text-white border-[#3D5249] shadow-xs"
+                  : "bg-[#FBF6F3] text-[#65746C] border-[#3D5249]/15 hover:border-[#3D5249]/40 hover:text-[#242E29]"
               }`}
             >
-              ALL
-            </span>
-          </button>
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>All Clients</span>
+              <span
+                className={`text-[10px] font-mono px-1 py-0.2 rounded ${
+                  isAllClients ? "bg-white/20 text-white" : "bg-[#3D5249]/10 text-[#3D5249]"
+                }`}
+              >
+                ALL
+              </span>
+            </button>
+          )}
 
           {accessibleClients.map((client) => {
             const isSelected = client.id === selectedClientId;

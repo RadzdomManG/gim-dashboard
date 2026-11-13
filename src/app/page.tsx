@@ -489,6 +489,17 @@ export default function GimDashboard() {
       title: "Creative Director, Studio Nets",
       clientScope: "Studio Nets",
     },
+    kimberly: {
+      id: "kimberly-001",
+      name: "Kimberly Besa",
+      nickname: "Kimberly",
+      email: "kimberly@graceinmotion.agency",
+      role: "Operations Assistant",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#3D5249]",
+      title: "Operations Assistant (Juvibolt & GIM)",
+      clientScope: "Juvibolt Cybertech, Grace In Motion (Internal)",
+    },
   });
 
   const router = useRouter();
@@ -798,7 +809,7 @@ export default function GimDashboard() {
       username: "kimberly.besa",
       name: "Kimberly Besa",
       role: "Operations Assistant",
-      clientScope: "Grace In Motion (Internal)",
+      clientScope: "Juvibolt Cybertech, Grace In Motion (Internal)",
       invitedBy: "Divine Origines",
       token: "gim_tok_4f11b229d",
       status: "Active",
@@ -925,7 +936,6 @@ export default function GimDashboard() {
     {
       title: "Organization",
       items: [
-        { id: "team", label: "Team & RBAC", icon: Users, badge: "Admin" },
         { id: "settings", label: "Profile & Settings", icon: Settings },
       ],
     },
@@ -1558,17 +1568,6 @@ export default function GimDashboard() {
               )}
             </button>
 
-            {/* Top 10 Upgrades Release Notes Pill */}
-            <button
-              type="button"
-              onClick={() => setIsUpgradesModalOpen(true)}
-              className="p-1.5 h-8 px-2.5 rounded-xl bg-[#518E6A]/15 text-[#3D5249] hover:bg-[#518E6A]/25 border border-[#518E6A]/30 flex items-center space-x-1.5 text-xs font-bold transition-all shadow-2xs shrink-0"
-              title="View Top 10 High-Impact Upgrades"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#518E6A]" />
-              <span className="hidden sm:inline">Top 10 Upgrades</span>
-            </button>
-
             {/* Quick Create Task Trigger (+ New Task) */}
             <Button
               variant="primary"
@@ -1696,24 +1695,6 @@ export default function GimDashboard() {
               className="font-semibold underline hover:text-[#4A3225] text-[11px]"
             >
               Switch to Core Admin
-            </button>
-          </div>
-        )}
-
-        {/* Team Specialist / PO Scoped View Notice */}
-        {!currentUser.isCoreAdmin && !isClientUser && (
-          <div className="bg-[#EBF3EF] border-b border-[#D2E4DA] px-4 sm:px-8 py-2 flex items-center justify-between text-xs text-[#244234]">
-            <div className="flex items-center space-x-2">
-              <ShieldCheck className="w-4 h-4 text-[#518E6A] shrink-0" />
-              <span>
-                <strong>{currentUser.role} View Active:</strong> Authenticated as <strong>{currentUser.name} ({currentUser.nickname})</strong> &lt;{currentUser.email}&gt;. Scope: <strong>{currentUser.clientScope}</strong>. You can add tasks, upload pictures/videos, and post comments, but editing tasks assigned to other members is locked.
-              </span>
-            </div>
-            <button
-              onClick={() => setCurrentUserKey("radz")}
-              className="font-semibold underline hover:text-[#183125] text-[11px] shrink-0 ml-2"
-            >
-              Switch back to Radz (Admin)
             </button>
           </div>
         )}
@@ -2260,7 +2241,12 @@ export default function GimDashboard() {
           {/* TAB: TEAM TIMESHEETS, EOS REPORTS & LIVE ATTENDANCE */}
           {/* ========================================================================= */}
           {activeTab === "timesheet" && (
-            <TeamTimesheetView />
+            <TeamTimesheetView
+              currentUserName={currentUser.name}
+              currentUserNickname={currentUser.nickname}
+              currentUserRole={currentUser.role}
+              isCoreAdmin={currentUser.isCoreAdmin}
+            />
           )}
 
           {/* ========================================================================= */}

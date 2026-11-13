@@ -224,6 +224,33 @@ const INITIAL_MEMBERS: MemberAttendance[] = [
       isDraft: false,
     },
   },
+  {
+    id: "kimberly",
+    name: "Kimberly Besa",
+    nickname: "Kimberly",
+    role: "Operations Assistant",
+    title: "Operations Assistant (Juvibolt & GIM)",
+    isOwner: false,
+    isCoreAdmin: false,
+    avatarColor: "bg-[#3D5249]",
+    initials: "KB",
+    status: "Online",
+    shiftStart: "09:00 AM",
+    shiftEnd: "06:00 PM",
+    hoursLoggedToday: 5.5,
+    breakMinutesLogged: 20,
+    breakLimitMinutes: 45,
+    currentTask: "Juvibolt Cybertech LMS verification and operations sweep",
+    assignedClient: "Juvibolt Cybertech, Grace In Motion (Internal)",
+    latestEos: {
+      id: "eos-k1",
+      completedTasks: "Verified Juvibolt student enrollment webhooks; synchronized internal ops checklist.",
+      blockers: "None",
+      prioritiesTomorrow: "Execute morning comms sweep and update LMS status.",
+      publishedAt: "Today at 05:30 PM",
+      isDraft: false,
+    },
+  },
 ];
 
 const INITIAL_AUDITS: ScheduleAuditRecord[] = [
@@ -292,8 +319,15 @@ export function TeamTimesheetView({
       m.name.toLowerCase() === (currentUserName || "").toLowerCase()
   ) || members[1]; // default Radz
 
-  // Filter members
+  // Filter members: if not Core Admin (Divine, Radz, RA), 100% strictly limited to their own personal timesheet
   const filteredMembers = members.filter((m) => {
+    if (!isCoreAdmin) {
+      return (
+        m.nickname.toLowerCase() === (currentUserNickname || "").toLowerCase() ||
+        m.name.toLowerCase() === (currentUserName || "").toLowerCase() ||
+        m.id.toLowerCase() === (currentUserNickname || "").toLowerCase()
+      );
+    }
     if (selectedFilter !== "All" && m.status !== selectedFilter) return false;
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
@@ -525,28 +559,30 @@ export function TeamTimesheetView({
       <Card>
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <CardTitle>Team Attendance & Shift Directory</CardTitle>
+            <CardTitle>{isCoreAdmin ? "Team Attendance & Shift Directory" : "My Personal Attendance & Timesheet"}</CardTitle>
             <CardDescription>
-              Live operational presence, break tracking, and daily login hour tallies
+              {isCoreAdmin ? "Live operational presence, break tracking, and daily login hour tallies" : "Personal shift status, active break tracking, and logged hours"}
             </CardDescription>
           </div>
 
-          {/* Filter Pills */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {(["All", "Online", "On Break", "Away", "Offline"] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setSelectedFilter(filter)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  selectedFilter === filter
-                    ? "bg-[#3D5249] text-white shadow-xs"
-                    : "bg-[#FBF6F3] text-[#65746C] hover:bg-[#E8E2DD]"
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
+          {/* Filter Pills (Admin only) */}
+          {isCoreAdmin && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(["All", "Online", "On Break", "Away", "Offline"] as const).map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setSelectedFilter(filter)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                    selectedFilter === filter
+                      ? "bg-[#3D5249] text-white shadow-xs"
+                      : "bg-[#FBF6F3] text-[#65746C] hover:bg-[#E8E2DD]"
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          )}
         </CardHeader>
 
         <div className="overflow-x-auto">
@@ -713,44 +749,46 @@ export function TeamTimesheetView({
       </Card>
 
       {/* 3. ADMIN SCHEDULE AUDIT FOOTPRINT TRAIL */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center space-x-2">
-            <History className="w-4 h-4 text-[#518E6A]" />
-            <CardTitle>Schedule Modification Footprint & Audit Trail</CardTitle>
-          </div>
-          <CardDescription>
-            Recorded changes to member shift schedules, hours adjustments, and overtime approvals
-          </CardDescription>
-        </CardHeader>
-
-        <div className="p-4 space-y-2.5">
-          {auditLog.map((audit) => (
-            <div
-              key={audit.id}
-              className="p-3 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
-            >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-[#242E29]">{audit.memberName}</span>
-                  <Badge variant="brand" className="text-[9px]">Shift Adjusted</Badge>
-                  <span className="text-[11px] text-[#65746C] font-mono">
-                    {audit.oldShift} $\rightarrow$ <strong>{audit.newShift}</strong>
-                  </span>
-                </div>
-                <p className="text-[11px] text-[#65746C]">
-                  Reason: <em>&ldquo;{audit.reason}&rdquo;</em>
-                </p>
-              </div>
-
-              <div className="text-right text-[10px] text-[#65746C] shrink-0">
-                <div>Adjusted by: <strong className="text-[#3D5249]">{audit.adjustedBy}</strong></div>
-                <div>{audit.timestamp}</div>
-              </div>
+      {isCoreAdmin && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <History className="w-4 h-4 text-[#518E6A]" />
+              <CardTitle>Schedule Modification Footprint & Audit Trail</CardTitle>
             </div>
-          ))}
-        </div>
-      </Card>
+            <CardDescription>
+              Recorded changes to member shift schedules, hours adjustments, and overtime approvals
+            </CardDescription>
+          </CardHeader>
+
+          <div className="p-4 space-y-2.5">
+            {auditLog.map((audit) => (
+              <div
+                key={audit.id}
+                className="p-3 rounded-xl border border-[#E8E2DD] bg-[#FBF6F3]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-[#242E29]">{audit.memberName}</span>
+                    <Badge variant="brand" className="text-[9px]">Shift Adjusted</Badge>
+                    <span className="text-[11px] text-[#65746C] font-mono">
+                      {audit.oldShift} $\rightarrow$ <strong>{audit.newShift}</strong>
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#65746C]">
+                    Reason: <em>&ldquo;{audit.reason}&rdquo;</em>
+                  </p>
+                </div>
+
+                <div className="text-right text-[10px] text-[#65746C] shrink-0">
+                  <div>Adjusted by: <strong className="text-[#3D5249]">{audit.adjustedBy}</strong></div>
+                  <div>{audit.timestamp}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* ========================================================================= */}
       {/* 4. EOS REPORT SUBMISSION MODAL */}
