@@ -23,11 +23,13 @@ export interface TeamMemberAccess {
 }
 
 const AUTHENTIC_CLIENTS = [
-  { id: "ltc", name: "Little Treasures Company", code: "LTC", description: "Paediatric Therapy & Education (AU)" },
+  { id: "wrts", name: "We Rock the Spectrum (WRTS)", code: "WRTS", description: "Sensory Gym Franchise (US)" },
+  { id: "jb", name: "Juvibolt Cybertech", code: "JB", description: "Cybersecurity EdTech & LMS (AU/Global)" },
   { id: "sn", name: "Studio Nets", code: "SN", description: "Design & Creative Systems (AU)" },
   { id: "ivc", name: "InVogue Cleans", code: "IVC", description: "Premium Cleaning Services (AU)" },
-  { id: "ao", name: "Aaron Ofosu Bootcamp", code: "AO", description: "Fitness & Training Platforms (AU)" },
-  { id: "t2t", name: "Tch2Thrive", code: "T2T", description: "Education & Teacher Development (US)" },
+  { id: "rw", name: "Risewise", code: "RW", description: "Executive Advisory & Growth (Global)" },
+  { id: "nl", name: "NoirLab", code: "NL", description: "Studio & Production Systems (US)" },
+  { id: "gim", name: "Grace In Motion (Internal)", code: "GIM", description: "Agency HQ Operations (Global)" },
 ];
 
 interface EditClientAccessModalProps {

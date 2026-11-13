@@ -117,8 +117,8 @@ export const BUILT_IN_ACCOUNTS: Record<string, any> = {
       isCoreAdmin: false,
       avatarColor: 'bg-[#518E6A]',
       title: 'Social Media Specialist',
-      clientScope: 'Little Treasures Company',
-      assigned_clients: ['Little Treasures Company'],
+      clientScope: 'We Rock the Spectrum (WRTS), Juvibolt Cybertech, Studio Nets',
+      assigned_clients: ['We Rock the Spectrum (WRTS)', 'Juvibolt Cybertech', 'Studio Nets'],
     },
   },
   'jerold.recaplaza': {

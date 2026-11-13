@@ -443,7 +443,7 @@ export default function GimDashboard() {
       isCoreAdmin: false,
       avatarColor: "bg-[#518E6A]",
       title: "Social Media Manager (SMM)",
-      clientScope: "Little Treasures Company",
+      clientScope: "We Rock the Spectrum (WRTS), Juvibolt Cybertech, Studio Nets",
     },
     zoe: {
       id: "zoe",
@@ -701,7 +701,7 @@ export default function GimDashboard() {
       username: "camille.smm",
       name: "Camille Bautista",
       role: "Social Media Specialist",
-      clientScope: "Little Treasures Company",
+      clientScope: "We Rock the Spectrum (WRTS), Juvibolt Cybertech, Studio Nets",
       invitedBy: "Radzdom Gallego",
       token: "gim_tok_7c64a511f",
       status: "Active",
@@ -936,6 +936,9 @@ export default function GimDashboard() {
     {
       title: "Organization",
       items: [
+        ...(hasAdminAccess
+          ? [{ id: "team" as NavTab, label: "Team & Client Access", icon: Users, badge: "Core 3" }]
+          : []),
         { id: "settings", label: "Profile & Settings", icon: Settings },
       ],
     },
@@ -3044,16 +3047,29 @@ export default function GimDashboard() {
         onClose={() => setEditAccessMember(null)}
         member={editAccessMember}
         onSaved={(memberId, updatedClients) => {
+          const newScope = updatedClients.length >= 6 ? "all" : updatedClients.join(", ");
           setInvitations((prev) =>
             prev.map((i) =>
               i.id === memberId
                 ? {
                     ...i,
-                    clientScope: updatedClients.length === 6 ? "all" : updatedClients.join(", "),
+                    clientScope: newScope,
                   }
                 : i
             )
           );
+          if (typeof window !== "undefined") {
+            try {
+              const saved = localStorage.getItem("gim_user_profiles");
+              const currentProfiles = saved ? JSON.parse(saved) : {};
+              Object.keys(currentProfiles).forEach((k) => {
+                if (k.toLowerCase().includes(memberId.toLowerCase()) || memberId.toLowerCase().includes(k.toLowerCase())) {
+                  currentProfiles[k] = { ...currentProfiles[k], clientScope: newScope, assigned_clients: updatedClients };
+                }
+              });
+              localStorage.setItem("gim_user_profiles", JSON.stringify(currentProfiles));
+            } catch {}
+          }
         }}
       />
 
