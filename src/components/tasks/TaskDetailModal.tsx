@@ -888,13 +888,29 @@ export function TaskDetailModal({
                 </div>
               )}
 
-              <textarea
-                rows={2}
-                placeholder="Write an acknowledgment, review note, or task comment..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="w-full p-2.5 text-xs rounded-xl border border-[#3D5249]/20 focus:outline-none focus:ring-2 focus:ring-[#518E6A]/30 focus:border-[#518E6A] bg-white text-[#242E29] resize-none"
-              />
+              <div className="relative">
+                <textarea
+                  rows={3}
+                  placeholder="Write an acknowledgment, review note, or task comment... (Press Ctrl + Enter to post)"
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                      e.preventDefault();
+                      if (!isSubmittingComment && (newComment.trim() || attachedFiles.length > 0)) {
+                        handleAddComment(e as unknown as React.FormEvent);
+                      }
+                    }
+                  }}
+                  className="w-full p-3 text-xs leading-relaxed rounded-xl border border-[#3D5249]/20 focus:outline-none focus:ring-2 focus:ring-[#518E6A]/30 focus:border-[#518E6A] bg-white text-[#242E29] resize-none shadow-xs placeholder:text-[#65746C]/60"
+                />
+                <div className="flex items-center justify-between px-1 pt-1 text-[10px] text-[#65746C]">
+                  <span className="flex items-center gap-1 font-mono">
+                    <kbd className="px-1 py-0.5 rounded bg-stone-100 border border-stone-300 text-[9px] font-sans">Ctrl</kbd> + <kbd className="px-1 py-0.5 rounded bg-stone-100 border border-stone-300 text-[9px] font-sans">Enter</kbd> to submit
+                  </span>
+                  <span>{newComment.length} characters</span>
+                </div>
+              </div>
 
               {/* Hidden File Input for Picture/Video */}
               <input

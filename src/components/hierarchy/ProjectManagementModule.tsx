@@ -9,6 +9,7 @@ import { HierarchyCalendarView } from "./views/HierarchyCalendarView";
 import { HierarchyGanttView } from "./views/HierarchyGanttView";
 import { HierarchyTimelineView } from "./views/HierarchyTimelineView";
 import { HierarchyMyTasksView } from "./views/HierarchyMyTasksView";
+import { HierarchyKnowledgeHubView } from "./views/HierarchyKnowledgeHubView";
 import {
   Space,
   Folder,
@@ -259,7 +260,9 @@ export function ProjectManagementModule({ currentUser }: ProjectManagementModule
         />
 
         {/* View Mode Rendering */}
-        {loadingTasks ? (
+        {viewMode === "knowledge" ? (
+          <HierarchyKnowledgeHubView />
+        ) : loadingTasks ? (
           <div className="flex-1 flex items-center justify-center text-xs text-[#65746C] animate-pulse">
             Loading tasks & deliverables...
           </div>

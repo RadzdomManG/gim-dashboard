@@ -47,7 +47,9 @@ export function HierarchyListView({
     setExpandedSubtasks((prev) => ({ ...prev, [taskId]: !prev[taskId] }));
   };
 
-  // Group root tasks by status
+  // Group root tasks by status & sort chronologically by date
+  const [dateSortAsc, setDateSortAsc] = useState<boolean>(true);
+
   const groupedTasks = useMemo(() => {
     const map: Record<string, HierarchicalTask[]> = {};
     statusConfigs.forEach((sc) => {
@@ -60,8 +62,20 @@ export function HierarchyListView({
       map[s].push(t);
     });
 
+    // Sort tasks in each status group chronologically by due_date
+    Object.keys(map).forEach((key) => {
+      map[key].sort((a, b) => {
+        if (!a.due_date && !b.due_date) return 0;
+        if (!a.due_date) return 1; // null dates go to bottom
+        if (!b.due_date) return -1;
+        const timeA = new Date(a.due_date).getTime();
+        const timeB = new Date(b.due_date).getTime();
+        return dateSortAsc ? timeA - timeB : timeB - timeA;
+      });
+    });
+
     return map;
-  }, [tasks, statusConfigs]);
+  }, [tasks, statusConfigs, dateSortAsc]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
@@ -78,6 +92,24 @@ export function HierarchyListView({
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4 font-sans bg-[#FBF6F3]/40">
+      {/* Quick Sort Controls Bar */}
+      <div className="flex items-center justify-between px-1 text-xs text-[#65746C]">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-[#242E29]">Chronological Order:</span>
+          <button
+            type="button"
+            onClick={() => setDateSortAsc(!dateSortAsc)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#E8E2DD] text-[#3D5249] hover:bg-stone-50 font-semibold shadow-2xs transition-colors"
+          >
+            <Calendar className="w-3.5 h-3.5 text-[#518E6A]" />
+            <span>{dateSortAsc ? "Due Date (Earliest First ↑)" : "Due Date (Latest First ↓)"}</span>
+          </button>
+        </div>
+        <span className="text-[11px] text-[#65746C]">
+          Showing {tasks.length} total tasks across {statusConfigs.length} statuses
+        </span>
+      </div>
+
       {statusConfigs.map((statusConfig) => {
         const statusKey = statusConfig.name.toLowerCase();
         const statusTasks = groupedTasks[statusKey] || [];

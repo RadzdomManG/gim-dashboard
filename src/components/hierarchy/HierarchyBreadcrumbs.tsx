@@ -34,6 +34,7 @@ export function HierarchyBreadcrumbs({
 }: HierarchyBreadcrumbsProps) {
   const views: { id: PMViewMode; label: string }[] = [
     { id: "list", label: "List" },
+    { id: "knowledge", label: "KNOWLEDGE HUB 🔒" },
     { id: "board", label: "Board" },
     { id: "calendar", label: "Calendar" },
     { id: "gantt", label: "Gantt" },

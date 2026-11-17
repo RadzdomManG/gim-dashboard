@@ -208,6 +208,7 @@ export function HierarchySidebar({
                   {(space.folders || []).map((folder) => {
                     const isFolderExpanded = !!expandedFolders[folder.id];
                     const isFolderSelected = selectedFolderId === folder.id && !selectedListId;
+                    const isFolderPaused = folder.name.toUpperCase().includes("PAUSE") || folder.name.toUpperCase().includes("ARCHIVE");
 
                     return (
                       <div key={folder.id} className="space-y-0.5">
@@ -215,8 +216,12 @@ export function HierarchySidebar({
                           onClick={() => onSelectFolder(folder, space)}
                           className={`group flex items-center justify-between px-2 py-1 rounded-md text-xs cursor-pointer transition-colors ${
                             isFolderSelected
-                              ? "bg-white/15 text-white font-semibold"
-                              : "text-white/80 hover:bg-white/10 hover:text-white"
+                              ? isFolderPaused
+                                ? "bg-amber-500/25 text-amber-100 font-semibold border border-amber-400/50"
+                                : "bg-white/15 text-white font-semibold"
+                              : isFolderPaused
+                                ? "text-amber-200/80 hover:bg-amber-500/10 hover:text-amber-100"
+                                : "text-white/80 hover:bg-white/10 hover:text-white"
                           }`}
                         >
                           <div className="flex items-center space-x-1.5 min-w-0">
@@ -232,9 +237,9 @@ export function HierarchySidebar({
                               )}
                             </button>
                             {isFolderExpanded ? (
-                              <FolderOpen className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                              <FolderOpen className={`w-3.5 h-3.5 shrink-0 ${isFolderPaused ? "text-amber-400" : "text-amber-300"}`} />
                             ) : (
-                              <FolderIcon className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                              <FolderIcon className={`w-3.5 h-3.5 shrink-0 ${isFolderPaused ? "text-amber-400" : "text-amber-300"}`} />
                             )}
                             <span className="truncate text-[11px]">{folder.name}</span>
                           </div>
@@ -259,6 +264,8 @@ export function HierarchySidebar({
                           <div className="pl-4 space-y-0.5 border-l border-white/10 ml-2.5">
                             {(folder.lists || []).map((list) => {
                               const isListSelected = selectedListId === list.id;
+                              const isListPaused = isFolderPaused || list.name.toLowerCase().includes("little treasures") || list.name.toLowerCase().includes("pause") || list.name.toLowerCase().includes("archive");
+                              const dotColor = isListPaused ? "#F59E0B" : (list.color || "#00b884");
 
                               return (
                                 <div
@@ -266,19 +273,23 @@ export function HierarchySidebar({
                                   onClick={() => onSelectList(list, space, folder)}
                                   className={`flex items-center justify-between px-2 py-1 rounded-md text-[11px] cursor-pointer transition-all ${
                                     isListSelected
-                                      ? "bg-[#518E6A] text-white font-bold shadow-xs"
-                                      : "text-white/70 hover:bg-white/10 hover:text-white"
+                                      ? isListPaused
+                                        ? "bg-amber-500/30 text-amber-100 font-bold border border-amber-400/60 shadow-xs"
+                                        : "bg-[#518E6A] text-white font-bold shadow-xs"
+                                      : isListPaused
+                                        ? "text-amber-200/75 hover:bg-amber-500/10 hover:text-amber-100"
+                                        : "text-white/70 hover:bg-white/10 hover:text-white"
                                   }`}
                                 >
                                   <div className="flex items-center space-x-1.5 min-w-0">
                                     <span
                                       className="w-1.5 h-1.5 rounded-full shrink-0"
-                                      style={{ backgroundColor: list.color || "#00b884" }}
+                                      style={{ backgroundColor: dotColor }}
                                     />
                                     <span className="truncate">{list.name}</span>
                                   </div>
                                   {list.tasks_count !== undefined && (
-                                    <span className="text-[9px] font-mono text-white/60 ml-1">
+                                    <span className={`text-[9px] font-mono ml-1 ${isListPaused ? "text-amber-300/80" : "text-white/60"}`}>
                                       {list.tasks_count}
                                     </span>
                                   )}
@@ -294,6 +305,8 @@ export function HierarchySidebar({
                   {/* Standalone Lists directly in Space */}
                   {(space.lists || []).map((list) => {
                     const isListSelected = selectedListId === list.id;
+                    const isListPaused = list.name.toLowerCase().includes("little treasures") || list.name.toLowerCase().includes("pause") || list.name.toLowerCase().includes("archive");
+                    const dotColor = isListPaused ? "#F59E0B" : (list.color || "#518E6A");
 
                     return (
                       <div
@@ -301,19 +314,23 @@ export function HierarchySidebar({
                         onClick={() => onSelectList(list, space)}
                         className={`flex items-center justify-between px-2 py-1 rounded-md text-[11px] cursor-pointer transition-all ${
                           isListSelected
-                            ? "bg-[#518E6A] text-white font-bold shadow-xs"
-                            : "text-white/70 hover:bg-white/10 hover:text-white"
+                            ? isListPaused
+                              ? "bg-amber-500/30 text-amber-100 font-bold border border-amber-400/60 shadow-xs"
+                              : "bg-[#518E6A] text-white font-bold shadow-xs"
+                            : isListPaused
+                              ? "text-amber-200/75 hover:bg-amber-500/10 hover:text-amber-100"
+                              : "text-white/70 hover:bg-white/10 hover:text-white"
                         }`}
                       >
                         <div className="flex items-center space-x-1.5 min-w-0">
                           <span
                             className="w-1.5 h-1.5 rounded-full shrink-0"
-                            style={{ backgroundColor: list.color || "#518E6A" }}
+                            style={{ backgroundColor: dotColor }}
                           />
                           <span className="truncate">{list.name}</span>
                         </div>
                         {list.tasks_count !== undefined && (
-                          <span className="text-[9px] font-mono text-white/60 ml-1">
+                          <span className={`text-[9px] font-mono ml-1 ${isListPaused ? "text-amber-300/80" : "text-white/60"}`}>
                             {list.tasks_count}
                           </span>
                         )}

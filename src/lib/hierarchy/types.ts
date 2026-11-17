@@ -132,4 +132,4 @@ export interface HierarchicalTask {
   updated_at?: string;
 }
 
-export type PMViewMode = "list" | "board" | "calendar" | "gantt" | "timeline" | "my-tasks";
+export type PMViewMode = "list" | "board" | "calendar" | "gantt" | "timeline" | "my-tasks" | "knowledge";
