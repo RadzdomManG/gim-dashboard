@@ -622,6 +622,16 @@ export default function GimDashboard() {
           // ignore
         }
       }
+      fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editForm.name,
+          nickname: editForm.nickname,
+          title: editForm.title,
+          avatarUrl: editForm.avatarUrl,
+        }),
+      }).catch(() => {});
     }
     setIsEditProfileOpen(false);
   };
