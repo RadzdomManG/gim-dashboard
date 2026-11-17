@@ -1,103 +1,92 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { HierarchicalTask } from "@/lib/hierarchy/types";
 
 export const dynamic = "force-dynamic";
 
+// Read authentic ClickUp tasks dataset
+function getMasterClickUpTasks(): HierarchicalTask[] {
+  try {
+    const masterPath = path.join(process.cwd(), "src", "lib", "hierarchy", "clickup_tasks_master.json");
+    if (fs.existsSync(masterPath)) {
+      const content = fs.readFileSync(masterPath, "utf-8");
+      return JSON.parse(content);
+    }
+  } catch (err) {
+    console.warn("Could not read clickup_tasks_master.json:", err);
+  }
+  return [];
+}
+
 export async function GET(req: NextRequest) {
   try {
     const listId = req.nextUrl.searchParams.get("list_id");
     const spaceId = req.nextUrl.searchParams.get("space_id");
-    const assigneeId = req.nextUrl.searchParams.get("assignee_id");
+    const folderId = req.nextUrl.searchParams.get("folder_id");
+    const assigneeParam = (req.nextUrl.searchParams.get("assignee_id") || "").toLowerCase();
     const myTasks = req.nextUrl.searchParams.get("my_tasks") === "true";
-    const statusParam = req.nextUrl.searchParams.get("status");
+    const statusParam = (req.nextUrl.searchParams.get("status") || "").toLowerCase();
+    const searchParam = (req.nextUrl.searchParams.get("search") || "").toLowerCase();
 
-    const supabase = createAdminClient();
+    // 1. Load authentic ClickUp tasks
+    let allMasterTasks = getMasterClickUpTasks();
 
-    // 1. Check if tasks table exists and query
-    let query = supabase
-      .from("tasks")
-      .select(`
-        id,
-        list_id,
-        parent_task_id,
-        title,
-        description,
-        status,
-        priority,
-        creator_id,
-        start_date,
-        due_date,
-        time_estimate_minutes,
-        time_spent_minutes,
-        tags,
-        custom_fields,
-        position,
-        created_at,
-        updated_at,
-        task_assignees (
-          id,
-          user_id
-        ),
-        checklists (
-          id,
-          name,
-          position,
-          checklist_items (
-            id,
-            title,
-            is_completed,
-            assignee_id,
-            due_date,
-            position,
-            completed_at
-          )
-        )
-      `)
-      .order("position", { ascending: true });
+    let filtered = allMasterTasks;
 
-    if (listId) {
-      query = query.eq("list_id", listId);
-    }
-    if (statusParam) {
-      query = query.eq("status", statusParam);
-    }
-
-    const { data: dbTasks, error } = await query;
-
-    if (!error && dbTasks && dbTasks.length > 0) {
-      // Build parent-subtask tree
-      const taskMap = new Map<string, any>();
-      const rootTasks: HierarchicalTask[] = [];
-
-      dbTasks.forEach((t: any) => {
-        taskMap.set(t.id, {
-          ...t,
-          subtasks: [],
-          subtasks_count: 0,
-          subtasks_completed_count: 0,
-          checklists: t.checklists || [],
+    // Filter by My Tasks
+    if (myTasks) {
+      filtered = filtered.filter((t) => {
+        if (!assigneeParam) return true;
+        return (t.assignees || []).some((a) => {
+          const name = (a.name || "").toLowerCase();
+          const nick = (a.nickname || "").toLowerCase();
+          return (
+            name.includes(assigneeParam) ||
+            assigneeParam.includes(name) ||
+            nick.includes(assigneeParam) ||
+            (assigneeParam.includes("radz") && (name.includes("radz") || nick.includes("radz"))) ||
+            (assigneeParam.includes("divine") && (name.includes("divine") || nick.includes("divine")))
+          );
         });
       });
-
-      dbTasks.forEach((t: any) => {
-        const item = taskMap.get(t.id);
-        if (t.parent_task_id && taskMap.has(t.parent_task_id)) {
-          const parent = taskMap.get(t.parent_task_id);
-          parent.subtasks.push(item);
-          parent.subtasks_count += 1;
-          if (item.status.toLowerCase() === "completed" || item.status.toLowerCase() === "closed") {
-            parent.subtasks_completed_count += 1;
-          }
-        } else {
-          rootTasks.push(item);
-        }
-      });
-
-      return NextResponse.json({ success: true, tasks: rootTasks, source: "database" });
+    } else if (listId) {
+      filtered = filtered.filter(
+        (t) => t.list_id === listId || (t.list_name && t.list_name.toLowerCase().includes(listId.replace("list-", "").replace(/-/g, " ")))
+      );
+    } else if (folderId) {
+      filtered = filtered.filter((t) => t.folder_id === folderId);
+    } else if (spaceId) {
+      filtered = filtered.filter((t) => t.space_id === spaceId);
     }
 
-    // 2. Fallback: Query existing client_tasks to maintain 100% backward compatibility
+    // Status filter
+    if (statusParam) {
+      filtered = filtered.filter((t) => (t.status || "").toLowerCase() === statusParam);
+    }
+
+    // Search filter
+    if (searchParam) {
+      filtered = filtered.filter(
+        (t) =>
+          (t.title || "").toLowerCase().includes(searchParam) ||
+          (t.description || "").toLowerCase().includes(searchParam)
+      );
+    }
+
+    // If master tasks exist, return them!
+    if (filtered.length > 0) {
+      return NextResponse.json({
+        success: true,
+        tasks: filtered,
+        total: filtered.length,
+        source: "authentic_clickup_master",
+      });
+    }
+
+    // Fallback: Query Supabase
+    const supabase = createAdminClient();
     const { data: clientTasks } = await supabase
       .from("client_tasks")
       .select("*")
@@ -105,7 +94,7 @@ export async function GET(req: NextRequest) {
 
     const mappedTasks: HierarchicalTask[] = (clientTasks || []).map((ct: any) => ({
       id: ct.id,
-      list_id: listId || "list-juvibolt",
+      list_id: listId || "list-grace-in-motion",
       title: ct.title,
       description: ct.description,
       status: ct.status,
