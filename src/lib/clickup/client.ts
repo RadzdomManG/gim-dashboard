@@ -58,6 +58,11 @@ export const CLICKUP_LISTS: { id: string; client: string; listName: string }[] =
   { id: '901616174910', client: 'Studio Nets', listName: 'Studio Nets' },
   { id: '901614119824', client: 'Risewise', listName: 'Risewise' },
   { id: '901607479883', client: 'Grace In Motion (Internal)', listName: 'Grace In Motion' },
+  { id: '1301240000006600', client: 'Grace In Motion (Internal)', listName: 'Phase 1: Foundation & Brand Architecture' },
+  { id: '1301240000006601', client: 'Grace In Motion (Internal)', listName: 'Phase 2: ClickUp REA 1:1 & RBAC Isolation' },
+  { id: '1301240000006602', client: 'Grace In Motion (Internal)', listName: 'Phase 3: Client Portfolios & Knowledge Hub' },
+  { id: '1301240000006603', client: 'Grace In Motion (Internal)', listName: 'Phase 4: Real-time Messaging & Active Sprints' },
+  { id: '1301240000006604', client: 'Grace In Motion (Internal)', listName: 'Phase 5: Grok AI, Slack & Automation Roadmap' },
   { id: '901605140683', client: 'Origines Biz', listName: 'Origines Biz' },
 ];
 
@@ -82,7 +87,7 @@ export function detectClient(raw: RawClickUpTask): string {
   if (listId === '901616453524' || listName === 'noirlab') return 'NoirLab';
   if (listId === '901616174910' || listName === 'studio nets') return 'Studio Nets';
   if (listId === '901614119824' || listName === 'risewise') return 'Risewise';
-  if (listId === '901607479883' || listName === 'grace in motion') return 'Grace In Motion (Internal)';
+  if (listId === '901607479883' || listId.startsWith('130124000000660') || listName === 'grace in motion' || listName.startsWith('phase ')) return 'Grace In Motion (Internal)';
   if (listId === '901605140683' || listName === 'origines biz') return 'Origines Biz';
 
   return raw.list?.name || 'Grace In Motion (Internal)';
