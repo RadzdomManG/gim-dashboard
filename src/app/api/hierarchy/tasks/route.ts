@@ -29,11 +29,48 @@ export async function GET(req: NextRequest) {
     const myTasks = req.nextUrl.searchParams.get("my_tasks") === "true";
     const statusParam = (req.nextUrl.searchParams.get("status") || "").toLowerCase();
     const searchParam = (req.nextUrl.searchParams.get("search") || "").toLowerCase();
+    const clientScopeParam = req.nextUrl.searchParams.get("client_scope");
+    const isCoreAdminParam = req.nextUrl.searchParams.get("is_core_admin") === "true";
 
     // 1. Load authentic ClickUp tasks
     let allMasterTasks = getMasterClickUpTasks();
 
     let filtered = allMasterTasks;
+
+    // Strict Client Isolation for non-admin specialists (if client_scope is provided)
+    if (!isCoreAdminParam && clientScopeParam && clientScopeParam !== "all" && !myTasks) {
+      const scopes = clientScopeParam.split(",").map((s) => s.trim().toLowerCase());
+      filtered = filtered.filter((t) => {
+        // Always include tasks assigned to the current user
+        if (
+          assigneeParam &&
+          (t.assignees || []).some(
+            (a) =>
+              (a.name || "").toLowerCase().includes(assigneeParam) ||
+              (a.nickname || "").toLowerCase().includes(assigneeParam) ||
+              assigneeParam.includes((a.name || "").toLowerCase())
+          )
+        ) {
+          return true;
+        }
+
+        const tFolder = (t.folder_name || "").toLowerCase();
+        const tList = (t.list_name || "").toLowerCase();
+        const tSpace = (t.space_name || "").toLowerCase();
+
+        return scopes.some((sc) => {
+          if (sc.includes("spectrum") && (tFolder.includes("spectrum") || tList.includes("spectrum") || tList.includes("wrts"))) return true;
+          if (sc.includes("juvibolt") && (tFolder.includes("juvibolt") || tList.includes("juvibolt") || tList.includes("ofosu"))) return true;
+          if (sc.includes("risewise") && (tFolder.includes("risewise") || tList.includes("risewise"))) return true;
+          if (sc.includes("noirlab") && (tFolder.includes("noirlab") || tList.includes("noirlab"))) return true;
+          if (sc.includes("studio net") && (tFolder.includes("studio net") || tList.includes("studio net"))) return true;
+          if (sc.includes("invogue") && (tFolder.includes("invogue") || tList.includes("invogue"))) return true;
+          if (sc.includes("tch2thrive") && (tFolder.includes("tch2thrive") || tList.includes("tch2thrive"))) return true;
+          if (sc.includes("motion") || sc.includes("internal")) return tSpace.includes("operations") || tFolder.includes("gim") || tList.includes("grace");
+          return tFolder.includes(sc) || tList.includes(sc);
+        });
+      });
+    }
 
     // Filter by My Tasks
     if (myTasks) {

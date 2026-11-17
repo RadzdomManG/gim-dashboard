@@ -309,7 +309,7 @@ export default function GimDashboard() {
       nickname: "Divine",
       email: "divine@graceinmotion.agency",
       role: "Owner",
-      isCoreAdmin: false,
+      isCoreAdmin: true,
       avatarColor: "bg-[#466B53]",
       title: "Founder & Strategy Lead",
       clientScope: "all",
@@ -2168,6 +2168,7 @@ export default function GimDashboard() {
               isCoreAdmin={currentUser.isCoreAdmin}
               initialClientId={selectedPortfolioClientId}
               initialSubTab={selectedPortfolioSubTab}
+              onClientChange={(id) => setSelectedPortfolioClientId(id)}
               onSelectTasks={(clientName) => {
                 setTaskSearchQuery(clientName);
                 setActiveTab("tasks");

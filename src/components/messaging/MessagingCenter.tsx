@@ -116,13 +116,13 @@ const INITIAL_CHANNELS: ChatChannel[] = [
     memberIds: ["divine", "radz", "bj", "aldwin", "erwin"],
   },
   {
-    id: "juvibolt-ops",
-    name: "juvibolt-cybertech",
+    id: "little-treasures-ops",
+    name: "little-treasures-clinic",
     type: "channel",
-    description: "GHL Sub-Account mg57RFEKUm6nvnSadv2D, LMS course sync, and WooCommerce.",
-    isPrivate: false,
-    membersCount: 4,
-    memberIds: ["divine", "radz", "aaron"],
+    description: "Paediatric therapy clinic, Website v2, GHL Sub-Account JCy1QAdpq5fEupDv1EXb (Paused - Read Only).",
+    isPrivate: true,
+    membersCount: 3,
+    memberIds: ["divine", "radz", "ra"],
   },
   {
     id: "risewise-ops",
@@ -625,15 +625,19 @@ export function MessagingCenter({
         if (isMounted && data.messages && Array.isArray(data.messages)) {
           const mapped: ChatMessage[] = data.messages.map((row: any) => ({
             id: row.id,
-            channelId: row.channel_id,
-            senderId: row.sender_id,
-            senderName: row.sender_name,
-            senderNickname: row.sender_nickname || row.sender_name?.split(" ")[0] || "User",
-            senderAvatar: row.sender_avatar || "#3D5249",
-            senderRole: row.sender_role || "team_member",
-            isCoreAdmin: !!row.is_core_admin,
+            channelId: row.channelId || row.channel_id || activeChannelId,
+            senderId: row.senderId || row.sender_id || "user",
+            senderName: row.senderName || row.sender_name || "Team Member",
+            senderNickname: row.senderNickname || row.sender_nickname || row.senderName?.split(" ")[0] || "User",
+            senderAvatar: row.senderAvatar || row.sender_avatar || "#3D5249",
+            senderRole: row.senderRole || row.sender_role || "Specialist",
+            isCoreAdmin: !!(row.isCoreAdmin ?? row.is_core_admin),
             content: row.content || "",
-            timestamp: new Date(row.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            timestamp:
+              row.timestamp ||
+              (row.created_at
+                ? new Date(row.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                : "Just now"),
             attachments: row.attachments || [],
             reactions: row.reactions || [],
           }));
@@ -1046,12 +1050,27 @@ export function MessagingCenter({
       return true;
     }
 
-    // 2. Core Admins have universal visibility to oversee all spaces
+    // 2. Core Admins have universal visibility across all client channels
     if (isCoreAdmin) {
       return true;
     }
 
-    // 3. Client Scope Access: If channel belongs to member's assigned client
+    // 3. Direct Messages: only visible if user is a participant
+    if (c.type === "dm") {
+      const myKeys = [
+        currentUserId.toLowerCase(),
+        currentUserNickname.toLowerCase(),
+        currentUserName.toLowerCase().split(" ")[0],
+      ];
+      return (c.memberIds || []).some((mId) => myKeys.includes(mId.toLowerCase()));
+    }
+
+    // 4. Restricted leadership channel
+    if (c.id === "leadership") {
+      return isCoreAdmin;
+    }
+
+    // 5. Client Scope Access: If channel belongs to member's assigned client
     if (clientScope && clientScope !== "all") {
       const scopeList = clientScope.split(",").map((s) => s.trim().toLowerCase());
       const channelName = c.name.toLowerCase();
@@ -1064,12 +1083,13 @@ export function MessagingCenter({
         if (sc.includes("studio net") && (channelName.includes("studio-net") || channelId.includes("studio-net"))) return true;
         if (sc.includes("invogue") && (channelName.includes("invogue") || channelId.includes("invogue"))) return true;
         if (sc.includes("tch2thrive") && (channelName.includes("tch2thrive") || channelId.includes("tch2thrive"))) return true;
+        if (sc.includes("little treasure") && (channelName.includes("little-treasure") || channelId.includes("little-treasure"))) return true;
         return false;
       });
       if (isClientChannel) return true;
     }
 
-    // 4. Member ID / Nickname check
+    // 6. Explicit Member ID / Nickname check
     if (c.memberIds && c.memberIds.length > 0) {
       const myKeys = [
         currentUserId.toLowerCase(),
@@ -1079,8 +1099,16 @@ export function MessagingCenter({
       return c.memberIds.some((mId) => myKeys.includes(mId.toLowerCase()));
     }
 
-    return !c.isPrivate;
+    // Strict client isolation: Non-admin members cannot see other clients' channels
+    return false;
   });
+
+  // Keep active channel in sync with filtered list for non-admin specialists
+  useEffect(() => {
+    if (filteredChannels.length > 0 && !filteredChannels.some((c) => c.id === activeChannelId)) {
+      setActiveChannelId(filteredChannels[0].id);
+    }
+  }, [filteredChannels, activeChannelId]);
 
   return (
     <div className="space-y-4">

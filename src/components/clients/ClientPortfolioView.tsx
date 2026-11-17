@@ -310,6 +310,7 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
 
 interface ClientPortfolioViewProps {
   onSelectTasks?: (clientName: string) => void;
+  onClientChange?: (clientId: string) => void;
   clientScope?: string | string[];
   currentUserName?: string;
   currentUserNickname?: string;
@@ -320,6 +321,7 @@ interface ClientPortfolioViewProps {
 
 export function ClientPortfolioView({
   onSelectTasks,
+  onClientChange,
   clientScope = "all",
   currentUserName = "Radzdom Gallego",
   currentUserNickname = "Radz",
@@ -358,19 +360,34 @@ export function ClientPortfolioView({
   });
 
   const [selectedClientId, setSelectedClientId] = useState<string>(
-    initialClientId || (isCoreAdmin ? "all" : (accessibleClients[0]?.id || "juvibolt-cybertech"))
+    initialClientId || (isCoreAdmin ? "all" : (accessibleClients[0]?.id || "we-rock-the-spectrum"))
   );
   const [activeSubTab, setActiveSubTab] = useState<"calendar" | "board" | "dossier" | "knowledge">(
     initialSubTab || "calendar"
   );
 
+  const handleSelectClient = (id: string) => {
+    setSelectedClientId(id);
+    onClientChange?.(id);
+  };
+
+  // Sync when initialClientId explicitly changes from parent navigation
   useEffect(() => {
-    if (initialClientId) {
-      setSelectedClientId(initialClientId);
-    } else if (!isCoreAdmin && selectedClientId === "all" && accessibleClients.length > 0) {
-      setSelectedClientId(accessibleClients[0].id);
+    if (initialClientId && initialClientId !== selectedClientId) {
+      if (isCoreAdmin || accessibleClients.some((c) => c.id === initialClientId)) {
+        setSelectedClientId(initialClientId);
+      }
     }
-  }, [initialClientId, isCoreAdmin, accessibleClients, selectedClientId]);
+  }, [initialClientId, isCoreAdmin]);
+
+  // Ensure non-admins are never stuck on 'all'
+  useEffect(() => {
+    if (!isCoreAdmin && selectedClientId === "all" && accessibleClients.length > 0) {
+      const fallback = accessibleClients[0].id;
+      setSelectedClientId(fallback);
+      onClientChange?.(fallback);
+    }
+  }, [isCoreAdmin, accessibleClients, selectedClientId]);
 
   useEffect(() => {
     if (initialSubTab) {
@@ -562,7 +579,7 @@ export function ClientPortfolioView({
           {/* ALL CLIENTS PILL (Admins Only) */}
           {isCoreAdmin && (
             <button
-              onClick={() => setSelectedClientId("all")}
+              onClick={() => handleSelectClient("all")}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 border ${
                 isAllClients
                   ? "bg-[#3D5249] text-white border-[#3D5249] shadow-xs"
@@ -586,7 +603,7 @@ export function ClientPortfolioView({
             return (
               <button
                 key={client.id}
-                onClick={() => setSelectedClientId(client.id)}
+                onClick={() => handleSelectClient(client.id)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 border ${
                   isSelected
                     ? "bg-[#3D5249] text-white border-[#3D5249] shadow-xs"

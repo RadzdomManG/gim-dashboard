@@ -27,6 +27,7 @@ interface ProjectManagementModuleProps {
     nickname: string;
     role: string;
     isCoreAdmin: boolean;
+    clientScope?: string;
   };
 }
 
@@ -51,6 +52,76 @@ export function ProjectManagementModule({ currentUser }: ProjectManagementModule
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState<boolean>(false);
   const [createTaskDefaultStatus, setCreateTaskDefaultStatus] = useState<string>("To Do");
 
+  // Filter hierarchy for non-admin specialists according to clientScope
+  const filteredSpaces = React.useMemo(() => {
+    if (currentUser.isCoreAdmin || !currentUser.clientScope || currentUser.clientScope === "all") {
+      return spaces;
+    }
+
+    const scopes = currentUser.clientScope.split(",").map((s) => s.trim().toLowerCase());
+
+    return spaces
+      .map((space) => {
+        if (space.id === "space-client-mgmt" || space.slug === "client-management") {
+          const matchedFolders = (space.folders || [])
+            .map((folder) => {
+              const matchedLists = (folder.lists || []).filter((l) => {
+                const lName = l.name.toLowerCase();
+                return scopes.some((sc) => {
+                  if (sc.includes("spectrum") && (lName.includes("spectrum") || lName.includes("wrts"))) return true;
+                  if (sc.includes("juvibolt") && (lName.includes("juvibolt") || lName.includes("ofosu"))) return true;
+                  if (sc.includes("risewise") && lName.includes("risewise")) return true;
+                  if (sc.includes("noirlab") && lName.includes("noirlab")) return true;
+                  if (sc.includes("studio net") && lName.includes("studio net")) return true;
+                  if (sc.includes("invogue") && lName.includes("invogue")) return true;
+                  if (sc.includes("tch2thrive") && lName.includes("tch2thrive")) return true;
+                  if (sc.includes("motion") || sc.includes("internal")) return lName.includes("grace in motion");
+                  return lName.includes(sc);
+                });
+              });
+              return { ...folder, lists: matchedLists };
+            })
+            .filter((f) => (f.lists && f.lists.length > 0) || scopes.some((sc) => f.name.toLowerCase().includes(sc)));
+
+          const matchedDirectLists = (space.lists || []).filter((l) => {
+            const lName = l.name.toLowerCase();
+            return scopes.some((sc) => lName.includes(sc));
+          });
+
+          return {
+            ...space,
+            folders: matchedFolders,
+            lists: matchedDirectLists,
+          };
+        }
+
+        if (space.id === "space-ops" || space.slug === "operations") {
+          const hasOpsScope = scopes.some((sc) => sc.includes("motion") || sc.includes("internal") || sc.includes("operations"));
+          if (!hasOpsScope) {
+            return {
+              ...space,
+              folders: [],
+              lists: [],
+            };
+          }
+        }
+
+        return space;
+      })
+      .filter((s) => (s.folders && s.folders.length > 0) || (s.lists && s.lists.length > 0));
+  }, [spaces, currentUser.isCoreAdmin, currentUser.clientScope]);
+
+  // Ensure selected items align with filtered hierarchy
+  useEffect(() => {
+    if (filteredSpaces.length > 0 && !filteredSpaces.some((s) => s.id === selectedSpace.id)) {
+      const firstSpace = filteredSpaces[0];
+      setSelectedSpace(firstSpace);
+      const firstFolder = firstSpace.folders?.[0] || null;
+      setSelectedFolder(firstFolder);
+      setSelectedList(firstFolder?.lists?.[0] || firstSpace.lists?.[0] || null);
+    }
+  }, [filteredSpaces, selectedSpace.id]);
+
   // Fetch Hierarchy Structure from API
   useEffect(() => {
     async function loadHierarchy() {
@@ -74,13 +145,16 @@ export function ProjectManagementModule({ currentUser }: ProjectManagementModule
     async function loadTasks() {
       setLoadingTasks(true);
       try {
-        let url = "/api/hierarchy/tasks";
+        let url = `/api/hierarchy/tasks?is_core_admin=${currentUser.isCoreAdmin}&client_scope=${encodeURIComponent(
+          currentUser.clientScope || "all"
+        )}`;
+
         if (isMyTasksActive) {
-          url += `?my_tasks=true&assignee_id=${encodeURIComponent(currentUser.name)}`;
+          url += `&my_tasks=true&assignee_id=${encodeURIComponent(currentUser.name)}`;
         } else if (selectedList) {
-          url += `?list_id=${encodeURIComponent(selectedList.id)}`;
+          url += `&list_id=${encodeURIComponent(selectedList.id)}`;
         } else if (selectedSpace) {
-          url += `?space_id=${encodeURIComponent(selectedSpace.id)}`;
+          url += `&space_id=${encodeURIComponent(selectedSpace.id)}`;
         }
 
         const res = await fetch(url);
@@ -97,7 +171,7 @@ export function ProjectManagementModule({ currentUser }: ProjectManagementModule
       }
     }
     loadTasks();
-  }, [selectedSpace, selectedFolder, selectedList, isMyTasksActive, currentUser.name]);
+  }, [selectedSpace, selectedFolder, selectedList, isMyTasksActive, currentUser.name, currentUser.isCoreAdmin, currentUser.clientScope]);
 
   // Handlers for Navigation
   const handleSelectSpace = (space: Space) => {
@@ -147,7 +221,7 @@ export function ProjectManagementModule({ currentUser }: ProjectManagementModule
     <div className="flex-1 flex overflow-hidden bg-white">
       {/* 1. ClickUp Collapsible Hierarchy Sidebar */}
       <HierarchySidebar
-        spaces={spaces}
+        spaces={filteredSpaces}
         selectedSpaceId={selectedSpace?.id}
         selectedFolderId={selectedFolder?.id}
         selectedListId={selectedList?.id}
