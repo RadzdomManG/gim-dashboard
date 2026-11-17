@@ -1,0 +1,845 @@
+[
+  {
+    "id": "space-90162348432",
+    "workspace_id": "ws-gim",
+    "name": "GIM Operations",
+    "slug": "gim-operations",
+    "icon": "Workflow",
+    "color": "#3D5249",
+    "is_private": false,
+    "position": 1,
+    "folders": [
+      {
+        "id": "folder-90163184406",
+        "space_id": "space-90162348432",
+        "name": "Active Clients",
+        "color": "#466B53",
+        "position": 1,
+        "is_archived": false,
+        "lists": [
+          {
+            "id": "901607479883",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163184406",
+            "name": "Grace In Motion",
+            "color": "#518E6A",
+            "position": 1,
+            "is_archived": false,
+            "tasks_count": 387
+          },
+          {
+            "id": "1301240000005206",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163184406",
+            "name": "Juvibolt Cybertech",
+            "color": "#518E6A",
+            "position": 2,
+            "is_archived": false,
+            "tasks_count": 227
+          },
+          {
+            "id": "1301240000002387",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163184406",
+            "name": "We Rock the Spectrum",
+            "color": "#518E6A",
+            "position": 3,
+            "is_archived": false,
+            "tasks_count": 205
+          },
+          {
+            "id": "901617666653",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163184406",
+            "name": "InVogue Cleans",
+            "color": "#518E6A",
+            "position": 4,
+            "is_archived": false,
+            "tasks_count": 195
+          },
+          {
+            "id": "901616453524",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163184406",
+            "name": "NoirLab",
+            "color": "#518E6A",
+            "position": 5,
+            "is_archived": false,
+            "tasks_count": 146
+          },
+          {
+            "id": "901614119824",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163184406",
+            "name": "Risewise",
+            "color": "#518E6A",
+            "position": 6,
+            "is_archived": false,
+            "tasks_count": 2093
+          },
+          {
+            "id": "901605229588",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163184406",
+            "name": "Template",
+            "color": "#518E6A",
+            "position": 7,
+            "is_archived": false,
+            "tasks_count": 50
+          }
+        ]
+      },
+      {
+        "id": "folder-90163643216",
+        "space_id": "space-90162348432",
+        "name": "PAUSE/ARCHIVED",
+        "color": "#466B53",
+        "position": 2,
+        "is_archived": false,
+        "lists": [
+          {
+            "id": "1301240000003883",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "Little Treasures",
+            "color": "#518E6A",
+            "position": 1,
+            "is_archived": true,
+            "tasks_count": 92
+          },
+          {
+            "id": "901616174910",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "Studio Nets",
+            "color": "#518E6A",
+            "position": 2,
+            "is_archived": true,
+            "tasks_count": 262
+          },
+          {
+            "id": "901615552185",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "PRSM DGTL",
+            "color": "#518E6A",
+            "position": 3,
+            "is_archived": true,
+            "tasks_count": 46
+          },
+          {
+            "id": "901614706489",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "Luminize",
+            "color": "#518E6A",
+            "position": 4,
+            "is_archived": true,
+            "tasks_count": 155
+          },
+          {
+            "id": "901616387040",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "DYDLI",
+            "color": "#518E6A",
+            "position": 5,
+            "is_archived": true,
+            "tasks_count": 114
+          },
+          {
+            "id": "901613402866",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "DTC Nova",
+            "color": "#518E6A",
+            "position": 6,
+            "is_archived": true,
+            "tasks_count": 0
+          },
+          {
+            "id": "901616075116",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "Maureen Data Systems",
+            "color": "#518E6A",
+            "position": 7,
+            "is_archived": true,
+            "tasks_count": 30
+          },
+          {
+            "id": "901608973503",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "Angl Creatives",
+            "color": "#518E6A",
+            "position": 8,
+            "is_archived": true,
+            "tasks_count": 106
+          },
+          {
+            "id": "901605268244",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "YUM Production",
+            "color": "#518E6A",
+            "position": 9,
+            "is_archived": true,
+            "tasks_count": 1327
+          },
+          {
+            "id": "901609124996",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "Te Pari Products",
+            "color": "#518E6A",
+            "position": 10,
+            "is_archived": true,
+            "tasks_count": 30
+          },
+          {
+            "id": "901605585764",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "Purpose Productions",
+            "color": "#518E6A",
+            "position": 11,
+            "is_archived": true,
+            "tasks_count": 128
+          },
+          {
+            "id": "901609097154",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "Slouch Potato",
+            "color": "#518E6A",
+            "position": 12,
+            "is_archived": true,
+            "tasks_count": 2
+          },
+          {
+            "id": "901605585812",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "PLAST-AX",
+            "color": "#518E6A",
+            "position": 13,
+            "is_archived": true,
+            "tasks_count": 2
+          },
+          {
+            "id": "901608973485",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "HealthPro",
+            "color": "#518E6A",
+            "position": 14,
+            "is_archived": true,
+            "tasks_count": 83
+          },
+          {
+            "id": "901611204429",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "Firebow Holidays - Amelia",
+            "color": "#518E6A",
+            "position": 15,
+            "is_archived": true,
+            "tasks_count": 71
+          },
+          {
+            "id": "901606446650",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "Dan Orichowskyj",
+            "color": "#518E6A",
+            "position": 16,
+            "is_archived": true,
+            "tasks_count": 1
+          },
+          {
+            "id": "901605585786",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "Video Machine",
+            "color": "#518E6A",
+            "position": 17,
+            "is_archived": true,
+            "tasks_count": 2
+          },
+          {
+            "id": "901606761721",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "Solcertain (Steven Burkhalter)",
+            "color": "#518E6A",
+            "position": 18,
+            "is_archived": true,
+            "tasks_count": 2
+          },
+          {
+            "id": "901611170048",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "GetFit",
+            "color": "#518E6A",
+            "position": 19,
+            "is_archived": true,
+            "tasks_count": 82
+          },
+          {
+            "id": "901611488171",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-90163643216",
+            "name": "Janne Kok",
+            "color": "#518E6A",
+            "position": 20,
+            "is_archived": true,
+            "tasks_count": 57
+          }
+        ]
+      },
+      {
+        "id": "folder-1301240000004859",
+        "space_id": "space-90162348432",
+        "name": "First Group Coaching Kickoff Kit (ClickUp Edition)",
+        "color": "#466B53",
+        "position": 3,
+        "is_archived": false,
+        "lists": [
+          {
+            "id": "1301240000006500",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-1301240000004859",
+            "name": "Participant Tracker",
+            "color": "#518E6A",
+            "position": 1,
+            "is_archived": false,
+            "tasks_count": 6
+          }
+        ]
+      },
+      {
+        "id": "folder-1301240000004927",
+        "space_id": "space-90162348432",
+        "name": "GIM Dashboard - System",
+        "color": "#466B53",
+        "position": 4,
+        "is_archived": false,
+        "lists": [
+          {
+            "id": "1301240000006600",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-1301240000004927",
+            "name": "Phase 1: Foundation & Brand Architecture",
+            "color": "#518E6A",
+            "position": 1,
+            "is_archived": false,
+            "tasks_count": 4
+          },
+          {
+            "id": "1301240000006601",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-1301240000004927",
+            "name": "Phase 2: ClickUp REA 1:1 & RBAC Isolation",
+            "color": "#518E6A",
+            "position": 2,
+            "is_archived": false,
+            "tasks_count": 5
+          },
+          {
+            "id": "1301240000006602",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-1301240000004927",
+            "name": "Phase 3: Client Portfolios & Knowledge Hub",
+            "color": "#518E6A",
+            "position": 3,
+            "is_archived": false,
+            "tasks_count": 5
+          },
+          {
+            "id": "1301240000006603",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-1301240000004927",
+            "name": "Phase 4: Real-time Messaging & Active Sprints",
+            "color": "#518E6A",
+            "position": 4,
+            "is_archived": false,
+            "tasks_count": 5
+          },
+          {
+            "id": "1301240000006604",
+            "space_id": "space-90162348432",
+            "folder_id": "folder-1301240000004927",
+            "name": "Phase 5: Grok AI, Slack & Automation Roadmap",
+            "color": "#518E6A",
+            "position": 5,
+            "is_archived": false,
+            "tasks_count": 5
+          }
+        ]
+      }
+    ],
+    "lists": [
+      {
+        "id": "901615594341",
+        "space_id": "space-90162348432",
+        "folder_id": null,
+        "name": "Client CRM",
+        "color": "#518E6A",
+        "position": 1,
+        "is_archived": false,
+        "tasks_count": 12
+      }
+    ]
+  },
+  {
+    "id": "space-90165071888",
+    "workspace_id": "ws-gim",
+    "name": "Operations & Management",
+    "slug": "operations-and-management",
+    "icon": "FolderKanban",
+    "color": "#3D5249",
+    "is_private": false,
+    "position": 2,
+    "folders": [
+      {
+        "id": "folder-901610412249",
+        "space_id": "space-90165071888",
+        "name": "Team KPI",
+        "color": "#466B53",
+        "position": 1,
+        "is_archived": false,
+        "lists": [
+          {
+            "id": "901615796341",
+            "space_id": "space-90165071888",
+            "folder_id": "folder-901610412249",
+            "name": "KPI Scorecards",
+            "color": "#518E6A",
+            "position": 1,
+            "is_archived": false,
+            "tasks_count": 397
+          }
+        ]
+      }
+    ],
+    "lists": [
+      {
+        "id": "901611016004",
+        "space_id": "space-90165071888",
+        "folder_id": null,
+        "name": "Admin Tasks",
+        "color": "#518E6A",
+        "position": 1,
+        "is_archived": false,
+        "tasks_count": 9
+      },
+      {
+        "id": "901614592267",
+        "space_id": "space-90165071888",
+        "folder_id": null,
+        "name": "Spreadsheet Import",
+        "color": "#518E6A",
+        "position": 2,
+        "is_archived": false,
+        "tasks_count": 1
+      }
+    ]
+  },
+  {
+    "id": "space-90164382449",
+    "workspace_id": "ws-gim",
+    "name": "HR",
+    "slug": "hr",
+    "icon": "Users",
+    "color": "#3D5249",
+    "is_private": true,
+    "position": 3,
+    "folders": [
+      {
+        "id": "folder-90165623988",
+        "space_id": "space-90164382449",
+        "name": "\u2728 Guide",
+        "color": "#466B53",
+        "position": 1,
+        "is_archived": false,
+        "lists": []
+      },
+      {
+        "id": "folder-90165623994",
+        "space_id": "space-90164382449",
+        "name": "General",
+        "color": "#466B53",
+        "position": 2,
+        "is_archived": false,
+        "lists": [
+          {
+            "id": "901609392191",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623994",
+            "name": "Meetings",
+            "color": "#518E6A",
+            "position": 1,
+            "is_archived": false,
+            "tasks_count": 4
+          },
+          {
+            "id": "901609392197",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623994",
+            "name": "OKRs",
+            "color": "#518E6A",
+            "position": 2,
+            "is_archived": false,
+            "tasks_count": 15
+          },
+          {
+            "id": "901609392194",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623994",
+            "name": "HR Projects",
+            "color": "#518E6A",
+            "position": 3,
+            "is_archived": false,
+            "tasks_count": 5
+          },
+          {
+            "id": "901609392192",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623994",
+            "name": "HR Requests",
+            "color": "#518E6A",
+            "position": 4,
+            "is_archived": false,
+            "tasks_count": 3
+          },
+          {
+            "id": "901616226346",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623994",
+            "name": "Monthly Pay Tracking",
+            "color": "#518E6A",
+            "position": 5,
+            "is_archived": false,
+            "tasks_count": 26
+          }
+        ]
+      },
+      {
+        "id": "folder-90165623987",
+        "space_id": "space-90164382449",
+        "name": "Employee Engagement",
+        "color": "#466B53",
+        "position": 3,
+        "is_archived": false,
+        "lists": [
+          {
+            "id": "901609392183",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623987",
+            "name": "New Hire Onboarding",
+            "color": "#518E6A",
+            "position": 1,
+            "is_archived": false,
+            "tasks_count": 45
+          },
+          {
+            "id": "901609392189",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623987",
+            "name": "Subcon Profiles",
+            "color": "#518E6A",
+            "position": 2,
+            "is_archived": false,
+            "tasks_count": 82
+          },
+          {
+            "id": "901609392176",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623987",
+            "name": "Subcon Offboarding",
+            "color": "#518E6A",
+            "position": 3,
+            "is_archived": false,
+            "tasks_count": 18
+          },
+          {
+            "id": "901609392177",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623987",
+            "name": "Performance Reviews",
+            "color": "#518E6A",
+            "position": 4,
+            "is_archived": false,
+            "tasks_count": 12
+          },
+          {
+            "id": "901609392182",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623987",
+            "name": "Engagement Surveys",
+            "color": "#518E6A",
+            "position": 5,
+            "is_archived": false,
+            "tasks_count": 4
+          }
+        ]
+      },
+      {
+        "id": "folder-90165623997",
+        "space_id": "space-90164382449",
+        "name": "Employee Resource Groups",
+        "color": "#466B53",
+        "position": 4,
+        "is_archived": false,
+        "lists": [
+          {
+            "id": "901609392195",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623997",
+            "name": "Core Team",
+            "color": "#518E6A",
+            "position": 1,
+            "is_archived": false,
+            "tasks_count": 3
+          },
+          {
+            "id": "901609392196",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623997",
+            "name": "GIM",
+            "color": "#518E6A",
+            "position": 2,
+            "is_archived": false,
+            "tasks_count": 3
+          }
+        ]
+      },
+      {
+        "id": "folder-90165623989",
+        "space_id": "space-90164382449",
+        "name": "Recruiting & Hiring",
+        "color": "#466B53",
+        "position": 5,
+        "is_archived": false,
+        "lists": [
+          {
+            "id": "901609392181",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623989",
+            "name": "Job Postings",
+            "color": "#518E6A",
+            "position": 1,
+            "is_archived": false,
+            "tasks_count": 2
+          },
+          {
+            "id": "901609392178",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623989",
+            "name": "Candidate Tracking",
+            "color": "#518E6A",
+            "position": 2,
+            "is_archived": false,
+            "tasks_count": 1588
+          },
+          {
+            "id": "901615159652",
+            "space_id": "space-90164382449",
+            "folder_id": "folder-90165623989",
+            "name": "Tasks",
+            "color": "#518E6A",
+            "position": 3,
+            "is_archived": false,
+            "tasks_count": 1
+          }
+        ]
+      }
+    ],
+    "lists": []
+  },
+  {
+    "id": "space-90165331484",
+    "workspace_id": "ws-gim",
+    "name": "Internal Integration",
+    "slug": "internal-integration",
+    "icon": "Workflow",
+    "color": "#3D5249",
+    "is_private": true,
+    "position": 4,
+    "folders": [],
+    "lists": [
+      {
+        "id": "901608832952",
+        "space_id": "space-90165331484",
+        "folder_id": null,
+        "name": "GIM Calendar",
+        "color": "#518E6A",
+        "position": 1,
+        "is_archived": false,
+        "tasks_count": 0
+      }
+    ]
+  },
+  {
+    "id": "space-90167933168",
+    "workspace_id": "ws-gim",
+    "name": "Noirlab Sandbox - Production",
+    "slug": "noirlab-sandbox---production",
+    "icon": "Workflow",
+    "color": "#3D5249",
+    "is_private": false,
+    "position": 5,
+    "folders": [
+      {
+        "id": "folder-901611060175",
+        "space_id": "space-90167933168",
+        "name": "Editors",
+        "color": "#466B53",
+        "position": 1,
+        "is_archived": false,
+        "lists": [
+          {
+            "id": "901616658111",
+            "space_id": "space-90167933168",
+            "folder_id": "folder-901611060175",
+            "name": "Nina",
+            "color": "#518E6A",
+            "position": 1,
+            "is_archived": false,
+            "tasks_count": 0
+          },
+          {
+            "id": "901616658112",
+            "space_id": "space-90167933168",
+            "folder_id": "folder-901611060175",
+            "name": "Patrick",
+            "color": "#518E6A",
+            "position": 2,
+            "is_archived": false,
+            "tasks_count": 0
+          },
+          {
+            "id": "901616658110",
+            "space_id": "space-90167933168",
+            "folder_id": "folder-901611060175",
+            "name": "Mary",
+            "color": "#518E6A",
+            "position": 3,
+            "is_archived": false,
+            "tasks_count": 0
+          },
+          {
+            "id": "901616658113",
+            "space_id": "space-90167933168",
+            "folder_id": "folder-901611060175",
+            "name": "Ahmed",
+            "color": "#518E6A",
+            "position": 4,
+            "is_archived": false,
+            "tasks_count": 0
+          },
+          {
+            "id": "901616658114",
+            "space_id": "space-90167933168",
+            "folder_id": "folder-901611060175",
+            "name": "Future Editor - 01",
+            "color": "#518E6A",
+            "position": 5,
+            "is_archived": false,
+            "tasks_count": 0
+          }
+        ]
+      }
+    ],
+    "lists": [
+      {
+        "id": "901616658064",
+        "space_id": "space-90167933168",
+        "folder_id": null,
+        "name": "Central Orders Intake",
+        "color": "#518E6A",
+        "position": 1,
+        "is_archived": false,
+        "tasks_count": 11
+      }
+    ]
+  },
+  {
+    "id": "space-90167933160",
+    "workspace_id": "ws-gim",
+    "name": "Noirlab Sandbox - Operations",
+    "slug": "noirlab-sandbox---operations",
+    "icon": "Workflow",
+    "color": "#3D5249",
+    "is_private": true,
+    "position": 6,
+    "folders": [
+      {
+        "id": "folder-901611060453",
+        "space_id": "space-90167933160",
+        "name": "Internal Operations",
+        "color": "#466B53",
+        "position": 1,
+        "is_archived": false,
+        "lists": [
+          {
+            "id": "901616658399",
+            "space_id": "space-90167933160",
+            "folder_id": "folder-901611060453",
+            "name": "Daily Operations",
+            "color": "#518E6A",
+            "position": 1,
+            "is_archived": false,
+            "tasks_count": 0
+          },
+          {
+            "id": "901616658400",
+            "space_id": "space-90167933160",
+            "folder_id": "folder-901611060453",
+            "name": "Access Register",
+            "color": "#518E6A",
+            "position": 2,
+            "is_archived": false,
+            "tasks_count": 0
+          },
+          {
+            "id": "901616658402",
+            "space_id": "space-90167933160",
+            "folder_id": "folder-901611060453",
+            "name": "Team Directory",
+            "color": "#518E6A",
+            "position": 3,
+            "is_archived": false,
+            "tasks_count": 0
+          }
+        ]
+      }
+    ],
+    "lists": []
+  },
+  {
+    "id": "space-90167933169",
+    "workspace_id": "ws-gim",
+    "name": "Noirlab Sandbox - Process Library",
+    "slug": "noirlab-sandbox---process-library",
+    "icon": "Workflow",
+    "color": "#3D5249",
+    "is_private": true,
+    "position": 7,
+    "folders": [],
+    "lists": [
+      {
+        "id": "901616658227",
+        "space_id": "space-90167933169",
+        "folder_id": null,
+        "name": "Task Templates",
+        "color": "#518E6A",
+        "position": 1,
+        "is_archived": false,
+        "tasks_count": 7
+      }
+    ]
+  }
+]

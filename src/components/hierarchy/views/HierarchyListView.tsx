@@ -36,6 +36,7 @@ export function HierarchyListView({
   // Collapsible status accordions
   const [collapsedStatuses, setCollapsedStatuses] = useState<Record<string, boolean>>({});
   const [expandedSubtasks, setExpandedSubtasks] = useState<Record<string, boolean>>({});
+  const [visibleLimits, setVisibleLimits] = useState<Record<string, number>>({});
 
   const toggleStatusAccordion = (statusName: string) => {
     setCollapsedStatuses((prev) => ({ ...prev, [statusName]: !prev[statusName] }));
@@ -131,12 +132,15 @@ export function HierarchyListView({
                     No tasks in {statusConfig.name}
                   </div>
                 ) : (
-                  statusTasks.map((task) => {
-                    const hasSubtasks = (task.subtasks && task.subtasks.length > 0) || (task.subtasks_count || 0) > 0;
-                    const isSubtasksOpen = !!expandedSubtasks[task.id];
+                  <>
+                    {statusTasks
+                      .slice(0, visibleLimits[statusConfig.name] || 40)
+                      .map((task) => {
+                        const hasSubtasks = (task.subtasks && task.subtasks.length > 0) || (task.subtasks_count || 0) > 0;
+                        const isSubtasksOpen = !!expandedSubtasks[task.id];
 
-                    return (
-                      <React.Fragment key={task.id}>
+                        return (
+                          <React.Fragment key={task.id}>
                         {/* Parent Task Row */}
                         <div
                           onClick={() => onSelectTask(task)}
@@ -304,7 +308,24 @@ export function HierarchyListView({
                         )}
                       </React.Fragment>
                     );
-                  })
+                  })}
+                  {statusTasks.length > (visibleLimits[statusConfig.name] || 40) && (
+                    <div className="p-3 text-center bg-[#FBF6F3]/50">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setVisibleLimits((prev) => ({
+                            ...prev,
+                            [statusConfig.name]: (prev[statusConfig.name] || 40) + 50,
+                          }))
+                        }
+                        className="px-3.5 py-1.5 rounded-lg border border-[#518E6A]/30 bg-white hover:bg-[#EBF3EF] text-xs font-bold text-[#518E6A] transition-all shadow-xs"
+                      >
+                        Load 50 more tasks ({statusTasks.length - (visibleLimits[statusConfig.name] || 40)} remaining) &darr;
+                      </button>
+                    </div>
+                  )}
+                  </>
                 )}
               </div>
             )}

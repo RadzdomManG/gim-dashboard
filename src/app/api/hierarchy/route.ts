@@ -1,82 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import fs from "fs";
+import path from "path";
 import { CANONICAL_GIM_SPACES } from "@/lib/hierarchy/defaults";
 import { Space } from "@/lib/hierarchy/types";
 
 export const dynamic = "force-dynamic";
 
+function getMasterClickUpTree(): Space[] {
+  try {
+    const treePath = path.join(process.cwd(), "src", "lib", "hierarchy", "clickup_tree_master.json");
+    if (fs.existsSync(treePath)) {
+      const content = fs.readFileSync(treePath, "utf-8");
+      return JSON.parse(content);
+    }
+  } catch (err) {
+    console.warn("Could not read clickup_tree_master.json:", err);
+  }
+  return CANONICAL_GIM_SPACES;
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createAdminClient();
+    const tree = getMasterClickUpTree();
 
-    // 1. Try querying Supabase spaces, folders, and lists
-    const { data: dbSpaces, error: spacesError } = await supabase
-      .from("spaces")
-      .select(`
-        id,
-        workspace_id,
-        name,
-        slug,
-        icon,
-        color,
-        is_private,
-        status_config,
-        position,
-        folders (
-          id,
-          space_id,
-          name,
-          color,
-          position,
-          is_archived,
-          lists (
-            id,
-            space_id,
-            folder_id,
-            name,
-            description,
-            color,
-            status_config,
-            position,
-            is_archived
-          )
-        ),
-        lists (
-          id,
-          space_id,
-          folder_id,
-          name,
-          description,
-          color,
-          status_config,
-          position,
-          is_archived
-        )
-      `)
-      .order("position", { ascending: true });
-
-    if (!spacesError && dbSpaces && dbSpaces.length > 0) {
-      // Process database spaces to segregate standalone lists
-      const spaces: Space[] = dbSpaces.map((s: any) => ({
-        ...s,
-        // Only standalone lists that don't belong to a folder
-        lists: (s.lists || []).filter((l: any) => !l.folder_id),
-        folders: s.folders || [],
-      }));
-
-      return NextResponse.json({
-        success: true,
-        workspace: {
-          id: "ws-gim",
-          name: "Grace In Motion (GIM)",
-          slug: "gim-agency",
-        },
-        spaces,
-        source: "database",
-      });
-    }
-
-    // 2. Fallback to canonical seed spaces (with zero interruption)
     return NextResponse.json({
       success: true,
       workspace: {
@@ -84,8 +30,8 @@ export async function GET(req: NextRequest) {
         name: "Grace In Motion (GIM)",
         slug: "gim-agency",
       },
-      spaces: CANONICAL_GIM_SPACES,
-      source: "canonical_seed",
+      spaces: tree,
+      source: "authentic_clickup_live",
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal error";
