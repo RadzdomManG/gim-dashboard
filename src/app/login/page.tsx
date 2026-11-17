@@ -577,7 +577,53 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="pt-4 border-t border-[#E8E2DD] text-center">
+          {/* Quick Access Badges for Core Admin Team */}
+          <div className="pt-2 border-t border-[#E8E2DD]/80">
+            <p className="text-[10px] font-bold text-[#65746C] uppercase tracking-wider mb-2 text-center">
+              Quick Admin Access (Development / Verification)
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername("radz");
+                  setPassword("GIM_Radz2026!Architect");
+                }}
+                className="p-2 rounded-xl border border-[#518E6A]/30 bg-[#EBF3EF] hover:bg-[#dcebe3] text-left transition-all group"
+              >
+                <div className="flex items-center space-x-1.5">
+                  <div className="w-5 h-5 rounded-md bg-[#466B53] text-white flex items-center justify-center font-bold text-[10px]">
+                    RG
+                  </div>
+                  <span className="font-bold text-xs text-[#242E29]">Radzdom (Radz)</span>
+                </div>
+                <span className="text-[10px] text-[#518E6A] font-medium block mt-0.5">
+                  Chief Architect / Admin &rarr;
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername("divine");
+                  setPassword("GIM_Divine2026!Strategy");
+                }}
+                className="p-2 rounded-xl border border-[#3D5249]/30 bg-[#FBF6F3] hover:bg-[#f3ece6] text-left transition-all group"
+              >
+                <div className="flex items-center space-x-1.5">
+                  <div className="w-5 h-5 rounded-md bg-[#3D5249] text-white flex items-center justify-center font-bold text-[10px]">
+                    DO
+                  </div>
+                  <span className="font-bold text-xs text-[#242E29]">Divine (Owner)</span>
+                </div>
+                <span className="text-[10px] text-[#3D5249] font-medium block mt-0.5">
+                  Universal Owner &rarr;
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-[#E8E2DD] text-center">
             <div className="flex items-center justify-center space-x-1.5 text-[11px] text-[#65746C]">
               <ShieldCheck className="w-3.5 h-3.5 text-[#518E6A]" />
               <span>Strict Access Governance: Only authenticated accounts permitted</span>
