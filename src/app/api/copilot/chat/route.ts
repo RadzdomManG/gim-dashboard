@@ -527,22 +527,16 @@ ${taskLines}
       });
     }
 
-    // Default intelligent conversational response
+    // Fallback to Grok xAI Grounded SOP Intelligence Engine
+    const { askGrokSopEngine } = await import("@/lib/ai/grok");
+    const grokRes = await askGrokSopEngine(message, user, accessibleTasks);
+
     return NextResponse.json({
-      reply: `Hey ${userNick}! 👋 I hear you. We're focused on **${assignedClients.join(", ")}**.
-
-I can help you:
-• 🚀 Put any task in progress and walk you through it step-by-step
-• 📱 Schedule multi-platform social media posts from Google Drive or Canva links
-• 📝 Generate your daily End of Shift (EOS) note
-• 📘 Answer SOP questions or explain client playbooks
-
-Tell me what you'd like to tackle first! 💼✨`,
-      suggestedActions: [
-        "What are my active deliverables? 📋",
-        "Put my task in progress and guide me 🎯",
-        "Draft End of Shift note 📝",
-      ],
+      reply: grokRes.reply,
+      modelUsed: grokRes.modelUsed,
+      isFallback: grokRes.isFallback,
+      statusMessage: grokRes.statusMessage,
+      suggestedActions: grokRes.suggestedActions,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal error";

@@ -46,6 +46,8 @@ interface ChatMessage {
   sender: "user" | "copilot";
   content: string;
   timestamp: string;
+  modelUsed?: string;
+  statusMessage?: string;
   action?: {
     type: string;
     taskId?: string;
@@ -236,6 +238,8 @@ What would you like to work on right now?`,
           sender: "copilot",
           content: data.reply,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          modelUsed: data.modelUsed,
+          statusMessage: data.statusMessage,
           action: data.action,
           suggestedActions: data.suggestedActions,
         };
@@ -417,6 +421,21 @@ What would you like to work on right now?`,
                           return <p key={lIdx}>{line}</p>;
                         })}
                       </div>
+
+                      {/* Grok / Grounded SOP Model Tag */}
+                      {msg.sender === "copilot" && msg.modelUsed && (
+                        <div className="mt-2 pt-1.5 border-t border-black/5 flex items-center justify-between text-[9px] text-[#65746C] font-mono">
+                          <span className="flex items-center gap-1">
+                            <Sparkles className="w-2.5 h-2.5 text-[#518E6A]" />
+                            {msg.modelUsed === "grok-beta" ? "Grok (xAI) Intelligence" : "GIM Grounded SOP Engine"}
+                          </span>
+                          {msg.statusMessage && (
+                            <span className="text-[8px] text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                              Active Fallback
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                       {/* Interactive Task Update Action Card (Option B: Confirmation First) */}
                       {msg.action && msg.action.type === "CONFIRM_TASK_MOVE" && (
