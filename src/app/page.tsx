@@ -66,6 +66,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { TaskBacklogView } from "@/components/tasks/TaskBacklogView";
+import { ProjectManagementModule } from "@/components/hierarchy/ProjectManagementModule";
 import { ClientPortfolioView } from "@/components/clients/ClientPortfolioView";
 import { MessagingCenter } from "@/components/messaging/MessagingCenter";
 import { TeamTimesheetView } from "@/components/timesheet/TeamTimesheetView";
@@ -2175,18 +2176,12 @@ export default function GimDashboard() {
           )}
 
           {/* ========================================================================= */}
-          {/* TAB: TASKS & DELIVERY PIPELINE (CLICKUP READ-ONLY MIRROR) */}
+          {/* TAB: TASKS & PM HIERARCHY (CLICKUP-INSPIRED 7-TIER ARCHITECTURE) */}
           {/* ========================================================================= */}
           {activeTab === "tasks" && (
-            <TaskBacklogView
-              initialStatusFilter={taskStatusFilter}
-              initialSearch={taskSearchQuery}
-              currentUserNickname={currentUser.nickname}
-              currentUserName={currentUser.name}
-              isCoreAdmin={currentUser.isCoreAdmin}
-              clientScope={currentUser.clientScope}
-              selectedClientId={selectedPortfolioClientId}
-            />
+            <div className="h-[calc(100vh-140px)] flex flex-col rounded-2xl border border-[#E8E2DD] overflow-hidden shadow-xs bg-white">
+              <ProjectManagementModule currentUser={currentUser} />
+            </div>
           )}
 
           {/* ========================================================================= */}
