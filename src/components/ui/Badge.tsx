@@ -3,7 +3,7 @@
 import React from "react";
 
 export interface BadgeProps {
-  variant?: "brand" | "active" | "review" | "upcoming" | "critical" | "neutral" | "dark";
+  variant?: "brand" | "active" | "review" | "upcoming" | "critical" | "neutral" | "dark" | "paused";
   children: React.ReactNode;
   className?: string;
   dot?: boolean;
@@ -26,6 +26,7 @@ export function Badge({
     upcoming: "bg-slate-50 text-slate-700 border-slate-200",
     critical: "bg-rose-50 text-rose-800 border-rose-200",
     neutral: "bg-[#F5EFEA] text-[#45544C] border-[#E8E2DD]",
+    paused: "bg-[#8C5E3C]/15 text-[#5C3A21] border-[#8C5E3C]/35 font-semibold",
   };
 
   const dotColors = {
@@ -36,6 +37,7 @@ export function Badge({
     upcoming: "bg-slate-400",
     critical: "bg-rose-500",
     neutral: "bg-[#65746C]",
+    paused: "bg-[#8C5E3C]",
   };
 
   return (

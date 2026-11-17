@@ -25,6 +25,7 @@ interface ProjectManagementModuleProps {
     id: string;
     name: string;
     nickname: string;
+    email?: string;
     role: string;
     isCoreAdmin: boolean;
     clientScope?: string;
@@ -150,7 +151,9 @@ export function ProjectManagementModule({ currentUser }: ProjectManagementModule
         )}`;
 
         if (isMyTasksActive) {
-          url += `&my_tasks=true&assignee_id=${encodeURIComponent(currentUser.name)}`;
+          url += `&my_tasks=true&assignee_id=${encodeURIComponent(currentUser.name)}&assignee_nickname=${encodeURIComponent(
+            currentUser.nickname
+          )}&assignee_email=${encodeURIComponent(currentUser.email || "")}`;
         } else if (selectedList) {
           url += `&list_id=${encodeURIComponent(selectedList.id)}`;
         } else if (selectedSpace) {
@@ -171,7 +174,7 @@ export function ProjectManagementModule({ currentUser }: ProjectManagementModule
       }
     }
     loadTasks();
-  }, [selectedSpace, selectedFolder, selectedList, isMyTasksActive, currentUser.name, currentUser.isCoreAdmin, currentUser.clientScope]);
+  }, [selectedSpace, selectedFolder, selectedList, isMyTasksActive, currentUser.name, currentUser.nickname, currentUser.email, currentUser.isCoreAdmin, currentUser.clientScope]);
 
   // Handlers for Navigation
   const handleSelectSpace = (space: Space) => {

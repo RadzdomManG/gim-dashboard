@@ -53,7 +53,8 @@ export interface ClientProfile {
   accountLead: string;
   specialist: string;
   status: "Active Sprint" | "Proposal Staged" | "Discovery Intake" | "Paused (Archive)";
-  statusVariant: "active" | "review" | "upcoming";
+  statusVariant: "active" | "review" | "upcoming" | "paused";
+  isPaused?: boolean;
   retainer: string;
   progress: number;
   currentSprint: string;
@@ -305,6 +306,35 @@ const CLIENT_PORTFOLIO: ClientProfile[] = [
       { code: "T2T-03", title: "Accreditation certificate generation automation", status: "Queued" },
     ],
     keyTechStack: ["ClickUp", "Google Docs / Drive API", "Stripe Invoicing", "Airtable"],
+  },
+  {
+    id: "little-treasures",
+    name: "Little Treasures Company",
+    code: "LTC-AU",
+    industry: "Paediatric Occupational Therapy Clinic",
+    location: "Sydney, New South Wales, Australia",
+    timezone: "AEST",
+    timezoneCity: "Sydney (UTC+10)",
+    aiBotName: "Zoe Bot",
+    contactName: "Zoe Horner",
+    contactRole: "Founder & Lead Paediatric OT",
+    accountLead: "Radzdom-Man Gallego",
+    specialist: "Divine Origines & RA Malinao",
+    status: "Paused (Archive)",
+    statusVariant: "paused",
+    isPaused: true,
+    retainer: "AUD $3,200 / month (Frozen / Archive)",
+    progress: 100,
+    currentSprint: "Operations frozen. Website v2 & GoHighLevel Sub-Account (JCy1QAdpq5fEupDv1EXb) archived in read-only mode.",
+    targetMilestone: "Archived & Grounded in Knowledge Hub",
+    description:
+      "Paediatric occupational therapy practice based in Sydney, Australia. Website v2 built on Next.js, GHL sub-account JCy1QAdpq5fEupDv1EXb. Operating status is paused/archived with strict read-only isolation.",
+    deliverables: [
+      { code: "LTC-01", title: "Website v2 Next.js static architecture deployment", status: "Completed" },
+      { code: "LTC-02", title: "GHL Sub-Account JCy1QAdpq5fEupDv1EXb snapshot & lock", status: "Completed" },
+      { code: "LTC-03", title: "Archive SOP & clinical confidentiality register", status: "Completed" },
+    ],
+    keyTechStack: ["GoHighLevel (JCy1QAdpq5fEupDv1EXb)", "Next.js", "ClickUp (1301240000003883)", "Stripe Invoicing"],
   },
 ];
 
@@ -600,23 +630,34 @@ export function ClientPortfolioView({
 
           {accessibleClients.map((client) => {
             const isSelected = client.id === selectedClientId;
+            const isPaused = client.statusVariant === "paused" || client.isPaused || client.status.toLowerCase().includes("pause");
             return (
               <button
                 key={client.id}
                 onClick={() => handleSelectClient(client.id)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 border ${
                   isSelected
-                    ? "bg-[#3D5249] text-white border-[#3D5249] shadow-xs"
+                    ? isPaused
+                      ? "bg-[#7A4B2A] text-white border-[#5C3A21] shadow-xs"
+                      : "bg-[#3D5249] text-white border-[#3D5249] shadow-xs"
+                    : isPaused
+                    ? "bg-[#8C5E3C]/15 text-[#6E3D1B] border-[#8C5E3C]/35 hover:border-[#8C5E3C] hover:bg-[#8C5E3C]/25"
                     : "bg-[#FBF6F3] text-[#65746C] border-[#3D5249]/15 hover:border-[#3D5249]/40 hover:text-[#242E29]"
                 }`}
               >
                 <span>{client.name}</span>
                 <span
-                  className={`text-[10px] font-mono px-1 py-0.2 rounded ${
-                    isSelected ? "bg-white/20 text-white" : "bg-[#3D5249]/10 text-[#3D5249]"
+                  className={`text-[10px] font-mono px-1 py-0.2 rounded font-bold ${
+                    isSelected
+                      ? isPaused
+                        ? "bg-black/25 text-white"
+                        : "bg-white/20 text-white"
+                      : isPaused
+                      ? "bg-[#8C5E3C]/25 text-[#5C3A21]"
+                      : "bg-[#3D5249]/10 text-[#3D5249]"
                   }`}
                 >
-                  {client.code}
+                  {isPaused ? "PAUSED" : client.code}
                 </span>
               </button>
             );
@@ -986,14 +1027,23 @@ export function ClientPortfolioView({
           <div className="p-5 border-b border-[#E8E2DD] bg-[#FBF6F3]/50">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
               <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                <span className="font-bold text-[#3D5249] text-xs bg-[#466B53]/20 px-2 py-0.5 rounded border border-[#466B53]/30">
+                <span
+                  className={`font-bold text-xs px-2 py-0.5 rounded border ${
+                    selectedClient.statusVariant === "paused"
+                      ? "bg-[#8C5E3C]/20 text-[#5C3A21] border-[#8C5E3C]/40"
+                      : "text-[#3D5249] bg-[#466B53]/20 border-[#466B53]/30"
+                  }`}
+                >
                   {selectedClient.code}
                 </span>
                 <Badge variant={selectedClient.statusVariant} dot>
                   {selectedClient.status}
                 </Badge>
                 {selectedClient.timezone && (
-                  <Badge variant="brand" className="text-[10px] font-mono flex items-center gap-1">
+                  <Badge
+                    variant={selectedClient.statusVariant === "paused" ? "paused" : "brand"}
+                    className="text-[10px] font-mono flex items-center gap-1"
+                  >
                     <Clock className="w-2.5 h-2.5" /> {selectedClient.timezone} ({selectedClient.timezoneCity})
                   </Badge>
                 )}
@@ -1003,10 +1053,24 @@ export function ClientPortfolioView({
                   </span>
                 )}
               </div>
-              <span className="text-xs font-bold text-[#466B53]">
+              <span
+                className={`text-xs font-bold ${
+                  selectedClient.statusVariant === "paused" ? "text-[#7A4B2A]" : "text-[#466B53]"
+                }`}
+              >
                 {selectedClient.retainer}
               </span>
             </div>
+
+            {selectedClient.statusVariant === "paused" && (
+              <div className="mt-3 p-3 rounded-xl bg-[#8C5E3C]/10 border border-[#8C5E3C]/35 text-[#5C3A21] flex items-center gap-2 text-xs">
+                <AlertTriangle className="w-4 h-4 text-[#8C5E3C] shrink-0" />
+                <span>
+                  <strong>PAUSED / ARCHIVED CLIENT ACCOUNT:</strong> All active sprint dispatches and billings are paused.
+                  Assets and GHL credentials are preserved in read-only archive mode.
+                </span>
+              </div>
+            )}
 
             <h2 className="text-lg font-bold text-[#242E29]">
               {selectedClient.name}

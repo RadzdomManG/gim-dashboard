@@ -20,12 +20,88 @@ function getMasterClickUpTasks(): HierarchicalTask[] {
   return [];
 }
 
+// Precise assignee matcher across ClickUp user profiles & aliases
+function matchesAssignee(a: any, targetName: string, targetNick: string, targetEmail: string): boolean {
+  const aName = (a.name || a.username || "").toLowerCase();
+  const aEmail = (a.email || "").toLowerCase();
+  const tEmail = (targetEmail || "").toLowerCase();
+  const tNick = (targetNick || "").toLowerCase();
+  const tName = (targetName || "").toLowerCase();
+
+  if (tEmail && aEmail && (tEmail === aEmail || aEmail.includes(tEmail) || tEmail.includes(aEmail))) return true;
+
+  if (tNick === "joy" || tName.startsWith("joy ")) {
+    return aName.includes("joy fabular") || aName === "joy" || (aName.includes("joy") && !aName.includes("joyce"));
+  }
+  if (tNick === "joyce" || tName.includes("joyce")) {
+    return aName.includes("joyce");
+  }
+  if (tNick === "jedy" || tName.includes("jedy")) {
+    return aName.includes("jedy");
+  }
+  if (tNick === "jane" || tName.includes("jane")) {
+    return aName.includes("jane");
+  }
+  if (tNick === "radz" || tName.includes("radz") || tName.includes("gallego") || tName.includes("tangonan")) {
+    return aName.includes("radz") || aName.includes("tangonan") || aName.includes("gallego");
+  }
+  if (tNick === "divine" || tName.includes("divine")) {
+    return aName.includes("divine");
+  }
+  if (tNick === "ra" || tName.includes("malinao") || tName.includes("rose anne")) {
+    return aName.includes("rose anne") || aName.includes("malinao");
+  }
+  if (tNick === "erwin" || tName.includes("erwin")) {
+    return aName.includes("erwin");
+  }
+  if (tNick === "bj" || tName.includes("ricafrente")) {
+    return aName.includes("bj") || aName.includes("ricafrente");
+  }
+  if (tNick === "kim" || tNick === "kimberly" || tName.includes("kimberly")) {
+    return aName.includes("kimberly");
+  }
+  if (tNick === "jerold" || tName.includes("jerold")) {
+    return aName.includes("jerold");
+  }
+  if (tNick === "aldwin" || tName.includes("aldwin")) {
+    return aName.includes("aldwin");
+  }
+  if (tNick === "ellyka" || tName.includes("ellyka")) {
+    return aName.includes("ellyka");
+  }
+  if (tNick === "hashim" || tName.includes("hashim")) {
+    return aName.includes("hashim");
+  }
+  if (tNick === "marj" || tName.includes("larona")) {
+    return aName.includes("larona") || aName.includes("marj");
+  }
+  if (tNick === "cy" || tName.includes("suarilla")) {
+    return aName.includes("suarilla") || aName === "cy";
+  }
+  if (tNick === "aaron" || tName.includes("ofosu")) {
+    return aName.includes("aaron") || aName.includes("ofosu");
+  }
+  if (tNick === "matthew" || tName.includes("robbins")) {
+    return aName.includes("matthew") || aName.includes("robbins");
+  }
+  if (tNick === "nathan" || tName.includes("blake")) {
+    return aName.includes("nathan") || aName.includes("blake");
+  }
+
+  // Token fallback
+  const targetTokens = tName.split(/\s+/).filter(Boolean);
+  const assigneeTokens = aName.split(/\s+/).filter(Boolean);
+  return targetTokens.some((tok: string) => tok.length > 2 && assigneeTokens.some((aTok: string) => aTok === tok || aTok.includes(tok)));
+}
+
 export async function GET(req: NextRequest) {
   try {
     const listId = req.nextUrl.searchParams.get("list_id");
     const spaceId = req.nextUrl.searchParams.get("space_id");
     const folderId = req.nextUrl.searchParams.get("folder_id");
     const assigneeParam = (req.nextUrl.searchParams.get("assignee_id") || "").toLowerCase();
+    const nicknameParam = (req.nextUrl.searchParams.get("assignee_nickname") || "").toLowerCase();
+    const emailParam = (req.nextUrl.searchParams.get("assignee_email") || "").toLowerCase();
     const myTasks = req.nextUrl.searchParams.get("my_tasks") === "true";
     const statusParam = (req.nextUrl.searchParams.get("status") || "").toLowerCase();
     const searchParam = (req.nextUrl.searchParams.get("search") || "").toLowerCase();
@@ -43,13 +119,8 @@ export async function GET(req: NextRequest) {
       filtered = filtered.filter((t) => {
         // Always include tasks assigned to the current user
         if (
-          assigneeParam &&
-          (t.assignees || []).some(
-            (a) =>
-              (a.name || "").toLowerCase().includes(assigneeParam) ||
-              (a.nickname || "").toLowerCase().includes(assigneeParam) ||
-              assigneeParam.includes((a.name || "").toLowerCase())
-          )
+          (assigneeParam || nicknameParam || emailParam) &&
+          (t.assignees || []).some((a) => matchesAssignee(a, assigneeParam, nicknameParam, emailParam))
         ) {
           return true;
         }
@@ -72,21 +143,13 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Filter by My Tasks
+    // Filter by My Tasks: strictly tasks assigned to the user
     if (myTasks) {
       filtered = filtered.filter((t) => {
-        if (!assigneeParam) return true;
-        return (t.assignees || []).some((a) => {
-          const name = (a.name || "").toLowerCase();
-          const nick = (a.nickname || "").toLowerCase();
-          return (
-            name.includes(assigneeParam) ||
-            assigneeParam.includes(name) ||
-            nick.includes(assigneeParam) ||
-            (assigneeParam.includes("radz") && (name.includes("radz") || nick.includes("radz"))) ||
-            (assigneeParam.includes("divine") && (name.includes("divine") || nick.includes("divine")))
-          );
-        });
+        if (!assigneeParam && !nicknameParam && !emailParam) return true;
+        return (t.assignees || []).some((a) =>
+          matchesAssignee(a, assigneeParam, nicknameParam, emailParam)
+        );
       });
     } else if (listId) {
       filtered = filtered.filter(

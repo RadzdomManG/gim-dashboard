@@ -479,6 +479,28 @@ export default function GimDashboard() {
       title: "Creative Director, Studio Nets",
       clientScope: "Studio Nets",
     },
+    marj: {
+      id: "marj",
+      name: "Marj Larona",
+      nickname: "Marj",
+      email: "marjoryann.d.larona@gmail.com",
+      role: "Operations Specialist",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#518E6A]",
+      title: "Operations Specialist (Risewise)",
+      clientScope: "Risewise, Grace In Motion (Internal)",
+    },
+    cy: {
+      id: "cy",
+      name: "Cy Suarilla",
+      nickname: "Cy",
+      email: "cyilsua@gmail.com",
+      role: "Operations Specialist",
+      isCoreAdmin: false,
+      avatarColor: "bg-[#466B53]",
+      title: "Operations Specialist (Risewise)",
+      clientScope: "Risewise, Grace In Motion (Internal)",
+    },
   });
 
   const router = useRouter();
@@ -1044,9 +1066,24 @@ export default function GimDashboard() {
       retainer: "USD $2,500 / mo",
       progress: 40,
     },
+    {
+      id: "little-treasures",
+      name: "Little Treasures Company",
+      code: "LTC-AU",
+      lead: "Radzdom-Man Gallego",
+      contact: "Zoe Horner (Sydney)",
+      currentSprint: "Operations frozen. Website v2 & GHL Sub-Account JCy1QAdpq5fEupDv1EXb in read-only archive",
+      status: "Paused (Archive)",
+      statusVariant: "paused" as const,
+      isPaused: true,
+      milestone: "Archived & Grounded in Knowledge Hub",
+      tasksCount: "92 archived tasks",
+      retainer: "AUD $3,200 / mo (Frozen)",
+      progress: 100,
+    },
   ];
 
-  const [showPausedClients, setShowPausedClients] = useState(false);
+  const [showPausedClients, setShowPausedClients] = useState(true);
 
   // Filter clients based on user scope and paused state
   const visibleClients = clientsData.filter((client) => {
@@ -1914,7 +1951,23 @@ export default function GimDashboard() {
                           {isClientUser ? "Authorized Organization" : "Active accounts and ongoing delivery sprints"}
                         </CardDescription>
                       </div>
-                      <Badge variant="brand">{visibleClients.length} Accounts</Badge>
+                      <div className="flex items-center gap-2">
+                        {/* Paused Clients Brown Toggle */}
+                        <button
+                          type="button"
+                          onClick={() => setShowPausedClients(!showPausedClients)}
+                          className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 ${
+                            showPausedClients
+                              ? "bg-[#8C5E3C] text-white border-[#5C3A21] shadow-xs"
+                              : "bg-[#8C5E3C]/10 text-[#7A4B2A] border-[#8C5E3C]/30 hover:bg-[#8C5E3C]/20"
+                          }`}
+                          title="Toggle visibility of paused/archived accounts"
+                        >
+                          <span className={`w-2 h-2 rounded-full ${showPausedClients ? "bg-white" : "bg-[#8C5E3C]"}`} />
+                          <span>{showPausedClients ? "Paused Included" : "Show Paused (Archive)"}</span>
+                        </button>
+                        <Badge variant="brand">{visibleClients.length} Accounts</Badge>
+                      </div>
                     </CardHeader>
 
                     <div className="overflow-x-auto">
@@ -1929,53 +1982,67 @@ export default function GimDashboard() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-[#E8E2DD]/70">
-                          {visibleClients.map((client, idx) => (
-                            <tr
-                              key={idx}
-                              onClick={() => {
-                                setSelectedPortfolioClientId(client.id);
-                                setSelectedPortfolioSubTab("calendar");
-                                setActiveTab("clients");
-                              }}
-                              className="hover:bg-[#518E6A]/5 transition-colors cursor-pointer group"
-                              title={`Open ${client.name} workspace`}
-                            >
-                              <td className="py-3 px-4 font-semibold text-[#242E29]">
-                                <div className="flex items-center gap-1.5 group-hover:text-[#466B53] transition-colors">
-                                  <span>{client.name}</span>
-                                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-[#518E6A]" />
-                                </div>
-                                <div className="text-[10px] text-[#65746C] font-normal">
-                                  {client.contact}
-                                </div>
-                              </td>
-                              <td className="py-3 px-4 text-[#242E29] font-medium">
-                                {client.lead}
-                              </td>
-                              <td className="py-3 px-4 text-[#242E29]">
-                                <div>{client.currentSprint}</div>
-                                <div className="flex items-center space-x-2 mt-1">
-                                  <div className="w-20 bg-[#E8E2DD] rounded-full h-1.5 overflow-hidden">
-                                    <div
-                                      className="bg-[#518E6A] h-1.5 rounded-full"
-                                      style={{ width: `${client.progress}%` }}
-                                    ></div>
+                          {visibleClients.map((client, idx) => {
+                            const isPaused = client.statusVariant === "paused" || (client as any).isPaused;
+                            return (
+                              <tr
+                                key={idx}
+                                onClick={() => {
+                                  setSelectedPortfolioClientId(client.id);
+                                  setSelectedPortfolioSubTab("calendar");
+                                  setActiveTab("clients");
+                                }}
+                                className={`transition-colors cursor-pointer group ${
+                                  isPaused
+                                    ? "bg-[#8C5E3C]/5 hover:bg-[#8C5E3C]/15 border-l-4 border-l-[#8C5E3C]"
+                                    : "hover:bg-[#518E6A]/5"
+                                }`}
+                                title={`Open ${client.name} workspace`}
+                              >
+                                <td className="py-3 px-4 font-semibold text-[#242E29]">
+                                  <div className={`flex items-center gap-1.5 transition-colors ${
+                                    isPaused ? "text-[#7A4B2A] group-hover:text-[#5C3A21]" : "group-hover:text-[#466B53]"
+                                  }`}>
+                                    <span>{client.name}</span>
+                                    {isPaused && (
+                                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#8C5E3C]/20 text-[#5C3A21] font-bold">
+                                        PAUSED
+                                      </span>
+                                    )}
+                                    <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-[#518E6A]" />
                                   </div>
-                                  <span className="text-[10px] text-[#518E6A] font-medium">
-                                    {client.progress}%
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="py-3 px-4 text-[#65746C]">
-                                {client.milestone}
-                              </td>
-                              <td className="py-3 px-4">
-                                <Badge variant={client.statusVariant} dot>
-                                  {client.status}
-                                </Badge>
-                              </td>
-                            </tr>
-                          ))}
+                                  <div className="text-[10px] text-[#65746C] font-normal">
+                                    {client.contact}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4 text-[#242E29] font-medium">
+                                  {client.lead}
+                                </td>
+                                <td className="py-3 px-4 text-[#242E29]">
+                                  <div>{client.currentSprint}</div>
+                                  <div className="flex items-center space-x-2 mt-1">
+                                    <div className="w-20 bg-[#E8E2DD] rounded-full h-1.5 overflow-hidden">
+                                      <div
+                                        className={`h-1.5 rounded-full ${isPaused ? "bg-[#8C5E3C]" : "bg-[#518E6A]"}`}
+                                        style={{ width: `${client.progress}%` }}
+                                      ></div>
+                                    </div>
+                                    <span className={`text-[10px] font-medium ${isPaused ? "text-[#8C5E3C]" : "text-[#518E6A]"}`}>
+                                      {client.progress}%
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4 text-[#65746C]">
+                                  {client.milestone}
+                                </td>
+                                <td className="py-3 px-4">
+                                  <Badge variant={client.statusVariant} dot>
+                                    {client.status}
+                                  </Badge>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
