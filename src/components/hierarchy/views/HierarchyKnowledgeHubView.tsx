@@ -6,34 +6,26 @@ import {
   Lock,
   Globe,
   Folder,
-  FolderOpen,
   ChevronDown,
   ChevronRight,
   Sparkles,
-  ExternalLink,
-  ShieldCheck,
   CheckCircle2,
-  Calendar,
-  Users,
   Copy,
   Check,
-  BookOpen,
-  HelpCircle,
-  Clock,
-  ArrowRight,
+  ShieldAlert,
 } from "lucide-react";
 
-interface KnowledgeDocPage {
-  id: string;
-  title: string;
-  icon?: string;
-  badge?: string;
-  badgeColor?: string;
-  category: string;
-  content: React.ReactNode;
+interface HierarchyKnowledgeHubViewProps {
+  isExecutive?: boolean;
+  currentUserName?: string;
+  currentUserNickname?: string;
 }
 
-export function HierarchyKnowledgeHubView() {
+export function HierarchyKnowledgeHubView({
+  isExecutive = false,
+  currentUserName = "Team Member",
+  currentUserNickname = "User",
+}: HierarchyKnowledgeHubViewProps) {
   const [selectedPageId, setSelectedPageId] = useState<string>("scope-of-work");
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
     assets: true,
@@ -44,11 +36,31 @@ export function HierarchyKnowledgeHubView() {
   });
   const [copiedLink, setCopiedLink] = useState(false);
 
-  const toggleFolder = (folderKey: string) => {
-    setExpandedFolders((prev) => ({ ...prev, [folderKey]: !prev[folderKey] }));
+  // Strict executive isolation guard: Only Divine Origines and RA Malinao (plus Radz Admin)
+  if (!isExecutive) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-[#FBF6F3] text-center">
+        <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 mb-4 shadow-xs">
+          <ShieldAlert className="w-7 h-7" />
+        </div>
+        <h3 className="text-base font-bold text-[#242E29]">
+          Executive Access Restricted
+        </h3>
+        <p className="text-xs text-[#65746C] max-w-md mt-1.5 leading-relaxed">
+          The GIM Knowledge Hub and internal standard operating procedures are strictly confidential and restricted to Divine Origines and RA Malinao.
+        </p>
+        <span className="mt-4 px-3 py-1 rounded-full bg-stone-100 border border-stone-200 text-[11px] font-mono text-[#65746C]">
+          Logged in as: {currentUserName} ({currentUserNickname})
+        </span>
+      </div>
+    );
+  }
+
+  const toggleFolder = (key: string) => {
+    setExpandedFolders((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleCopyLink = () => {
+  const handleCopy = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
@@ -56,18 +68,18 @@ export function HierarchyKnowledgeHubView() {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-white">
-      {/* Top Web Share Notification Banner */}
+      {/* Top Banner */}
       <div className="bg-[#6B46C1] text-white px-4 py-2 text-xs flex items-center justify-between shadow-xs shrink-0">
         <div className="flex items-center gap-2">
           <Globe className="w-4 h-4 text-purple-200" />
           <span className="font-semibold">This Doc is shared to the web.</span>
           <span className="text-purple-200 text-[11px] hidden sm:inline">
-            Internal GIM team members have full read-access to client playbooks and SOPs.
+            Executive Leadership Access Verified &bull; Grace In Motion Operations
           </span>
         </div>
         <button
           type="button"
-          onClick={handleCopyLink}
+          onClick={handleCopy}
           className="flex items-center gap-1 px-2.5 py-1 rounded bg-white/15 hover:bg-white/25 text-white text-[11px] font-semibold transition-colors"
         >
           {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
@@ -75,11 +87,10 @@ export function HierarchyKnowledgeHubView() {
         </button>
       </div>
 
-      {/* Main Dual-Pane Container */}
+      {/* Main Dual-Pane Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Document Navigation Tree */}
+        {/* Left Doc Navigation Tree */}
         <aside className="w-72 border-r border-[#E8E2DD] bg-[#FAF8F6] flex flex-col shrink-0 overflow-y-auto">
-          {/* Doc Header */}
           <div className="p-3.5 border-b border-[#E8E2DD] flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0">
               <span className="p-1 rounded bg-[#3D5249] text-white">
@@ -90,11 +101,10 @@ export function HierarchyKnowledgeHubView() {
               </span>
             </div>
             <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[#3D5249]/10 text-[#3D5249]">
-              Verified
+              Executive
             </span>
           </div>
 
-          {/* Pages List */}
           <div className="p-2 space-y-1 text-xs">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#65746C] px-2 py-1 block">
               Pages
@@ -130,7 +140,6 @@ export function HierarchyKnowledgeHubView() {
                   <span className="truncate">Assets & Log-in details</span>
                 </div>
               </div>
-
               {expandedFolders.assets && (
                 <div className="pl-6 space-y-0.5 mt-0.5">
                   <button
@@ -165,7 +174,6 @@ export function HierarchyKnowledgeHubView() {
                   <span className="truncate">Implementation Playbook</span>
                 </div>
               </div>
-
               {expandedFolders.playbook && (
                 <div className="pl-6 space-y-0.5 mt-0.5">
                   {[
@@ -208,7 +216,6 @@ export function HierarchyKnowledgeHubView() {
                   <span className="truncate">Onboarding Clients</span>
                 </div>
               </div>
-
               {expandedFolders.onboarding_clients && (
                 <div className="pl-6 space-y-0.5 mt-0.5">
                   {[
@@ -252,7 +259,6 @@ export function HierarchyKnowledgeHubView() {
                   <span className="truncate">Onboarding</span>
                 </div>
               </div>
-
               {expandedFolders.onboarding && (
                 <div className="pl-6 space-y-0.5 mt-0.5">
                   {[
@@ -293,7 +299,6 @@ export function HierarchyKnowledgeHubView() {
                   <span className="truncate">GIM Internal Processes</span>
                 </div>
               </div>
-
               {expandedFolders.internal_processes && (
                 <div className="pl-6 space-y-0.5 mt-0.5">
                   {[
@@ -326,109 +331,69 @@ export function HierarchyKnowledgeHubView() {
           </div>
         </aside>
 
-        {/* Right Main Document Content Area */}
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6 max-w-4xl">
+        {/* Right Main Content Pane */}
+        <main className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6 max-w-4xl font-sans">
+          {/* Scope of Work */}
           {selectedPageId === "scope-of-work" && (
             <div className="space-y-6">
-              {/* Blue Sparkle Info Callout */}
               <div className="p-4 rounded-xl bg-[#EBF5FB] border border-[#BCE2F5] text-xs text-[#1B4F72] leading-relaxed flex items-start gap-3 shadow-2xs">
                 <Sparkles className="w-4 h-4 text-[#2980B9] shrink-0 mt-0.5" />
                 <p>
-                  A scope of work document acts as the formal agreement between Grace In Motion and the client, defining all operational responsibilities, technical deliverables, milestones, and review cadences. This framework ensures complete clarity and alignment across all stakeholders from day one.
+                  Scope of work document establishing execution agreements, deliverable specifications, milestones, and review cadences across Grace In Motion client operations.
                 </p>
               </div>
 
-              {/* Section: Overview */}
               <div className="space-y-3">
-                <h2 className="text-xl font-bold text-[#242E29] font-serif tracking-tight">Overview</h2>
-
-                {/* Yellow Pointer Callout */}
-                <div className="p-3.5 rounded-xl bg-[#FEF9E7] border border-[#FAD7A0] text-xs text-[#7D6608] flex items-center gap-2.5">
-                  <span className="text-base">👉</span>
-                  <span className="font-medium">
-                    Provide a summary view of the key project details in this section.
-                  </span>
+                <h2 className="text-xl font-bold text-[#242E29]">Overview</h2>
+                <div className="p-3 rounded-xl bg-[#FEF9E7] border border-[#FAD7A0] text-xs text-[#7D6608] flex items-center gap-2">
+                  <span>👉</span>
+                  <span className="font-medium">Summary of key project properties and operational contacts.</span>
                 </div>
 
-                {/* Structured Metadata Table */}
                 <div className="border border-[#E8E2DD] rounded-xl overflow-hidden shadow-xs">
                   <table className="w-full text-xs">
                     <tbody>
                       <tr className="border-b border-[#E8E2DD]">
-                        <td className="w-1/3 p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72] flex items-center gap-2">
-                          <span>⭐</span> Client
-                        </td>
+                        <td className="w-1/3 p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72]">⭐ Client</td>
                         <td className="p-3 font-bold text-[#242E29] bg-white">Divine Origines</td>
                       </tr>
                       <tr className="border-b border-[#E8E2DD]">
-                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72] flex items-center gap-2">
-                          <span>⭐</span> Role/Services
-                        </td>
+                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72]">⭐ Role/Services</td>
                         <td className="p-3 text-[#242E29] bg-white">Fractional COO & Systems Architecture</td>
                       </tr>
                       <tr className="border-b border-[#E8E2DD]">
-                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72] flex items-center gap-2">
-                          <span>👤</span> Client Contact
-                        </td>
-                        <td className="p-3 text-[#242E29] bg-white">
-                          <a href="mailto:info@divineorigines.com" className="text-[#518E6A] font-semibold hover:underline">
-                            info@divineorigines.com
-                          </a>
-                        </td>
+                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72]">👤 Client Contact</td>
+                        <td className="p-3 text-[#518E6A] font-semibold bg-white">info@divineorigines.com</td>
                       </tr>
                       <tr className="border-b border-[#E8E2DD]">
-                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72] flex items-center gap-2">
-                          <span>👤</span> Project Manager
-                        </td>
+                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72]">👤 Project Manager</td>
                         <td className="p-3 font-semibold text-[#242E29] bg-white">Erwin Manaog</td>
                       </tr>
                       <tr className="border-b border-[#E8E2DD]">
-                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72] flex items-center gap-2">
-                          <span>📝</span> Description
-                        </td>
-                        <td className="p-3 text-[#242E29] bg-white leading-relaxed">
-                          Divine works with multiple high-growth clients delivering fractional operations, automation systems, and executive execution standards.
-                        </td>
+                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72]">📝 Description</td>
+                        <td className="p-3 text-[#242E29] bg-white">Executive operations management, automation systems, and client delivery oversight.</td>
                       </tr>
                       <tr className="border-b border-[#E8E2DD]">
-                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72] flex items-center gap-2">
-                          <span>📅</span> Target Start Date
-                        </td>
+                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72]">📅 Target Start Date</td>
                         <td className="p-3 text-[#242E29] bg-white font-mono">Jan 6, 2025</td>
                       </tr>
                       <tr className="border-b border-[#E8E2DD]">
-                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72] flex items-center gap-2">
-                          <span>📅</span> Target End Date
-                        </td>
+                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72]">📅 Target End Date</td>
                         <td className="p-3 text-[#242E29] bg-white font-mono">Ongoing / Retainer</td>
                       </tr>
                       <tr className="border-b border-[#E8E2DD]">
-                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72] flex items-center gap-2">
-                          <span>💲</span> Overall Budget
-                        </td>
-                        <td className="p-3 text-[#242E29] bg-white">Monthly Retainer &amp; Sprint Allocation</td>
+                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72]">💲 Overall Budget</td>
+                        <td className="p-3 text-[#242E29] bg-white">Retainer & Sprints</td>
                       </tr>
                       <tr>
-                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72] align-top flex items-center gap-2">
-                          <span>🔗</span> Key Resources
-                        </td>
+                        <td className="p-3 bg-[#EBF5FB]/60 font-semibold text-[#1B4F72] align-top">🔗 Key Resources</td>
                         <td className="p-3 text-[#242E29] bg-white">
-                          <ul className="space-y-1 text-xs">
-                            <li className="flex items-center gap-1.5 text-[#518E6A] hover:underline cursor-pointer">
-                              <span>&bull;</span> <span>[Signed Service Agreement]</span>
-                            </li>
-                            <li className="flex items-center gap-1.5 text-[#518E6A] hover:underline cursor-pointer">
-                              <span>&bull;</span> <span>[ClickUp Master Execution Roadmap]</span>
-                            </li>
-                            <li className="flex items-center gap-1.5 text-[#518E6A] hover:underline cursor-pointer">
-                              <span>&bull;</span> <span>[Client Change Request Register]</span>
-                            </li>
-                            <li className="flex items-center gap-1.5 text-[#518E6A] hover:underline cursor-pointer">
-                              <span>&bull;</span> <span>[Executive Stakeholder Feedback Form]</span>
-                            </li>
-                            <li className="flex items-center gap-1.5 text-[#518E6A] hover:underline cursor-pointer">
-                              <span>&bull;</span> <span>[Internal Deliverables &amp; SOP Folder]</span>
-                            </li>
+                          <ul className="space-y-1 text-xs text-[#518E6A]">
+                            <li>&bull; [Signed Service Agreement]</li>
+                            <li>&bull; [ClickUp Master Roadmap]</li>
+                            <li>&bull; [Client Change Request Log]</li>
+                            <li>&bull; [Feedback Register]</li>
+                            <li>&bull; [SOP Documentation Vault]</li>
                           </ul>
                         </td>
                       </tr>
@@ -437,66 +402,37 @@ export function HierarchyKnowledgeHubView() {
                 </div>
               </div>
 
-              {/* Section: Background & Goals */}
               <div className="space-y-3 pt-2">
-                <h2 className="text-xl font-bold text-[#242E29] font-serif tracking-tight">Background &amp; Goals</h2>
-                <div className="p-4 rounded-xl bg-white border border-[#E8E2DD] space-y-3 text-xs text-[#242E29] leading-relaxed">
+                <h2 className="text-xl font-bold text-[#242E29]">Background & Goals</h2>
+                <div className="p-4 rounded-xl bg-white border border-[#E8E2DD] space-y-2 text-xs text-[#242E29] leading-relaxed">
                   <p>
-                    Grace In Motion provides executive operations management, automation pipeline architecture, and team delivery oversight. This scope establishes standardized processes across client onboarding, tool inventory, and daily task accountability.
+                    Grace In Motion standardizes operating architectures, builds reliable automation pipelines, and enforces accountable delivery gates across active clients.
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                    <div className="p-3 rounded-lg bg-[#FAF8F6] border border-[#E8E2DD] space-y-1">
-                      <span className="font-bold text-[#3D5249] block text-xs">Primary Objectives</span>
-                      <ul className="list-disc pl-4 text-[11px] text-[#65746C] space-y-0.5">
-                        <li>Eliminate operational bottlenecks across active clients</li>
-                        <li>Automate lead intake, CRM synchronization, and notifications</li>
-                        <li>Enforce strict quality gates prior to deliverable handoff</li>
-                      </ul>
-                    </div>
-                    <div className="p-3 rounded-lg bg-[#FAF8F6] border border-[#E8E2DD] space-y-1">
-                      <span className="font-bold text-[#3D5249] block text-xs">Success Metrics</span>
-                      <ul className="list-disc pl-4 text-[11px] text-[#65746C] space-y-0.5">
-                        <li>Zero missed client milestones or unassigned blockers</li>
-                        <li>100% daily End-of-Day (EOD) submission rate</li>
-                        <li>Audit-ready SOP coverage for all recurring operations</li>
-                      </ul>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
           )}
 
+          {/* Tool Tracker */}
           {selectedPageId === "tool-tracker" && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-[#E8E2DD]">
-                <div>
-                  <h2 className="text-xl font-bold text-[#242E29] font-serif">Tool Tracker</h2>
-                  <p className="text-xs text-[#65746C] mt-0.5">
-                    Centralized registry of all agency and client systems, access levels, and security requirements.
-                  </p>
-                </div>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold">
-                  10 Active Systems
-                </span>
-              </div>
-
+              <h2 className="text-xl font-bold text-[#242E29]">Tool Tracker</h2>
               <div className="border border-[#E8E2DD] rounded-xl overflow-hidden shadow-xs">
                 <table className="w-full text-xs text-left">
                   <thead className="bg-[#FAF8F6] text-[#3D5249] uppercase font-bold text-[10px] border-b border-[#E8E2DD]">
                     <tr>
                       <th className="p-3">Platform</th>
                       <th className="p-3">Category</th>
-                      <th className="p-3">Primary Admin</th>
+                      <th className="p-3">Owner</th>
                       <th className="p-3">Access Level</th>
-                      <th className="p-3">Security &amp; 2FA</th>
+                      <th className="p-3">Security & 2FA</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E8E2DD] bg-white">
                     {[
                       { name: "ClickUp", cat: "Project Management", admin: "Divine Origines", access: "Workspace Admin", sec: "Enforced 2FA" },
-                      { name: "GoHighLevel (GHL)", cat: "CRM & Marketing Automation", admin: "Radzdom Gallego", access: "Agency Admin", sec: "Enforced 2FA" },
-                      { name: "Supabase", cat: "Production Database", admin: "Radzdom Gallego", access: "Owner / Full DB", sec: "Service Key / RLS" },
+                      { name: "GoHighLevel (GHL)", cat: "CRM & Automations", admin: "Radzdom Gallego", access: "Agency Admin", sec: "Enforced 2FA" },
+                      { name: "Supabase", cat: "Production Database", admin: "Radzdom Gallego", access: "Owner / Full DB", sec: "RLS Policies" },
                       { name: "Google Workspace", cat: "Email & Storage", admin: "Divine Origines", access: "Super Admin", sec: "Enforced 2FA" },
                       { name: "Calendly", cat: "Client Scheduling", admin: "RA Malinao", access: "Org Admin", sec: "Google SSO" },
                       { name: "n8n Self-Hosted", cat: "Workflow Automation", admin: "Radzdom Gallego", access: "Admin / Cloud", sec: "API Tokens" },
@@ -508,11 +444,7 @@ export function HierarchyKnowledgeHubView() {
                         <td className="p-3 text-[#65746C]">{tool.cat}</td>
                         <td className="p-3 font-semibold text-[#3D5249]">{tool.admin}</td>
                         <td className="p-3 font-mono text-[11px]">{tool.access}</td>
-                        <td className="p-3">
-                          <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold">
-                            {tool.sec}
-                          </span>
-                        </td>
+                        <td className="p-3 font-semibold text-emerald-700">{tool.sec}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -521,90 +453,167 @@ export function HierarchyKnowledgeHubView() {
             </div>
           )}
 
-          {selectedPageId.startsWith("playbook-") && (
+          {/* Implementation Playbook Phases 1-4 */}
+          {selectedPageId === "playbook-phase-1" && (
             <div className="space-y-4">
-              <div className="pb-2 border-b border-[#E8E2DD]">
-                <h2 className="text-xl font-bold text-[#242E29] font-serif">
-                  {selectedPageId === "playbook-phase-1" && "Phase 1: Preparation"}
-                  {selectedPageId === "playbook-phase-2" && "Phase 2: Process Documentation"}
-                  {selectedPageId === "playbook-phase-3" && "Phase 3: Planning"}
-                  {selectedPageId === "playbook-phase-4" && "Phase 4: Action"}
-                </h2>
-                <p className="text-xs text-[#65746C] mt-0.5">
-                  Standard operating blueprint for client implementation lifecycles.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-white border border-[#E8E2DD] space-y-3 text-xs leading-relaxed text-[#242E29]">
-                <h4 className="font-bold text-[#3D5249] text-sm">Key Action Checklist</h4>
+              <h2 className="text-xl font-bold text-[#242E29]">Phase 1: Preparation</h2>
+              <div className="p-4 rounded-xl bg-white border border-[#E8E2DD] space-y-3 text-xs text-[#242E29] leading-relaxed">
+                <h4 className="font-bold text-[#3D5249] text-sm">Action Checklist</h4>
                 <ul className="space-y-2">
-                  {[
-                    "Complete comprehensive discovery audit across client operations and communication channels.",
-                    "Verify all credential delegations and test access permissions before kicking off implementation.",
-                    "Document all client-specific rules, tone-of-voice constraints, and sensitive data guardrails.",
-                    "Establish weekly review rhythm and designate primary operational point of contact.",
-                  ].map((step, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
-                      <span>{step}</span>
-                    </li>
-                  ))}
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                    <span>Run comprehensive systems and tool audit across client workspaces.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                    <span>Confirm credential delegations and password manager access.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                    <span>Set up dedicated client communication channels and internal project lists.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                    <span>Schedule kickoff call between assigned Operations Manager and client stakeholders.</span>
+                  </li>
                 </ul>
               </div>
             </div>
           )}
 
-          {selectedPageId.startsWith("onb-step-") && (
+          {selectedPageId === "playbook-phase-2" && (
             <div className="space-y-4">
-              <div className="pb-2 border-b border-[#E8E2DD]">
-                <h2 className="text-xl font-bold text-[#242E29] font-serif">Client Onboarding Framework</h2>
-                <p className="text-xs text-[#65746C] mt-0.5">
-                  5-step standardized client intake journey ensuring seamless handoff and execution.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3">
-                {[
-                  { step: "Step 1", title: "Discovery Call & Alignment", desc: "Understand client goals, team bottlenecks, and technology stack." },
-                  { step: "Step 2", title: "Proposal, Agreement & Onboarding", desc: "Execute contracts, secure initial invoices, and trigger welcome emails." },
-                  { step: "Step 3", title: "Strategy Session & 90-Day Plan", desc: "Map sprint milestones, establish ClickUp spaces, and configure tool access." },
-                  { step: "Step 4", title: "Implementation & Team Execution", desc: "Assign operational specialists, activate workflows, and initiate daily reporting." },
-                  { step: "Step 5", title: "Ongoing Optimization & Reporting", desc: "Conduct weekly client check-ins, review KPI scorecards, and iterate systems." },
-                ].map((item, idx) => (
-                  <div key={idx} className="p-3.5 rounded-xl bg-white border border-[#E8E2DD] flex items-start gap-3">
-                    <span className="px-2 py-1 rounded bg-[#3D5249] text-white font-mono font-bold text-xs">
-                      {item.step}
-                    </span>
-                    <div>
-                      <h4 className="font-bold text-xs text-[#242E29]">{item.title}</h4>
-                      <p className="text-xs text-[#65746C] mt-0.5">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
+              <h2 className="text-xl font-bold text-[#242E29]">Phase 2: Process Documentation</h2>
+              <div className="p-4 rounded-xl bg-white border border-[#E8E2DD] space-y-3 text-xs text-[#242E29] leading-relaxed">
+                <h4 className="font-bold text-[#3D5249] text-sm">SOP Authoring Standards</h4>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                    <span>Record 1080p walkthrough videos with clear step annotations.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                    <span>Structure SOPs: Objective, Prerequisites, Step-by-Step, Output Verification.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                    <span>Store documents inside verified client Knowledge Hub folders.</span>
+                  </li>
+                </ul>
               </div>
             </div>
           )}
 
+          {selectedPageId === "playbook-phase-3" && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-[#242E29]">Phase 3: Planning</h2>
+              <div className="p-4 rounded-xl bg-white border border-[#E8E2DD] space-y-3 text-xs text-[#242E29] leading-relaxed">
+                <h4 className="font-bold text-[#3D5249] text-sm">Sprint Configuration</h4>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                    <span>Establish 90-day milestone goals and 14-day sprint allocations.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                    <span>Slice deliverables into discrete ClickUp tasks with assignees and due dates.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                    <span>Validate team bandwidth and confirm milestone handoff schedule.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {selectedPageId === "playbook-phase-4" && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-[#242E29]">Phase 4: Action</h2>
+              <div className="p-4 rounded-xl bg-white border border-[#E8E2DD] space-y-3 text-xs text-[#242E29] leading-relaxed">
+                <h4 className="font-bold text-[#3D5249] text-sm">Daily Execution & Cadences</h4>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                    <span>Execute assigned tasks and post daily End-of-Day reports by 5:00 PM PHT.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                    <span>Attend Friday Subcon Weekly Meeting facilitated by RA Malinao.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#518E6A] shrink-0 mt-0.5" />
+                    <span>Conduct monthly KPI scorecard reviews and client profitability audits.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Onboarding Operations & Marketing */}
+          {selectedPageId === "onb-ops" && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-[#242E29]">Operations Onboarding</h2>
+              <div className="p-4 rounded-xl bg-white border border-[#E8E2DD] space-y-3 text-xs text-[#242E29] leading-relaxed">
+                <h4 className="font-bold text-[#3D5249] text-sm">Operating Rules</h4>
+                <ul className="space-y-1.5 list-disc pl-4 text-[#65746C]">
+                  <li>Strict client data isolation: Never mix assets, credentials, or workflows across clients.</li>
+                  <li>ClickUp is 100% read-only; mutations are stored in Supabase.</li>
+                  <li>Submit monthly compensation invoices via Wise by the 7th of each month.</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {selectedPageId === "onb-marketing" && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-[#242E29]">Marketing Onboarding</h2>
+              <div className="p-4 rounded-xl bg-white border border-[#E8E2DD] space-y-3 text-xs text-[#242E29] leading-relaxed">
+                <h4 className="font-bold text-[#3D5249] text-sm">Campaign Standards</h4>
+                <ul className="space-y-1.5 list-disc pl-4 text-[#65746C]">
+                  <li>Multi-platform paid campaigns across Meta and TikTok Ads Manager.</li>
+                  <li>Track ROAS, CPA, and CTR metrics weekly with structured reporting.</li>
+                  <li>Maintain verified case study repositories and client outcome portfolios.</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Internal SOPs */}
           {selectedPageId.startsWith("sop-") && (
             <div className="space-y-4">
-              <div className="pb-2 border-b border-[#E8E2DD]">
-                <h2 className="text-xl font-bold text-[#242E29] font-serif">Internal Standard Operating Procedure</h2>
-                <p className="text-xs text-[#65746C] mt-0.5">
-                  Mandatory operational protocol for Grace In Motion specialists and leadership.
+              <h2 className="text-xl font-bold text-[#242E29]">Internal SOP Documentation</h2>
+              <div className="p-4 rounded-xl bg-white border border-[#E8E2DD] space-y-3 text-xs text-[#242E29] leading-relaxed">
+                <h4 className="font-bold text-[#3D5249] text-sm">Protocol Details</h4>
+                <p>
+                  Follow standardized procedures for Google Workspace provisioning, GoHighLevel staff management, and ClickUp task updating. Any discrepancies must be escalated to Divine Origines or RA Malinao.
                 </p>
               </div>
+            </div>
+          )}
 
-              <div className="p-4 rounded-xl bg-white border border-[#E8E2DD] space-y-3 text-xs text-[#242E29] leading-relaxed">
-                <h4 className="font-bold text-[#3D5249] text-sm">Execution Guidelines</h4>
-                <p>
-                  Every team member must strictly follow documented SOP steps. If any discrepancy or tool update occurs, submit an SOP update ticket to the Project Manager before taking action.
-                </p>
-                <div className="p-3 bg-[#FAF8F6] rounded-lg border border-[#E8E2DD] space-y-1">
-                  <span className="font-bold text-xs text-[#242E29]">End of Day (EOD) Protocol</span>
-                  <p className="text-[11px] text-[#65746C]">
-                    All specialists must submit their daily EOD reports in the assigned Slack/Discord channel by 5:00 PM local time detailing completed tasks, open blockers, and next-day priorities.
-                  </p>
-                </div>
+          {/* Onboarding Clients Steps 1-5 */}
+          {selectedPageId.startsWith("onb-step-") && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-[#242E29]">Client Onboarding Steps</h2>
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { step: "Step 1", title: "Discovery Call & Alignment", desc: "Evaluate operational scope, team bottlenecks, and tool architectures." },
+                  { step: "Step 2", title: "Proposal & Agreement", desc: "Sign service contracts, issue retainer deposit, and initiate welcome communications." },
+                  { step: "Step 3", title: "Strategy Session", desc: "Map 90-day milestones and establish project management hierarchies." },
+                  { step: "Step 4", title: "Team Execution", desc: "Assign specialist resources, begin sprints, and report daily progress." },
+                  { step: "Step 5", title: "Ongoing Optimization", desc: "Review performance metrics weekly and optimize systems monthly." },
+                ].map((s, idx) => (
+                  <div key={idx} className="p-3.5 rounded-xl bg-white border border-[#E8E2DD] flex items-start gap-3">
+                    <span className="px-2 py-1 rounded bg-[#3D5249] text-white font-mono font-bold text-xs">
+                      {s.step}
+                    </span>
+                    <div>
+                      <h4 className="font-bold text-xs text-[#242E29]">{s.title}</h4>
+                      <p className="text-xs text-[#65746C] mt-0.5">{s.desc}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

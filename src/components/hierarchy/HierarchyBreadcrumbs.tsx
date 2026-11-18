@@ -19,6 +19,7 @@ interface HierarchyBreadcrumbsProps {
   list?: List | null;
   isMyTasksActive: boolean;
   viewMode: PMViewMode;
+  canAccessKnowledgeHub?: boolean;
   onSwitchViewMode: (mode: PMViewMode) => void;
   onOpenCreateTask: () => void;
 }
@@ -29,10 +30,11 @@ export function HierarchyBreadcrumbs({
   list,
   isMyTasksActive,
   viewMode,
+  canAccessKnowledgeHub = true,
   onSwitchViewMode,
   onOpenCreateTask,
 }: HierarchyBreadcrumbsProps) {
-  const views: { id: PMViewMode; label: string }[] = [
+  const allViews: { id: PMViewMode; label: string }[] = [
     { id: "list", label: "List" },
     { id: "knowledge", label: "KNOWLEDGE HUB 🔒" },
     { id: "board", label: "Board" },
@@ -41,6 +43,8 @@ export function HierarchyBreadcrumbs({
     { id: "timeline", label: "Timeline" },
     { id: "my-tasks", label: "My Tasks" },
   ];
+
+  const views = canAccessKnowledgeHub ? allViews : allViews.filter((v) => v.id !== "knowledge");
 
   return (
     <div className="bg-white border-b border-[#E8E2DD] px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">

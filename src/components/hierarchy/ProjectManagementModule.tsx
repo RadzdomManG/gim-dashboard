@@ -45,6 +45,26 @@ export function ProjectManagementModule({ currentUser }: ProjectManagementModule
   const [isMyTasksActive, setIsMyTasksActive] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<PMViewMode>("list");
 
+  // Executive access check: Divine Origines & RA Malinao (plus Radz as Admin operator)
+  const isExecutiveDocUser = React.useMemo(() => {
+    if (!currentUser.isCoreAdmin) return false;
+    const nameLower = (currentUser.name || "").toLowerCase();
+    const nickLower = (currentUser.nickname || "").toLowerCase();
+    const emailLower = (currentUser.email || "").toLowerCase();
+
+    return (
+      nickLower === "divine" ||
+      nickLower === "ra" ||
+      nickLower === "radz" ||
+      nameLower.includes("divine") ||
+      nameLower.includes("rose anne") ||
+      nameLower.includes("radzdom") ||
+      emailLower.includes("divine") ||
+      emailLower.includes("rose") ||
+      emailLower.includes("radz")
+    );
+  }, [currentUser]);
+
   // Tasks state
   const [tasks, setTasks] = useState<HierarchicalTask[]>([]);
   const [loadingTasks, setLoadingTasks] = useState<boolean>(true);
@@ -248,6 +268,7 @@ export function ProjectManagementModule({ currentUser }: ProjectManagementModule
           list={selectedList}
           isMyTasksActive={isMyTasksActive}
           viewMode={viewMode}
+          canAccessKnowledgeHub={isExecutiveDocUser}
           onSwitchViewMode={(mode) => {
             setViewMode(mode);
             if (mode === "my-tasks") setIsMyTasksActive(true);
@@ -261,7 +282,11 @@ export function ProjectManagementModule({ currentUser }: ProjectManagementModule
 
         {/* View Mode Rendering */}
         {viewMode === "knowledge" ? (
-          <HierarchyKnowledgeHubView />
+          <HierarchyKnowledgeHubView
+            isExecutive={isExecutiveDocUser}
+            currentUserName={currentUser.name}
+            currentUserNickname={currentUser.nickname}
+          />
         ) : loadingTasks ? (
           <div className="flex-1 flex items-center justify-center text-xs text-[#65746C] animate-pulse">
             Loading tasks & deliverables...
